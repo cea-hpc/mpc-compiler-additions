@@ -1,0 +1,252 @@
+diff -Naur binutils-2.25/bfd/elf64-x86-64.c mpc-binutils-2.25/bfd/elf64-x86-64.c
+--- binutils-2.25/bfd/elf64-x86-64.c	2014-12-23 09:47:10.000000000 +0100
++++ mpc-binutils-2.25/bfd/elf64-x86-64.c	2016-05-09 13:47:14.587962076 +0200
+@@ -1314,6 +1314,7 @@
+ 	return FALSE;
+ 
+       h = sym_hashes[r_symndx - symtab_hdr->sh_info];
++
+       /* Use strncmp to check __tls_get_addr since __tls_get_addr
+ 	 may be versioned.  */
+       return (h != NULL
+@@ -1323,7 +1324,17 @@
+ 		  : (ELF32_R_TYPE (rel[1].r_info) == R_X86_64_PC32
+ 		     || ELF32_R_TYPE (rel[1].r_info) == R_X86_64_PLT32))
+ 	      && (strncmp (h->root.root.string,
+-			   "__tls_get_addr", 14) == 0));
++			   "__tls_get_addr", 14) == 0))
++      /* MPC BEGIN */
++      /* We check __sctk__tls_get_addr__ to
++         handle TLS variables in MPC Framework*/
++	      || (h != NULL
++		 && h->root.root.string != NULL
++		 && (ELF64_R_TYPE (rel[1].r_info) == R_X86_64_PC32
++                     || ELF64_R_TYPE (rel[1].r_info) == R_X86_64_PLT32) 
++		 && strncmp (h->root.root.string, 
++			   "__sctk__tls_get_addr__",22)==0);
++      /* MPC END */
+ 
+     case R_X86_64_GOTTPOFF:
+       /* Check transition from IE access model:
+@@ -4234,6 +4245,91 @@
+ 					   &r_type, tls_type, rel,
+ 					   relend, h, r_symndx))
+ 	    return FALSE;
++	  
++	  /* MPC BEGIN */
++	  /* this #define allow to inject Hexa code to offset GS with the desired TLS level */
++#define extls_memcpy(a, b, c)\
++unsigned char* start = a;\
++memcpy(start, b, c);\
++start[5] = extls_scope_offset;
++
++	  int extls_decl = 0;
++	  unsigned char extls_scope_offset;
++	/* check if the current symbol is handled by extls */
++	{
++	  unsigned long extls_r_symndx;
++	  struct elf_link_hash_entry *extls_h=NULL;
++	  /* it is probably possible to optimized these nested "if"s */
++	  if ( (rel+1) < relend ) {
++		  extls_r_symndx = ELF64_R_SYM (rel[1].r_info);
++		  if (extls_r_symndx >= symtab_hdr->sh_info) {
++			  extls_h = sym_hashes[extls_r_symndx - symtab_hdr->sh_info];
++			  if ( extls_h != NULL && strncmp (extls_h->root.root.string, "__sctk",6)==0) {
++				 
++				  const unsigned long long scope_nb = 11;
++				  const unsigned long long nb_char_to_ignore = 22;
++
++				  /* construct a list of supported levels */
++				  char scope_name[][16] = {
++					  "process",
++					  "task",
++					  "thread",
++					  "openmp",
++					  "node",
++					  "numa_level_2",
++					  "numa_level_1",
++					  "cache_level_3",
++					  "cache_level_2",
++					  "cache_level_1",
++					  "core"};
++
++				  int scope_name_length[] = {
++					  7,
++					  4,
++					  6,
++					  6,
++					  4,
++					  12,
++					  12,
++					  13,
++					  13,
++					  13,
++					  4 } ;
++
++				  unsigned long long tls_scope_idx;
++				  for ( tls_scope_idx = 0 ; tls_scope_idx < scope_nb ; ++tls_scope_idx ) {
++				  	if ( strncmp ( extls_h->root.root.string+nb_char_to_ignore, /* get the scope name (ignore first chars */
++								   scope_name[tls_scope_idx],                 /* is it matching with current level ? */
++								   scope_name_length[tls_scope_idx] )==0 )
++						break ;
++				  }
++
++				  if(tls_scope_idx >= scope_nb)
++				  {
++				  	/* get variable name for error message */
++				  	const char* name ;
++				  	const char unknown[16] = "unknown" ;
++				  	if ( h && h->root.root.string )
++						  name = h->root.root.string ;
++				  	else
++                      name = bfd_elf_sym_name (input_bfd, symtab_hdr, sym, NULL) ;
++				  	if ( name == NULL )
++					  name = unknown ;
++
++	      			(*_bfd_error_handler)
++					(_("%B(%A+0x%lx): Undefined EXTLS level for the symbol '%s'"), input_bfd, input_section, extls_h->root.root.string);
++			  		bfd_set_error (bfd_error_bad_value);
++	      			return FALSE;
++				 }
++				extls_decl = 1 ;
++				extls_scope_offset = '\x00' + tls_scope_idx * (4*8); /* a level is built w/ a 4-pointer structure */
++					  /*memcpy(mpc_buff,"\x65\x48\x8b\x04\x25\0\0\0\0\x48\x8d\x80\0\0\0",16);*/
++
++				  } /* close extls symbol check */
++			  } /* close sym index lookup */
++		  } /* close (rel+1) < relend check */
++	} /* close a local block to unstack tabs */
++	  /* MPC END */
+ 
+ 	  if (r_type == R_X86_64_TPOFF32)
+ 	    {
+@@ -4265,7 +4361,15 @@
+ 		     leaq foo@tpoff(%rax), %rax
+ 		     nopw 0x0(%rax,%rax,1) */
+ 		  int largepic = 0;
+-		  if (ABI_64_P (output_bfd)
++		  /* MPC BEGIN */
++		  if(extls_decl)
++		  {
++			extls_memcpy(contents + roff - 4,
++				"\x65\x48\x8b\x04\x25\0\0\0\0\x48\x8d\x80\0\0\0",
++				16);
++		  }
++		  else if (ABI_64_P (output_bfd)
++		  /* MPC END */
+ 		      && contents[roff + 5] == (bfd_byte) '\xb8')
+ 		    {
+ 		      memcpy (contents + roff - 3,
+@@ -4540,7 +4644,14 @@
+ 		     addq foo@gottpoff(%rax), %rax
+ 		     nopw 0x0(%rax,%rax,1) */
+ 		  int largepic = 0;
+-		  if (ABI_64_P (output_bfd)
++		  /* MPC BEGIN */
++		  if(extls_decl){
++		    extls_memcpy(contents + roff - 4,
++			"\x65\x48\x8b\x04\x25\0\0\0\0\x48\x03\x05\0\0\0",
++			16);
++		  }
++		  else if (ABI_64_P (output_bfd)
++		  /* MPC END */
+ 		      && contents[roff + 5] == (bfd_byte) '\xb8')
+ 		    {
+ 		      memcpy (contents + roff - 3,
+diff -Naur binutils-2.25/bfd/elflink.c mpc-binutils-2.25/bfd/elflink.c
+--- binutils-2.25/bfd/elflink.c	2014-12-23 09:47:10.000000000 +0100
++++ mpc-binutils-2.25/bfd/elflink.c	2016-05-09 13:46:57.959644959 +0200
+@@ -1813,6 +1813,34 @@
+   return TRUE;
+ }
+ 
++/* MPC BEGIN */
++static bfd_boolean
++_bfd_elf_export_mpc_dyn_tls_wrapper (struct elf_link_hash_entry *h, void *data)
++{
++	struct elf_info_failed *eif = (struct elf_info_failed *) data;
++
++  /* Ignore indirect symbols.  These are added by the versioning code.  */
++	if (h->root.type == bfd_link_hash_indirect)
++		return TRUE;
++
++	const char * name = h->root.root.string;
++
++	if( !name )
++		return TRUE;
++	
++	if( !strstr( name, "___mpc_TLS_w_" ) )
++		return TRUE;
++
++	if (! bfd_elf_link_record_dynamic_symbol (eif->info, h))
++	{
++		eif->failed = TRUE;
++		return FALSE;
++	}
++
++	return TRUE;
++}
++/* MPC END */
++
+ /* Look through the symbols which are defined in other shared
+    libraries and referenced here.  Update the list of version
+    dependencies.  This will be put into the .gnu.version_r section.
+@@ -5712,7 +5740,18 @@
+ 	  if (eif.failed)
+ 	    return FALSE;
+ 	}
+-
++	
++	/* MPC BEGIN */
++	 /* Here we export the dynamic TLS symbols
++	  * in order to allow remote TU intializer
++	  * resolution */
++	  elf_link_hash_traverse (elf_hash_table (info),
++			  _bfd_elf_export_mpc_dyn_tls_wrapper,
++			  &eif);
++	  if (eif.failed)
++	    return FALSE;
++	/* MPC END */
++	
+       /* Make all global versions with definition.  */
+       for (t = info->version_info; t != NULL; t = t->next)
+ 	for (d = t->globals.list; d != NULL; d = d->next)
+diff -Naur binutils-2.25/ld/ldfile.c mpc-binutils-2.25/ld/ldfile.c
+--- binutils-2.25/ld/ldfile.c	2014-10-14 09:32:04.000000000 +0200
++++ mpc-binutils-2.25/ld/ldfile.c	2016-05-09 13:46:57.959644959 +0200
+@@ -339,18 +339,35 @@
+      directory first.  */
+   if (! entry->flags.maybe_archive)
+     {
++        /* MPC INTEL BEGIN */
++#if 0
+       if (entry->flags.sysrooted && IS_ABSOLUTE_PATH (entry->filename))
++#endif
++      /* For absolute pathnames, try to always open the file in the
++	 sysroot first. If this fails, try to open the file at the
++	 given location. */
++      entry->flags.sysrooted = is_sysrooted_pathname(entry->filename);
++      if (IS_ABSOLUTE_PATH (entry->filename) && ld_sysroot && ! entry->flags.sysrooted)
++          /* MPC INTEL END */
+ 	{
+ 	  char *name = concat (ld_sysroot, entry->filename,
+ 			       (const char *) NULL);
+ 	  if (ldfile_try_open_bfd (name, entry))
+ 	    {
+ 	      entry->filename = name;
++          /* MPC INTEL BEGIN */
++	      entry->flags.sysrooted = TRUE;
++          /* MPC INTEL END */
+ 	      return TRUE;
+ 	    }
+ 	  free (name);
+ 	}
++      /* MPC INTEL BEGIN */
++#if 0
+       else if (ldfile_try_open_bfd (entry->filename, entry))
++#endif
++      if (ldfile_try_open_bfd (entry->filename, entry))
++          /* MPC INTEL END */
+ 	return TRUE;
+ 
+       if (IS_ABSOLUTE_PATH (entry->filename))

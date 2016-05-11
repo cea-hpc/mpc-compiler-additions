@@ -1,0 +1,15 @@
+EXTENDED LOCAL STORAGE IMPLEMENTATION (EXTLS)
+=============================================
+
+This superproject is composed of the following:
+1. GCC sources and the Extls patch
+2. Binutils sources and the Extls patch
+3. priv-plugin implementing dynamic initializer in C language
+4. libextls, providing logical Hierarchy TLS mechanism
+
+
+Git sub-modules
+---------------
+
+This project is based on submodule system provided by Git.
+Please, run `git submodule init` after any clone to download the components
