@@ -1,6 +1,6 @@
 [submodule "libextls"]
 	path = libextls
-	url = helios.france.paratools.com:/media/raid/gitroot/libextls.git
+	url = http://france.paratools.com:12345/cea/libextls.git
 [submodule "priv-plugin"]
 	path = priv-plugin
-	url = helios.france.paratools.com:/media/raid/gitroot/priv-plugin.git
+	url = http://france.paratools.com:12345/cea/priv-plugin.git
