@@ -8,6 +8,7 @@ DEBUG_MODE=yes
 COLOR_SUPPORT=no
 MAKE_J=1
 EXTRA_ARGS=
+MODE=rc
 
 extls_arg_parse()
 {
@@ -105,8 +106,14 @@ do
 		--with-*)
 			read_external_dep "$arg" "--with-"
 			;;
-		--components=*)
-			COMPONENTS_TO_BUILD="`extls_arg_parse "$arg" "--components="`"
+		--lib-mode)
+			MODE="r"
+			;;
+		--compil-mode)
+			MODE="c"
+			;;
+		--all)
+			MODE="rc"
 			;;
 		--help|-help|-h|--h)
 			extls_help
@@ -137,33 +144,42 @@ extls_prepare_sources()
 	extls_printf "* Clean Build Folder $BUILD_PREFIX"
 	test -n $BUILD_PREFIX && rm -rf -- $BUILD_PREFIX
 	mkdir -p $BUILD_PREFIX && cd $BUILD_PREFIX || exit 1
-
-
-	export LD_LIBRARY_PATH="$COMPILATION_PREFIX/lib:$COMPILATION_PREFIX/lib64:$RUNTIME_PREFIX/lib:$RUNTIME_PREFIX/lib64:${LD_LIBRARY_PATH}"
-	export PATH="$COMPILATION_PREFIX/bin:$RUNTIME_PREFIX/bin:${PATH}"
-	export INCLUDE_PATH="$COMPILATION_PREFIX/include:$RUNTIME_PREFIX/include:${INCLUDE_PATH}"
 	
-	for dep in `ls $ROOT_DIRECTORY/archives/*`
-	do 
-		cd $BUILD_PREFIX
-		dep_name=`basename $dep | sed -e "s@.tar.*@@g"`
-		extls_printf "* Un-zipping $dep_name"
-		tar -xf $dep > .${dep_name}-untar.log 2>&1 || exit 1
+	if test -n "`echo $MODE | grep -o "r"`" ; then
+		version=`sh $ROOT_DIRECTORY/libextls/.extls_version`
+		extls_printf "* Copying libextls-$version"
+		cp -r $ROOT_DIRECTORY/libextls $BUILD_PREFIX/libextls-$version
+	fi
 
-		patch_name="${dep_name}.patch";
-		patch="$ROOT_DIRECTORY/patches/${patch_name}"
+	if test -n "`echo $MODE | grep -o "c"`" ; then
+
+		version=`sh $ROOT_DIRECTORY/priv-plugin/.priv-plugin_version`
+		extls_printf "* Copying priv-plugin-$version"
+		cp -r $ROOT_DIRECTORY/priv-plugin $BUILD_PREFIX/priv-plugin-$version
 		
-		if test -f ${patch};
-		then
-			extls_printf "  + patching with $patch_name"
-			cd $dep_name
-			patch -p1 < ${patch} > .${dep_name}-patch.log 2>&1 || exit 1
+		export LD_LIBRARY_PATH="$COMPILATION_PREFIX/lib:$COMPILATION_PREFIX/lib64:$RUNTIME_PREFIX/lib:$RUNTIME_PREFIX/lib64:${LD_LIBRARY_PATH}"
+		export PATH="$COMPILATION_PREFIX/bin:$RUNTIME_PREFIX/bin:${PATH}"
+		export INCLUDE_PATH="$COMPILATION_PREFIX/include:$RUNTIME_PREFIX/include:${INCLUDE_PATH}"
+		
+		for dep in `ls $ROOT_DIRECTORY/archives/*`
+		do 
+			cd $BUILD_PREFIX
+			dep_name=`basename $dep | sed -e "s@.tar.*@@g"`
+			extls_printf "* Uncompressing $dep_name"
+			tar -xf $dep > .${dep_name}-untar.log 2>&1 || exit 1
 
-		fi
-	done
+			patch_name="${dep_name}.patch";
+			patch="$ROOT_DIRECTORY/patches/${patch_name}"
+			
+			if test -f ${patch};
+			then
+				extls_printf "  + Patching with $patch_name"
+				cd $dep_name
+				patch -p1 < ${patch} > .${dep_name}-patch.log 2>&1 || exit 1
 
-	cp -r $ROOT_DIRECTORY/libextls $BUILD_PREFIX/libextls-$version
-	cp -r $ROOT_DIRECTORY/priv-plugin $BUILD_PREFIX/priv-plugin-$version
+			fi
+		done
+	fi
 
 }
 extls_prepare_sources
@@ -204,6 +220,11 @@ extls_run()
 		cur_dep_type="`echo $line | cut -f2 -d";"`"
 		cur_dep_args="`echo $line | cut -f3 -d';'`"
 		cur_dep_make_args="`echo $line | cut -f4 -d';'`"
+		
+		if test -z "`echo "$MODE" | grep -o "$cur_dep_type"`" ; then 
+			continue;
+		fi
+		
 		folder="`ls -d ${cur_dep}-*`"
 		EXTRA_ARGS=""
 
