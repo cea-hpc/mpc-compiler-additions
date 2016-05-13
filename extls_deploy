@@ -250,7 +250,7 @@ extls_run()
 		fi
 
 
-		extls_printf "* Target $folder..."
+		extls_printf "* Targeting $folder..."
 		extls_printf "  + Configuring $folder"
 		../configure ${EXTRA_ARGS} ${cur_dep_args} > .extls-configure.log 2>&1 || extls_error "Error during build. Please read $BUILD_PREFIX/$folder/build/.extls-configure.log !"
 		extls_printf "  + Building $folder"
@@ -274,12 +274,12 @@ extls_sourcing()
 		$BUILD_PREFIX/extls_vars.sh
 
 
-	#cp $BUILD_PREFIX/extls_vars.sh $COMPILATION_PREFIX/extls_vars.sh
-	cp $BUILD_PREFIX/extls_vars.sh $RUNTIME_PREFIX/extls_vars.sh
+	mkdir -p $RUNTIME_PREFIX/bin
+	cp $BUILD_PREFIX/extls_vars.sh $RUNTIME_PREFIX/bin/extls_vars.sh
 
 	extls_printf ""
-	extls_printf "Building EXTLS Done !"
-	extls_printf "You can now load the EXTLS environment fy sourcing ${RUNTIME_PREFIX}/extls_vars.sh"
+	extls_printf "Building extls components: done !"
+	extls_printf "You can now load the EXTLS environment by sourcing ${RUNTIME_PREFIX}/bin/extls_vars.sh"
 }
 
 extls_sourcing
