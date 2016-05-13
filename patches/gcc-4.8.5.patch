@@ -1262,8 +1262,8 @@ index 40dec96..0c83239 100644
 +      ix86_tls_symbol = gen_rtx_SYMBOL_REF (Pmode,
 +					    (TARGET_ANY_GNU_TLS
 +					     && !TARGET_64BIT)
-+					    ? "__sctk__tls_get_addr__openmp_scope"
-+					    : "__sctk__tls_get_addr__openmp_scope");
++					    ? "__extls_get_addr_openmp"
++					    : "__extls_get_addr_openmp");
 +    }
 +
 +  return ix86_tls_symbol;
@@ -1277,8 +1277,8 @@ index 40dec96..0c83239 100644
 +      ix86_tls_symbol = gen_rtx_SYMBOL_REF (Pmode,
 +					    (TARGET_ANY_GNU_TLS
 +					     && !TARGET_64BIT)
-+					    ? "__sctk__tls_get_addr__process_scope"
-+					    : "__sctk__tls_get_addr__process_scope");
++					    ? "__extls_get_addr_process"
++					    : "__extls_get_addr_process");
 +    }
 +
 +  return ix86_tls_symbol;
@@ -1292,8 +1292,8 @@ index 40dec96..0c83239 100644
 +      ix86_tls_symbol = gen_rtx_SYMBOL_REF (Pmode,
 +					    (TARGET_ANY_GNU_TLS
 +					     && !TARGET_64BIT)
-+					    ? "__sctk__tls_get_addr__task_scope"
-+					    : "__sctk__tls_get_addr__task_scope");
++					    ? "__extls_get_addr_task"
++					    : "__extls_get_addr_task");
 +    }
 +
 +  return ix86_tls_symbol;
@@ -1307,8 +1307,8 @@ index 40dec96..0c83239 100644
 +      ix86_tls_symbol = gen_rtx_SYMBOL_REF (Pmode,
 +					    (TARGET_ANY_GNU_TLS
 +					     && !TARGET_64BIT)
-+					    ? "__sctk__tls_get_addr__thread_scope"
-+					    : "__sctk__tls_get_addr__thread_scope");
++					    ? "__extls_get_addr_thread"
++					    : "__extls_get_addr_thread");
 +    }
 +
 +  return ix86_tls_symbol;
@@ -6930,7 +6930,7 @@ index 80a9a00..9f726e4 100644
      __iso_c_binding_c_f_pointer_l4;
      __iso_c_binding_c_f_pointer_l8;
      __iso_c_binding_c_f_pointer_u0;
-+    __sctk__tls_get_addr__task_scope;
++    __extls_get_addr_task;
    local:
      *;
  };
@@ -6975,7 +6975,7 @@ index 3b46bba..c4f52e2 100644
 +} tls_index;
 +
 +void * __attribute__ ((weak))
-+__sctk__tls_get_addr__task_scope (tls_index * tmp)
++__extls_get_addr_task (tls_index * tmp)
 +{
 +    return NULL;
 +}

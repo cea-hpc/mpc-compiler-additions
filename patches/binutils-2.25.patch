@@ -23,7 +23,7 @@ diff -Naur binutils-2.25/bfd/elf64-x86-64.c mpc-binutils-2.25/bfd/elf64-x86-64.c
 +		 && (ELF64_R_TYPE (rel[1].r_info) == R_X86_64_PC32
 +                     || ELF64_R_TYPE (rel[1].r_info) == R_X86_64_PLT32) 
 +		 && strncmp (h->root.root.string, 
-+			   "__sctk__tls_get_addr__",22)==0);
++			   "__extls_get_addr_",17)==0);
 +      /* MPC END */
  
      case R_X86_64_GOTTPOFF:
@@ -51,10 +51,10 @@ diff -Naur binutils-2.25/bfd/elf64-x86-64.c mpc-binutils-2.25/bfd/elf64-x86-64.c
 +		  extls_r_symndx = ELF64_R_SYM (rel[1].r_info);
 +		  if (extls_r_symndx >= symtab_hdr->sh_info) {
 +			  extls_h = sym_hashes[extls_r_symndx - symtab_hdr->sh_info];
-+			  if ( extls_h != NULL && strncmp (extls_h->root.root.string, "__sctk",6)==0) {
++			  if ( extls_h != NULL && strncmp (extls_h->root.root.string, "__extls_get_addr_",17)==0) {
 +				 
 +				  const unsigned long long scope_nb = 11;
-+				  const unsigned long long nb_char_to_ignore = 22;
++				  const unsigned long long nb_char_to_ignore = 17;
 +
 +				  /* construct a list of supported levels */
 +				  char scope_name[][16] = {
