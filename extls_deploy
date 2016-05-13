@@ -1,0 +1,265 @@
+#!/bin/sh
+ROOT_DIRECTORY=$PWD/`dirname $0`
+BUILD_PREFIX=$PWD/build
+INSTALLATION_PREFIX=$BUILD_PREFIX/install
+COMPILATION_PREFIX=
+RUNTIME_PREFIX=
+DEBUG_MODE=yes
+COLOR_SUPPORT=no
+MAKE_J=1
+EXTRA_ARGS=
+
+extls_arg_parse()
+{
+	echo "x$1" | sed -e "s@^x$2@@g"
+}
+
+extls_printf()
+{
+	printf " $@\n"
+}
+
+extls_help()
+{
+	extls_printf "==============> EXTLS CONFIGURE HELP <============"
+	extls_printf 
+	extls_printf "-------- PREFIX --------"
+	extls_printf " --prefix          set installation prefix"
+	extls_printf " --prefix-build    set build prefix (GCC & Binutils tarball decompression)"
+	extls_printf " --prefix-compil   set install prefix for compiling tools (override --prefix)"
+	extls_printf " --prefix-runtime  set install prefix for runtime libraries (override --prefix)"
+	extls_printf 
+	extls_printf "-------- OTHERS --------"
+	extls_printf " --enable-debug    Activate debug mode for all components"
+	extls_printf " -j<val>           Set a concurrency level to build a component"
+	extls_printf " --enable-color    Activate color support in components (if any)"
+	extls_printf " --help            Display this help"
+	extls_printf 
+	extls_printf "=================================================="
+}
+
+extls_error(){
+	extls_help
+	extls_printf "EXTLS Configure Error: $@"
+	exit 1
+}
+
+extls_print_config()
+{
+	extls_printf "============> EXTLS CONFIGURE SUMMARY <==========="
+	extls_printf "- Install Prefix     : $INSTALLATION_PREFIX"
+	extls_printf "- Build Prefix       : $BUILD_PREFIX"
+	if test "$COMPILATION_PREFIX" != "$INSTALLATION_PREFIX";
+	then
+	extls_printf "- Compilation Prefix : $COMPILATION_PREFIX"
+	fi
+	if test "$RUNTIME_PREFIX" != "$INSTALLATION_PREFIX";
+	then
+	extls_printf "- Runtime Prefix     : $RUNTIME_PREFIX"
+	fi
+
+	extls_printf "- Debug Mode         : $DEBUG_MODE"
+	extls_printf "- Color Support      : $COLOR_SUPPORT"
+	extls_printf "- Make concurrency   : $MAKE_J"
+	extls_printf "- Root directory     : $ROOT_DIRECTORY"
+}
+
+read_external_dep()
+{
+	line="$1"
+	dep="`echo $line | cut -f1 -d"="`"
+	dep_upper=`echo $dep | sed -e "s;$2;;g" -e "s@-@_@g" | tr '[:lower:]' '[:upper:]'`
+	path=`echo $line | cut -f2 -d"="`
+
+	final="${dep_upper}_PREFIX_OPTION=\"${dep}=${path}\""
+	eval "$final"
+
+}
+for arg in $@
+do
+	case $arg in
+		-j*)
+			MAKE_J="`extls_arg_parse "$arg" "-j"`"
+			;;
+		--prefix=*)
+			INSTALLATION_PREFIX="`extls_arg_parse "$arg" "--prefix="`"
+			;;
+		--prefix-build=*)
+			BUILD_PREFIX="`extls_arg_parse "$arg" "--prefix-build="`"
+			;;
+		--prefix-compil=*)
+			COMPILATION_PREFIX="`extls_arg_parse "$arg" "--prefix-compil="`"
+			;;
+		--prefix-runtime=*)
+			RUNTIME_PREFIX="`extls_arg_parse "$arg" "--prefix-runtime="`"
+			;;
+		--enable-debug|-d)
+			DEBUG_MODE=yes
+			;;
+		--disable-debug)
+			DEBUG_MODE=no
+			;;
+		--enable-color)
+			COLOR_SUPPORT=yes
+			;;
+		--with-*)
+			read_external_dep "$arg" "--with-"
+			;;
+		--components=*)
+			COMPONENTS_TO_BUILD="`extls_arg_parse "$arg" "--components="`"
+			;;
+		--help|-help|-h|--h)
+			extls_help
+			exit 0
+			;;
+		*)
+		    extls_error "Unkown argument: '$arg'"
+			exit 1
+			;;
+	esac
+done
+
+if test -z $COMPILATION_PREFIX;
+then
+	COMPILATION_PREFIX=$INSTALLATION_PREFIX
+fi
+if test -z $RUNTIME_PREFIX;
+then
+	RUNTIME_PREFIX=$INSTALLATION_PREFIX
+fi
+
+extls_print_config
+
+
+extls_prepare_sources()
+{
+	extls_printf "\n==========> PREPARING SOURCES TO BUILD <=========="
+	extls_printf "* Clean Build Folder $BUILD_PREFIX"
+	test -n $BUILD_PREFIX && rm -rf -- $BUILD_PREFIX
+	mkdir -p $BUILD_PREFIX && cd $BUILD_PREFIX || exit 1
+
+
+	export LD_LIBRARY_PATH="$COMPILATION_PREFIX/lib:$COMPILATION_PREFIX/lib64:$RUNTIME_PREFIX/lib:$RUNTIME_PREFIX/lib64:${LD_LIBRARY_PATH}"
+	export PATH="$COMPILATION_PREFIX/bin:$RUNTIME_PREFIX/bin:${PATH}"
+	export INCLUDE_PATH="$COMPILATION_PREFIX/include:$RUNTIME_PREFIX/include:${INCLUDE_PATH}"
+	
+	for dep in `ls $ROOT_DIRECTORY/archives/*`
+	do 
+		cd $BUILD_PREFIX
+		dep_name=`basename $dep | sed -e "s@.tar.*@@g"`
+		extls_printf "* Un-zipping $dep_name"
+		tar -xf $dep > .${dep_name}-untar.log 2>&1 || exit 1
+
+		patch_name="${dep_name}.patch";
+		patch="$ROOT_DIRECTORY/patches/${patch_name}"
+		
+		if test -f ${patch};
+		then
+			extls_printf "  + patching with $patch_name"
+			cd $dep_name
+			patch -p1 < ${patch} > .${dep_name}-patch.log 2>&1 || exit 1
+
+		fi
+	done
+
+	cp -r $ROOT_DIRECTORY/libextls $BUILD_PREFIX/libextls-$version
+	cp -r $ROOT_DIRECTORY/priv-plugin $BUILD_PREFIX/priv-plugin-$version
+
+}
+extls_prepare_sources
+
+extls_set_default_deps()
+{
+		if test -z "${GMP_PREFIX_OPTION}"; then GMP_PREFIX_OPTION="--with-gmp=${COMPILATION_PREFIX}"; fi
+		if test -z "${MPFR_PREFIX_OPTION}"; then MPFR_PREFIX_OPTION="--with-mpfr=${COMPILATION_PREFIX}"; fi
+		if test -z "${MPC_PREFIX_OPTION}"; then MPC_PREFIX_OPTION="--with-mpc=${COMPILATION_PREFIX}"; fi
+}
+
+extls_run()
+{
+	extls_printf "\n========> BUILDING EXTLS & DEPENDENCIES <========="
+	mkdir -p $COMPILATION_PREFIX
+	mkdir -p $RUNTIME_PREFIX
+
+	cd $BUILD_PREFIX
+	
+	extls_set_default_deps
+
+	cp $ROOT_DIRECTORY/.deps_run .
+	sed -i \
+		-e "s;@GMP_PREFIX_OPTION@;${GMP_PREFIX_OPTION};g" \
+		-e "s;@MPFR_PREFIX_OPTION@;${MPFR_PREFIX_OPTION};g" \
+		-e "s;@MPC_PREFIX_OPTION@;${MPC_PREFIX_OPTION};g" \
+		-e "s;@HWLOC_PREFIX_OPTION@;${HWLOC_PREFIX_OPTION};g" \
+		$BUILD_PREFIX/.deps_run
+	while read line
+	do
+		cd $BUILD_PREFIX
+		echo $line | egrep "^[[:space:]]*(#|$)" > /dev/null
+		if test $? = "0"
+		then
+			continue;
+		fi
+		cur_dep="`echo $line | cut -f1 -d';' | sed -e "s@ @@g"`"
+		cur_dep_type="`echo $line | cut -f2 -d";"`"
+		cur_dep_args="`echo $line | cut -f3 -d';'`"
+		cur_dep_make_args="`echo $line | cut -f4 -d';'`"
+		folder="`ls -d ${cur_dep}-*`"
+		EXTRA_ARGS=""
+
+		if test ! -d ${folder}; then exit 1; fi
+
+		cd ${folder} || exit 1
+		mkdir -p build && cd build
+
+		if test "$cur_dep_type" = "c"; then
+			EXTRA_ARGS="${EXTRA_ARGS} --prefix=${COMPILATION_PREFIX}"
+		elif test "$cur_dep_type" = "r"; then
+			EXTRA_ARGS="${EXTRA_ARGS} --prefix=${RUNTIME_PREFIX}"
+		else
+			exit 1
+		fi
+
+		if test "${DEBUG_MODE}" = "yes"; then
+			EXTRA_ARGS="${EXTRA_ARGS} --enable-debug"
+		fi
+		
+		if test "${COLOR_SUPPORT}" = "yes"; then
+			EXTRA_ARGS="${EXTRA_ARGS} --enable-color"
+		fi
+
+
+		extls_printf "* Target $folder..."
+		extls_printf "  + Configuring $folder"
+		../configure ${EXTRA_ARGS} ${cur_dep_args} > .extls-configure.log 2>&1 || extls_error "Error during build. Please read $BUILD_PREFIX/$folder/build/.extls-configure.log !"
+		extls_printf "  + Building $folder"
+		
+		make -j${MAKE_J} ${cur_dep_make_args} > .extls-make.log 2>&1 || extls_error "Error during build. Please read $BUILD_PREFIX/$folder/build/.extls-make.log !"
+
+		extls_printf "  + Installing $folder"
+		make -j${MAKE_J} install > .extls-make-install.log 2>&1 || extls_error "Error during build. Please read $BUILD_PREFIX/$folder/build/.extls-make-install.log !"
+
+	done < $BUILD_PREFIX/.deps_run
+}
+extls_run
+
+extls_sourcing()
+{
+	cp $ROOT_DIRECTORY/tools/extls_vars.sh $BUILD_PREFIX/extls_vars.sh
+
+	sed -i \
+		-e "s;@COMPILATION_PREFIX@;${COMPILATION_PREFIX};g" \
+		-e "s;@RUNTIME_PREFIX@;${RUNTIME_PREFIX};g" \
+		$BUILD_PREFIX/extls_vars.sh
+
+
+	#cp $BUILD_PREFIX/extls_vars.sh $COMPILATION_PREFIX/extls_vars.sh
+	cp $BUILD_PREFIX/extls_vars.sh $RUNTIME_PREFIX/extls_vars.sh
+
+	extls_printf ""
+	extls_printf "Building EXTLS Done !"
+	extls_printf "You can now load the EXTLS environment fy sourcing ${RUNTIME_PREFIX}/extls_vars.sh"
+}
+
+extls_sourcing
+

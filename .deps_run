@@ -1,0 +1,15 @@
+# by default, all ./configure will be called with a --prefix option
+# You can use the following macros to be replaced during configure w/ real value provided by user
+# @HWLOC_PREFIX@ for libextls
+# @GMP_PREFIX@
+# @MPFR_PREFIX@
+# @MPC_PREFIX@
+# @OPENPA_PREFIX@ for libextls too
+# The order gurantee compilation order, to not echange lines !
+binutils    ;c; --disable-werror --program-prefix= --with-sysroot=/ ; MAKEINFO=true
+gmp         ;c; ;
+mpfr        ;c; @GMP_PREFIX_OPTION@ ;
+mpc         ;c; @GMP_PREFIX_OPTION@ @MPFR_PREFIX_OPTION@ ;
+gcc         ;c; @GMP_PREFIX_OPTION@ @MPFR_PREFIX_OPTION@ @MPC_PREFIX_OPTION@ --enable-languages=c,c++,fortran --disable-bootstrap --disable-multilib ;
+priv-plugin ;c; ; 
+libextls    ;r;  @HWLOC_PREFIX_OPTION@ ; 
