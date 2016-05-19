@@ -1,6 +1,6 @@
 [submodule "libextls"]
 	path = libextls
-	url = http://france.paratools.com:12345/cea/libextls.git
+	url = git@france.paratools.com:cea/libextls.git
 [submodule "priv-plugin"]
 	path = priv-plugin
-	url = http://france.paratools.com:12345/cea/priv-plugin.git
+	url = git@france.paratools.com:cea/priv-plugin.git
