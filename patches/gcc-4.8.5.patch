@@ -1322,8 +1322,8 @@ index 40dec96..0c83239 100644
 +      ix86_tls_symbol = gen_rtx_SYMBOL_REF (Pmode,
 +					    (TARGET_ANY_GNU_TLS
 +					     && !TARGET_64BIT)
-+					    ? "__sctk__tls_get_addr__node_scope"
-+					    : "__sctk__tls_get_addr__node_scope");
++					    ? "__extls_get_addr_node"
++					    : "__extls_get_addr_node");
 +    }
 +
 +  return ix86_tls_symbol;
@@ -1337,8 +1337,8 @@ index 40dec96..0c83239 100644
 +      ix86_tls_symbol = gen_rtx_SYMBOL_REF (Pmode,
 +					    (TARGET_ANY_GNU_TLS
 +					     && !TARGET_64BIT)
-+					    ? "__sctk__tls_get_addr__numa_level_2_scope"
-+					    : "__sctk__tls_get_addr__numa_level_2_scope");
++					    ? "__extls_get_addr_numa_level_2"
++					    : "__extls_get_addr_numa_level_2");
 +    }
 +
 +  return ix86_tls_symbol;
@@ -1352,8 +1352,8 @@ index 40dec96..0c83239 100644
 +      ix86_tls_symbol = gen_rtx_SYMBOL_REF (Pmode,
 +					    (TARGET_ANY_GNU_TLS
 +					     && !TARGET_64BIT)
-+					    ? "__sctk__tls_get_addr__numa_level_1_scope"
-+					    : "__sctk__tls_get_addr__numa_level_1_scope");
++					    ? "__extls_get_addr_numa_level_1"
++					    : "__extls_get_addr_numa_level_1");
 +    }
 +
 +  return ix86_tls_symbol;
@@ -1367,8 +1367,8 @@ index 40dec96..0c83239 100644
 +      ix86_tls_symbol = gen_rtx_SYMBOL_REF (Pmode,
 +					    (TARGET_ANY_GNU_TLS
 +					     && !TARGET_64BIT)
-+					    ? "__sctk__tls_get_addr__socket_scope"
-+					    : "__sctk__tls_get_addr__socket_scope");
++					    ? "__extls_get_addr_socket"
++					    : "__extls_get_addr_socket");
 +    }
 +
 +  return ix86_tls_symbol;
@@ -1382,8 +1382,8 @@ index 40dec96..0c83239 100644
 +      ix86_tls_symbol = gen_rtx_SYMBOL_REF (Pmode,
 +					    (TARGET_ANY_GNU_TLS
 +					     && !TARGET_64BIT)
-+					    ? "__sctk__tls_get_addr__cache_level_3_scope"
-+					    : "__sctk__tls_get_addr__cache_level_3_scope");
++					    ? "__extls_get_addr_cache_level_3"
++					    : "__extls_get_addr_cache_level_3");
 +    }
 +
 +  return ix86_tls_symbol;
@@ -1397,8 +1397,8 @@ index 40dec96..0c83239 100644
 +      ix86_tls_symbol = gen_rtx_SYMBOL_REF (Pmode,
 +					    (TARGET_ANY_GNU_TLS
 +					     && !TARGET_64BIT)
-+					    ? "__sctk__tls_get_addr__cache_level_2_scope"
-+					    : "__sctk__tls_get_addr__cache_level_2_scope");
++					    ? "__extls_get_addr_cache_level_2"
++					    : "__extls_get_addr_cache_level_2");
 +    }
 +
 +  return ix86_tls_symbol;
@@ -1412,8 +1412,8 @@ index 40dec96..0c83239 100644
 +      ix86_tls_symbol = gen_rtx_SYMBOL_REF (Pmode,
 +					    (TARGET_ANY_GNU_TLS
 +					     && !TARGET_64BIT)
-+					    ? "__sctk__tls_get_addr__cache_level_1_scope"
-+					    : "__sctk__tls_get_addr__cache_level_1_scope");
++					    ? "__extls_get_addr_cache_level_1"
++					    : "__extls_get_addr_cache_level_1");
 +    }
 +
 +  return ix86_tls_symbol;
@@ -1427,8 +1427,8 @@ index 40dec96..0c83239 100644
 +      ix86_tls_symbol = gen_rtx_SYMBOL_REF (Pmode,
 +					    (TARGET_ANY_GNU_TLS
 +					     && !TARGET_64BIT)
-+					    ? "__sctk__tls_get_addr__core_scope"
-+					    : "__sctk__tls_get_addr__core_scope");
++					    ? "__extls_get_addr_core"
++					    : "__extls_get_addr_core");
 +    }
 +
 +  return ix86_tls_symbol;
@@ -2169,23 +2169,6 @@ index 6faf3fd..77a8f7b 100644
      {
        /* Only variables can be thread-local, and all declarations must
  	 agree on this property.  */
-@@ -4437,6 +4453,7 @@ start_decl (const cp_declarator *declarator,
- 	    tree prefix_attributes,
- 	    tree *pushed_scope_p)
- {
-+  
-   tree decl;
-   tree context;
-   bool was_public;
-@@ -4454,7 +4471,7 @@ start_decl (const cp_declarator *declarator,
- 
-   decl = grokdeclarator (declarator, declspecs, NORMAL, initialized,
- 			 &attributes);
--
-+			 
-   deprecated_state = DEPRECATED_NORMAL;
- 
-   if (decl == NULL_TREE || TREE_CODE (decl) == VOID_TYPE
 @@ -4533,6 +4550,46 @@ start_decl (const cp_declarator *declarator,
        && lookup_attribute ("noinline", DECL_ATTRIBUTES (decl)))
      warning (0, "inline function %q+D given attribute noinline", decl);
@@ -2323,31 +2306,6 @@ index 6faf3fd..77a8f7b 100644
  
    if (use_dtor)
      {
-@@ -6890,6 +7003,7 @@ register_dtor_fn (tree decl)
- static void
- expand_static_init (tree decl, tree init)
- {
-+	
-   gcc_assert (TREE_CODE (decl) == VAR_DECL);
-   gcc_assert (TREE_STATIC (decl));
- 
-@@ -7050,6 +7164,7 @@ expand_static_init (tree decl, tree init)
-     tls_aggregates = tree_cons (init, decl, tls_aggregates);
-   else
-     static_aggregates = tree_cons (init, decl, static_aggregates);
-+    
- }
- 
- 
-@@ -13766,7 +13881,7 @@ finish_function (int flags)
-   tree fndecl = current_function_decl;
-   tree fntype, ctype = NULL_TREE;
-   int inclass_inline = (flags & 2) != 0;
--
-+  
-   /* When we get some parse errors, we can end up without a
-      current_function_decl, so cope.  */
-   if (fndecl == NULL_TREE)
 diff --git a/gcc/cp/decl2.c b/gcc/cp/decl2.c
 index 1a604a4..6a089b2 100644
 --- a/gcc/cp/decl2.c
@@ -2421,46 +2379,6 @@ index 1a604a4..6a089b2 100644
  
      case FIELD_DECL:
        if (asmspec)
-@@ -3526,10 +3575,10 @@ prune_vars_needing_no_initialization (tree *vars)
-       tree t = *var;
-       tree decl = TREE_VALUE (t);
-       tree init = TREE_PURPOSE (t);
--
-       /* Deal gracefully with error.  */
-       if (decl == error_mark_node)
- 	{
-+		fprintf(stderr,"error_mark_node\n");
- 	  var = &TREE_CHAIN (t);
- 	  continue;
- 	}
-@@ -3541,6 +3590,7 @@ prune_vars_needing_no_initialization (tree *vars)
- 	 here.  */
-       if (DECL_EXTERNAL (decl))
- 	{
-+		fprintf(stderr,"object not defined\n");
- 	  var = &TREE_CHAIN (t);
- 	  continue;
- 	}
-@@ -3550,6 +3600,7 @@ prune_vars_needing_no_initialization (tree *vars)
-       if (init && TREE_CODE (init) == TREE_LIST
- 	  && value_member (error_mark_node, init))
- 	{
-+		fprintf(stderr,"bail out now\n");
- 	  var = &TREE_CHAIN (t);
- 	  continue;
- 	}
-@@ -3909,9 +3960,9 @@ static void
- handle_tls_init (void)
- {
-   tree vars = prune_vars_needing_no_initialization (&tls_aggregates);
--  if (vars == NULL_TREE)
-+  if (vars == NULL_TREE) 
-     return;
--
-+    
-   location_t loc = DECL_SOURCE_LOCATION (TREE_VALUE (vars));
- 
-   write_out_vars (vars);
 @@ -3923,7 +3974,19 @@ handle_tls_init (void)
    DECL_ARTIFICIAL (guard) = true;
    DECL_IGNORED_P (guard) = true;
@@ -2950,7 +2868,7 @@ index 2428b51..44b1db4 100644
      contiguous:1;
  
 + /* MPC HLS BEGIN */
-+  ENUM_BITFIELD (gfc_hls_scope) hls_scope:3;
++  ENUM_BITFIELD (gfc_hls_scope) hls_scope:4;
 +  unsigned hls_level:2;
 +  /* MPC HLS END */
 +  
@@ -6061,27 +5979,27 @@ index 91f3387..92f9c7c 100644
  #define SYMBOL_FLAG_TLS_SHIFT	3
  #define SYMBOL_REF_TLS_MODEL(RTX) \
 -  ((enum tls_model) ((SYMBOL_REF_FLAGS (RTX) >> SYMBOL_FLAG_TLS_SHIFT) & 7))
-+  ((enum tls_model) ((SYMBOL_REF_FLAGS (RTX) >> SYMBOL_FLAG_TLS_SHIFT) & 15))
++  ((enum tls_model) ((SYMBOL_REF_FLAGS (RTX) >> SYMBOL_FLAG_TLS_SHIFT) & 31))
  /* Set if this symbol is not defined in this translation unit.  */
 -#define SYMBOL_FLAG_EXTERNAL	(1 << 6)
-+#define SYMBOL_FLAG_EXTERNAL	(1 << 7)
++#define SYMBOL_FLAG_EXTERNAL	(1 << 8)
  #define SYMBOL_REF_EXTERNAL_P(RTX) \
    ((SYMBOL_REF_FLAGS (RTX) & SYMBOL_FLAG_EXTERNAL) != 0)
  /* Set if this symbol has a block_symbol structure associated with it.  */
 -#define SYMBOL_FLAG_HAS_BLOCK_INFO (1 << 7)
-+#define SYMBOL_FLAG_HAS_BLOCK_INFO (1 << 8)
++#define SYMBOL_FLAG_HAS_BLOCK_INFO (1 << 9)
  #define SYMBOL_REF_HAS_BLOCK_INFO_P(RTX) \
    ((SYMBOL_REF_FLAGS (RTX) & SYMBOL_FLAG_HAS_BLOCK_INFO) != 0)
  /* Set if this symbol is a section anchor.  SYMBOL_REF_ANCHOR_P implies
     SYMBOL_REF_HAS_BLOCK_INFO_P.  */
 -#define SYMBOL_FLAG_ANCHOR	(1 << 8)
-+#define SYMBOL_FLAG_ANCHOR	(1 << 9)
++#define SYMBOL_FLAG_ANCHOR	(1 << 10)
  #define SYMBOL_REF_ANCHOR_P(RTX) \
    ((SYMBOL_REF_FLAGS (RTX) & SYMBOL_FLAG_ANCHOR) != 0)
  
  /* Subsequent bits are available for the target to use.  */
 -#define SYMBOL_FLAG_MACH_DEP_SHIFT	9
-+#define SYMBOL_FLAG_MACH_DEP_SHIFT	10
++#define SYMBOL_FLAG_MACH_DEP_SHIFT	11
  #define SYMBOL_FLAG_MACH_DEP		(1 << SYMBOL_FLAG_MACH_DEP_SHIFT)
 +/* MPC HLS END */
  
@@ -6154,15 +6072,6 @@ diff --git a/gcc/tree.c b/gcc/tree.c
 index 077eed8..b676b17 100644
 --- a/gcc/tree.c
 +++ b/gcc/tree.c
-@@ -2616,6 +2616,8 @@ array_type_nelts (const_tree type)
- 	  : fold_build2 (MINUS_EXPR, TREE_TYPE (max), max, min));
- }
- 
-+
-+
- /* If arg is static -- a reference to an object in static storage -- then
-    return the object.  This is not the same as the C meaning of `static'.
-    If arg isn't static, return NULL.  */
 @@ -2632,23 +2634,38 @@ staticp (tree arg)
        return arg;
  
@@ -6204,31 +6113,6 @@ index 077eed8..b676b17 100644
        /* If the thing being referenced is not a field, then it is
  	 something language specific.  */
        gcc_assert (TREE_CODE (TREE_OPERAND (arg, 1)) == FIELD_DECL);
-@@ -2661,13 +2678,16 @@ staticp (tree arg)
-       return staticp (TREE_OPERAND (arg, 0));
- 
-     case BIT_FIELD_REF:
-+
-       return NULL;
- 
-     case INDIRECT_REF:
-+
-       return TREE_CONSTANT (TREE_OPERAND (arg, 0)) ? arg : NULL;
- 
-     case ARRAY_REF:
-     case ARRAY_RANGE_REF:
-+
-       if (TREE_CODE (TYPE_SIZE (TREE_TYPE (arg))) == INTEGER_CST
- 	  && TREE_CODE (TREE_OPERAND (arg, 1)) == INTEGER_CST)
- 	return staticp (TREE_OPERAND (arg, 0));
-@@ -2675,6 +2695,7 @@ staticp (tree arg)
- 	return NULL;
- 
-     case COMPOUND_LITERAL_EXPR:
-+
-       return TREE_STATIC (COMPOUND_LITERAL_EXPR_DECL (arg)) ? arg : NULL;
- 
-     default:
 diff --git a/gcc/tree.h b/gcc/tree.h
 index 33d8c5d..e4721a0 100644
 --- a/gcc/tree.h
@@ -6256,7 +6140,7 @@ index 33d8c5d..e4721a0 100644
 +#if 0
 +	ENUM_BITFIELD(tls_model) tls_model : 3;
 +#endif
-+	ENUM_BITFIELD(tls_model) tls_model : 4;
++	ENUM_BITFIELD(tls_model) tls_model : 5;
 + /* MPC HLS END */
   /* Belong to FUNCTION_DECL exclusively.  */
   unsigned init_priority_p : 1;
@@ -6308,46 +6192,6 @@ index d39d291..6df4d62 100644
        else
  	/* Leave space for it.  */
  	assemble_zeros (tree_low_cst (DECL_SIZE_UNIT (decl), 1));
-@@ -4210,23 +4238,30 @@ initializer_constant_valid_p_1 (tree value, tree endtype, tree *cache)
-     case FDESC_EXPR:
-       {
- 	tree op0 = staticp (TREE_OPERAND (value, 0));
-+	
- 	if (op0)
- 	  {
- 	    /* "&(*a).f" is like unto pointer arithmetic.  If "a" turns out
- 	       to be a constant, this is old-skool offsetof-like nonsense.  */
- 	    if (TREE_CODE (op0) == INDIRECT_REF
- 		&& TREE_CONSTANT (TREE_OPERAND (op0, 0)))
-+		{
- 	      return null_pointer_node;
-+	  }
- 	    /* Taking the address of a nested function involves a trampoline,
- 	       unless we don't need or want one.  */
- 	    if (TREE_CODE (op0) == FUNCTION_DECL
- 		&& DECL_STATIC_CHAIN (op0)
- 		&& !TREE_NO_TRAMPOLINE (value))
-+		{
- 	      return NULL_TREE;
-+	  }
- 	    /* "&{...}" requires a temporary to hold the constructed
- 	       object.  */
- 	    if (TREE_CODE (op0) == CONSTRUCTOR)
-+	    {
- 	      return NULL_TREE;
-+	    }
- 	  }
- 	return op0;
-       }
-@@ -5934,7 +5969,7 @@ decl_default_tls_model (const_tree decl)
- {
-   enum tls_model kind;
-   bool is_local;
--
-+  
-   is_local = targetm.binds_local_p (decl);
-   if (!flag_shlib)
-     {
 diff --git a/libgfortran/Makefile.am b/libgfortran/Makefile.am
 index abc23cd..04c99a2 100644
 --- a/libgfortran/Makefile.am
@@ -6418,14 +6262,6 @@ diff --git a/libgfortran/Makefile.in b/libgfortran/Makefile.in
 index 62b9f7a..a7f26e4 100644
 --- a/libgfortran/Makefile.in
 +++ b/libgfortran/Makefile.in
-@@ -16,6 +16,7 @@
- @SET_MAKE@
- 
- 
-+
- VPATH = @srcdir@
- pkgdatadir = $(datadir)/@PACKAGE@
- pkgincludedir = $(includedir)/@PACKAGE@
 @@ -66,6 +67,15 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/../mkinstalldirs
  CONFIG_HEADER = config.h
  CONFIG_CLEAN_FILES = libgfortran.spec

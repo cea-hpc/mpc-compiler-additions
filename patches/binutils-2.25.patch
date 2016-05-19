@@ -53,7 +53,7 @@ diff -Naur binutils-2.25/bfd/elf64-x86-64.c mpc-binutils-2.25/bfd/elf64-x86-64.c
 +			  extls_h = sym_hashes[extls_r_symndx - symtab_hdr->sh_info];
 +			  if ( extls_h != NULL && strncmp (extls_h->root.root.string, "__extls_get_addr_",17)==0) {
 +				 
-+				  const unsigned long long scope_nb = 11;
++				  const unsigned long long scope_nb = 12;
 +				  const unsigned long long nb_char_to_ignore = 17;
 +
 +				  /* construct a list of supported levels */
@@ -62,7 +62,7 @@ diff -Naur binutils-2.25/bfd/elf64-x86-64.c mpc-binutils-2.25/bfd/elf64-x86-64.c
 +					  "task",
 +					  "thread",
 +					  "openmp",
-+					  "node",
++					  "node", "socket",
 +					  "numa_level_2",
 +					  "numa_level_1",
 +					  "cache_level_3",
@@ -75,7 +75,7 @@ diff -Naur binutils-2.25/bfd/elf64-x86-64.c mpc-binutils-2.25/bfd/elf64-x86-64.c
 +					  4,
 +					  6,
 +					  6,
-+					  4,
++					  4,6,
 +					  12,
 +					  12,
 +					  13,
