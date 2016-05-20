@@ -109,7 +109,7 @@ diff -Naur binutils-2.25/bfd/elf64-x86-64.c mpc-binutils-2.25/bfd/elf64-x86-64.c
 +	      			return FALSE;
 +				 }
 +				extls_decl = 1 ;
-+				extls_scope_offset = '\x00' + tls_scope_idx * (4*8); /* a level is built w/ a 4-pointer structure */
++				extls_scope_offset = '\x00' + tls_scope_idx * (5*8); /* a level is built w/ a 5-pointer structure */
 +					  /*memcpy(mpc_buff,"\x65\x48\x8b\x04\x25\0\0\0\0\x48\x8d\x80\0\0\0",16);*/
 +
 +				  } /* close extls symbol check */
