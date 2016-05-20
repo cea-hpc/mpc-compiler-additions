@@ -4715,13 +4715,13 @@ index 0000000..638e2c8
 --- /dev/null
 +++ b/gcc/hls-builtins.def
 @@ -0,0 +1,8 @@
-+DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_BARRIER, "__sctk__hls_barrier",
++DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_BARRIER, "__extls_hls_barrier",
 +		  BT_FN_VOID_INT, ATTR_NOTHROW_LIST)
-+DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_SINGLE, "__sctk__hls_single",
++DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_SINGLE, "__extls_hls_single",
 +		  BT_FN_BOOL_INT, ATTR_NOTHROW_LIST)
-+DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_SINGLE_DONE, "__sctk__hls_single_done",
++DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_SINGLE_DONE, "__extls_hls_single_done",
 +		  BT_FN_VOID_INT, ATTR_NOTHROW_LIST)
-+DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_SINGLE_NOWAIT, "__sctk__hls_single_nowait",
++DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_SINGLE_NOWAIT, "__extls_hls_single_nowait",
 +		  BT_FN_BOOL_INT, ATTR_NOTHROW_LIST)
 diff --git a/gcc/mpc-pass.c b/gcc/mpc-pass.c
 new file mode 100644

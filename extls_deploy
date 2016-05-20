@@ -207,6 +207,7 @@ extls_run()
 		-e "s;@MPFR_PREFIX_OPTION@;${MPFR_PREFIX_OPTION};g" \
 		-e "s;@MPC_PREFIX_OPTION@;${MPC_PREFIX_OPTION};g" \
 		-e "s;@HWLOC_PREFIX_OPTION@;${HWLOC_PREFIX_OPTION};g" \
+		-e "s;@OPENPA_PREFIX_OPTION@;${OPENPA_PREFIX_OPTION};g" \
 		$BUILD_PREFIX/.deps_run
 	while read line
 	do

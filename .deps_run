@@ -12,4 +12,4 @@ mpfr        ;c; @GMP_PREFIX_OPTION@ ;
 mpc         ;c; @GMP_PREFIX_OPTION@ @MPFR_PREFIX_OPTION@ ;
 gcc         ;c; @GMP_PREFIX_OPTION@ @MPFR_PREFIX_OPTION@ @MPC_PREFIX_OPTION@ --enable-languages=c,c++,fortran --disable-bootstrap --disable-multilib ;
 priv-plugin ;c; ; 
-libextls    ;r;  @HWLOC_PREFIX_OPTION@ ; 
+libextls    ;r;  @HWLOC_PREFIX_OPTION@ @OPENPA_PREFIX_OPTION@; 
