@@ -1,6 +1,6 @@
-diff -Naur binutils-2.25/bfd/elf64-x86-64.c mpc-binutils-2.25/bfd/elf64-x86-64.c
+diff -Naur binutils-2.25/bfd/elf64-x86-64.c new-binutils-2.25/bfd/elf64-x86-64.c
 --- binutils-2.25/bfd/elf64-x86-64.c	2014-12-23 09:47:10.000000000 +0100
-+++ mpc-binutils-2.25/bfd/elf64-x86-64.c	2016-05-09 13:47:14.587962076 +0200
++++ new-binutils-2.25/bfd/elf64-x86-64.c	2016-05-21 13:36:10.438067346 +0200
 @@ -1314,6 +1314,7 @@
  	return FALSE;
  
@@ -28,20 +28,22 @@ diff -Naur binutils-2.25/bfd/elf64-x86-64.c mpc-binutils-2.25/bfd/elf64-x86-64.c
  
      case R_X86_64_GOTTPOFF:
        /* Check transition from IE access model:
-@@ -4234,6 +4245,91 @@
+@@ -4234,6 +4245,93 @@
  					   &r_type, tls_type, rel,
  					   relend, h, r_symndx))
  	    return FALSE;
 +	  
 +	  /* MPC BEGIN */
 +	  /* this #define allow to inject Hexa code to offset GS with the desired TLS level */
-+#define extls_memcpy(a, b, c)\
++#define extls_memcpy(a, b, c) do{\
 +unsigned char* start = a;\
 +memcpy(start, b, c);\
-+start[5] = extls_scope_offset;
++start[5] = '\x00' + (extls_scope_offset & 255); \
++start[6] = '\x00' + (extls_scope_offset >> 8);\
++}while(0)
 +
 +	  int extls_decl = 0;
-+	  unsigned char extls_scope_offset;
++	  unsigned short int extls_scope_offset;
 +	/* check if the current symbol is handled by extls */
 +	{
 +	  unsigned long extls_r_symndx;
@@ -109,7 +111,7 @@ diff -Naur binutils-2.25/bfd/elf64-x86-64.c mpc-binutils-2.25/bfd/elf64-x86-64.c
 +	      			return FALSE;
 +				 }
 +				extls_decl = 1 ;
-+				extls_scope_offset = '\x00' + tls_scope_idx * (5*8); /* a level is built w/ a 5-pointer structure */
++				extls_scope_offset = tls_scope_idx * (5*8); /* a level is built w/ a 5-pointer structure */
 +					  /*memcpy(mpc_buff,"\x65\x48\x8b\x04\x25\0\0\0\0\x48\x8d\x80\0\0\0",16);*/
 +
 +				  } /* close extls symbol check */
@@ -120,7 +122,7 @@ diff -Naur binutils-2.25/bfd/elf64-x86-64.c mpc-binutils-2.25/bfd/elf64-x86-64.c
  
  	  if (r_type == R_X86_64_TPOFF32)
  	    {
-@@ -4265,7 +4361,15 @@
+@@ -4265,7 +4363,15 @@
  		     leaq foo@tpoff(%rax), %rax
  		     nopw 0x0(%rax,%rax,1) */
  		  int largepic = 0;
@@ -137,7 +139,7 @@ diff -Naur binutils-2.25/bfd/elf64-x86-64.c mpc-binutils-2.25/bfd/elf64-x86-64.c
  		      && contents[roff + 5] == (bfd_byte) '\xb8')
  		    {
  		      memcpy (contents + roff - 3,
-@@ -4540,7 +4644,14 @@
+@@ -4540,7 +4646,14 @@
  		     addq foo@gottpoff(%rax), %rax
  		     nopw 0x0(%rax,%rax,1) */
  		  int largepic = 0;
@@ -153,9 +155,9 @@ diff -Naur binutils-2.25/bfd/elf64-x86-64.c mpc-binutils-2.25/bfd/elf64-x86-64.c
  		      && contents[roff + 5] == (bfd_byte) '\xb8')
  		    {
  		      memcpy (contents + roff - 3,
-diff -Naur binutils-2.25/bfd/elflink.c mpc-binutils-2.25/bfd/elflink.c
+diff -Naur binutils-2.25/bfd/elflink.c new-binutils-2.25/bfd/elflink.c
 --- binutils-2.25/bfd/elflink.c	2014-12-23 09:47:10.000000000 +0100
-+++ mpc-binutils-2.25/bfd/elflink.c	2016-05-09 13:46:57.959644959 +0200
++++ new-binutils-2.25/bfd/elflink.c	2016-05-21 13:36:02.150067459 +0200
 @@ -1813,6 +1813,34 @@
    return TRUE;
  }
@@ -211,9 +213,9 @@ diff -Naur binutils-2.25/bfd/elflink.c mpc-binutils-2.25/bfd/elflink.c
        /* Make all global versions with definition.  */
        for (t = info->version_info; t != NULL; t = t->next)
  	for (d = t->globals.list; d != NULL; d = d->next)
-diff -Naur binutils-2.25/ld/ldfile.c mpc-binutils-2.25/ld/ldfile.c
+diff -Naur binutils-2.25/ld/ldfile.c new-binutils-2.25/ld/ldfile.c
 --- binutils-2.25/ld/ldfile.c	2014-10-14 09:32:04.000000000 +0200
-+++ mpc-binutils-2.25/ld/ldfile.c	2016-05-09 13:46:57.959644959 +0200
++++ new-binutils-2.25/ld/ldfile.c	2016-05-21 13:36:02.150067459 +0200
 @@ -339,18 +339,35 @@
       directory first.  */
    if (! entry->flags.maybe_archive)
