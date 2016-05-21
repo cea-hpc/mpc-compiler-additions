@@ -147,15 +147,15 @@ extls_prepare_sources()
 	
 	if test -n "`echo $MODE | grep -o "r"`" ; then
 		version=`sh $ROOT_DIRECTORY/libextls/.extls_version`
-		extls_printf "* Copying libextls-$version"
-		cp -r $ROOT_DIRECTORY/libextls $BUILD_PREFIX/libextls-$version
+		extls_printf "* Creating libextls-$version"
+		mkdir -p $BUILD_PREFIX/libextls-$version
 	fi
 
 	if test -n "`echo $MODE | grep -o "c"`" ; then
 
 		version=`sh $ROOT_DIRECTORY/priv-plugin/.priv-plugin_version`
-		extls_printf "* Copying priv-plugin-$version"
-		cp -r $ROOT_DIRECTORY/priv-plugin $BUILD_PREFIX/priv-plugin-$version
+		extls_printf "* Creating priv-plugin-$version"
+		mkdir -p $BUILD_PREFIX/priv-plugin-$version
 		
 		export LD_LIBRARY_PATH="$COMPILATION_PREFIX/lib:$COMPILATION_PREFIX/lib64:$RUNTIME_PREFIX/lib:$RUNTIME_PREFIX/lib64:${LD_LIBRARY_PATH}"
 		export PATH="$COMPILATION_PREFIX/bin:$RUNTIME_PREFIX/bin:${PATH}"
@@ -250,10 +250,19 @@ extls_run()
 			EXTRA_ARGS="${EXTRA_ARGS} --enable-color"
 		fi
 
+		if test "$cur_dep" = "libextls";
+		then
+			CONFIGURE_PREFIX=${ROOT_DIRECTORY}/${cur_dep}
+		elif test "$cur_dep" = "priv-plugin";
+		then
+			CONFIGURE_PREFIX=${ROOT_DIRECTORY}/${cur_dep}
+		else
+			CONFIGURE_PREFIX=${BUILD_PREFIX}/${folder}
+		fi
 
 		extls_printf "* Targeting $folder..."
 		extls_printf "  + Configuring $folder"
-		../configure ${EXTRA_ARGS} ${cur_dep_args} > .extls-configure.log 2>&1 || extls_error "Error during build. Please read $BUILD_PREFIX/$folder/build/.extls-configure.log !"
+		${CONFIGURE_PREFIX}/configure ${EXTRA_ARGS} ${cur_dep_args} > .extls-configure.log 2>&1 || extls_error "Error during build. Please read $BUILD_PREFIX/$folder/build/.extls-configure.log !"
 		extls_printf "  + Building $folder"
 		
 		make -j${MAKE_J} ${cur_dep_make_args} > .extls-make.log 2>&1 || extls_error "Error during build. Please read $BUILD_PREFIX/$folder/build/.extls-make.log !"
