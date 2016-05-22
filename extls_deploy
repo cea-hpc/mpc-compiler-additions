@@ -282,7 +282,9 @@ extls_sourcing()
 		-e "s;@COMPILATION_PREFIX@;${COMPILATION_PREFIX};g" \
 		-e "s;@RUNTIME_PREFIX@;${RUNTIME_PREFIX};g" \
 		$BUILD_PREFIX/extls_vars.sh
-
+	
+	echo 'export EXTLS_CFLAGS="-I$RUNTIME_PREFIX/include -DHAVE_ATOMICS -DHAVE_TOPOLOGY -DENABLE_HLS"' >> $BUILD_PREFIX/extls_vars.sh
+	echo 'export EXTLS_LDFLAGS="-L$RUNTIME_PREFIX/lib -L/$RUNTIME_PREFIX/lib64 -Wl,-rpath=$RUNTIME_PREFIX/lib"' >> $BUILD_PREFIX/extls_vars.sh
 
 	mkdir -p $RUNTIME_PREFIX/bin
 	cp $BUILD_PREFIX/extls_vars.sh $RUNTIME_PREFIX/bin/extls_vars.sh
