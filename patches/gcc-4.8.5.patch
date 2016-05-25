@@ -112,7 +112,7 @@ index d5afe0d..8aae9ca 100644
  #include "gtm-builtins.def"
  
 diff --git a/gcc/c-family/c-common.c b/gcc/c-family/c-common.c
-index f41ec9c..8c253d2 100644
+index f41ec9c..39ee4db 100644
 --- a/gcc/c-family/c-common.c
 +++ b/gcc/c-family/c-common.c
 @@ -469,6 +469,12 @@ const struct c_common_resword c_common_reswords[] =
@@ -128,7 +128,18 @@ index f41ec9c..8c253d2 100644
    { "__transaction_atomic", RID_TRANSACTION_ATOMIC, 0 },
    { "__transaction_relaxed", RID_TRANSACTION_RELAXED, 0 },
    { "__transaction_cancel", RID_TRANSACTION_CANCEL, 0 },
-@@ -11383,6 +11389,11 @@ keyword_is_storage_class_specifier (enum rid keyword)
+@@ -536,7 +542,10 @@ const struct c_common_resword c_common_reswords[] =
+   { "switch",		RID_SWITCH,	0 },
+   { "template",		RID_TEMPLATE,	D_CXXONLY | D_CXXWARN },
+   { "this",		RID_THIS,	D_CXXONLY | D_CXXWARN },
++  { "process_local",	RID_PROCESS,	D_CXXONLY | D_CXX0X | D_CXXWARN },
++  { "task_local",	RID_TASK,	D_CXXONLY | D_CXX0X | D_CXXWARN },
+   { "thread_local",	RID_THREAD,	D_CXXONLY | D_CXX0X | D_CXXWARN },
++  { "openmp_local",	RID_OPENMP,	D_CXXONLY | D_CXX0X | D_CXXWARN },
+   { "throw",		RID_THROW,	D_CXX_OBJC | D_CXXWARN },
+   { "true",		RID_TRUE,	D_CXXONLY | D_CXXWARN },
+   { "try",		RID_TRY,	D_CXX_OBJC | D_CXXWARN },
+@@ -11383,6 +11392,11 @@ keyword_is_storage_class_specifier (enum rid keyword)
      case RID_AUTO:
      case RID_MUTABLE:
      case RID_THREAD:
@@ -1233,7 +1244,7 @@ index 602e6fc..35b18e6 100644
  extern void ix86_expand_vector_set (bool, rtx, rtx, int);
  extern void ix86_expand_vector_extract (bool, rtx, rtx, int);
 diff --git a/gcc/config/i386/i386.c b/gcc/config/i386/i386.c
-index 40dec96..0c83239 100644
+index 40dec96..5400809 100644
 --- a/gcc/config/i386/i386.c
 +++ b/gcc/config/i386/i386.c
 @@ -12748,7 +12748,11 @@ static GTY(()) rtx ix86_tls_symbol;
@@ -2120,10 +2131,22 @@ index 320b4dd..35fabce 100644
  
  /* Types of unwind/exception handling info that can be generated.  */
 diff --git a/gcc/cp/cp-tree.h b/gcc/cp/cp-tree.h
-index b0b79f8..315290f 100644
+index b0b79f8..d732057 100644
 --- a/gcc/cp/cp-tree.h
 +++ b/gcc/cp/cp-tree.h
-@@ -5771,6 +5771,10 @@ extern tree nonlambda_method_basetype		(void);
+@@ -4733,6 +4733,11 @@ typedef enum cp_decl_spec {
+   ds_constexpr,
+   ds_complex,
+   ds_thread,
++  /* MPC TLS BEGIN */
++  ds_process,
++  ds_task,
++  ds_openmp,
++  /* MPC TLS END */
+   ds_type_spec,
+   ds_redefined_builtin_type_spec,
+   ds_attribute,
+@@ -5771,6 +5776,10 @@ extern tree nonlambda_method_basetype		(void);
  extern void maybe_add_lambda_conv_op            (tree);
  extern bool is_lambda_ignored_entity            (tree);
  
@@ -2135,7 +2158,7 @@ index b0b79f8..315290f 100644
  extern int cp_tree_operand_length		(const_tree);
  void cp_free_lang_data 				(tree t);
 diff --git a/gcc/cp/decl.c b/gcc/cp/decl.c
-index 6faf3fd..77a8f7b 100644
+index 6faf3fd..ffbd10a 100644
 --- a/gcc/cp/decl.c
 +++ b/gcc/cp/decl.c
 @@ -1892,6 +1892,17 @@ duplicate_decls (tree newdecl, tree olddecl, bool newdecl_is_friend)
@@ -2169,7 +2192,19 @@ index 6faf3fd..77a8f7b 100644
      {
        /* Only variables can be thread-local, and all declarations must
  	 agree on this property.  */
-@@ -4533,6 +4550,46 @@ start_decl (const cp_declarator *declarator,
+@@ -4295,7 +4311,10 @@ check_tag_decl (cp_decl_specifier_seq *declspecs,
+       else if (decl_spec_seq_has_spec_p (declspecs, ds_const)
+ 	       || decl_spec_seq_has_spec_p (declspecs, ds_volatile)
+ 	       || decl_spec_seq_has_spec_p (declspecs, ds_restrict)
+-	       || decl_spec_seq_has_spec_p (declspecs, ds_thread))
++	       || decl_spec_seq_has_spec_p (declspecs, ds_thread)
++	       || decl_spec_seq_has_spec_p (declspecs, ds_process)
++	       || decl_spec_seq_has_spec_p (declspecs, ds_task)
++	       || decl_spec_seq_has_spec_p (declspecs, ds_openmp))
+ 	error ("qualifiers can only be specified for objects "
+ 	       "and functions");
+       else if (saw_typedef)
+@@ -4533,6 +4552,46 @@ start_decl (const cp_declarator *declarator,
        && lookup_attribute ("noinline", DECL_ATTRIBUTES (decl)))
      warning (0, "inline function %q+D given attribute noinline", decl);
  
@@ -2216,7 +2251,7 @@ index 6faf3fd..77a8f7b 100644
    if (TYPE_P (context) && COMPLETE_TYPE_P (complete_type (context)))
      {
        if (TREE_CODE (decl) == VAR_DECL)
-@@ -6122,6 +6179,20 @@ cp_finish_decl (tree decl, tree init, bool init_const_expr_p,
+@@ -6122,6 +6181,20 @@ cp_finish_decl (tree decl, tree init, bool init_const_expr_p,
        && (DECL_INITIAL (decl) || init))
      DECL_INITIALIZED_IN_CLASS_P (decl) = 1;
  
@@ -2237,7 +2272,7 @@ index 6faf3fd..77a8f7b 100644
    if (TREE_CODE (decl) != FUNCTION_DECL
        && (auto_node = type_uses_auto (type)))
      {
-@@ -6518,6 +6589,20 @@ cp_finish_decl (tree decl, tree init, bool init_const_expr_p,
+@@ -6518,6 +6591,20 @@ cp_finish_decl (tree decl, tree init, bool init_const_expr_p,
      TREE_READONLY (decl) = 1;
  
    invoke_plugin_callbacks (PLUGIN_FINISH_DECL, decl);
@@ -2258,7 +2293,7 @@ index 6faf3fd..77a8f7b 100644
  }
  
  /* Returns a declaration for a VAR_DECL as if:
-@@ -6670,6 +6755,24 @@ get_thread_atexit_node (void)
+@@ -6670,6 +6757,24 @@ get_thread_atexit_node (void)
    return decay_conversion (atexit_fndecl, tf_warning_or_error);
  }
  
@@ -2283,7 +2318,7 @@ index 6faf3fd..77a8f7b 100644
  /* Returns the __dso_handle VAR_DECL.  */
  
  static tree
-@@ -6821,11 +6924,21 @@ register_dtor_fn (tree decl)
+@@ -6821,11 +6926,21 @@ register_dtor_fn (tree decl)
    /* Call atexit with the cleanup function.  */
    mark_used (cleanup);
    cleanup = build_address (cleanup);
@@ -2306,8 +2341,31 @@ index 6faf3fd..77a8f7b 100644
  
    if (use_dtor)
      {
+@@ -7872,9 +7987,20 @@ grokvardecl (tree type,
+       TREE_PUBLIC (decl) = DECL_EXTERNAL (decl);
+     }
+ 
+-  if (decl_spec_seq_has_spec_p (declspecs, ds_thread))
++  if(flag_mpc_privatize)
++  {
++	  if (decl_spec_seq_has_spec_p (declspecs, ds_process))
++			  DECL_TLS_MODEL (decl) = TLS_MODEL_MPC_PROCESS;
++	  else if (decl_spec_seq_has_spec_p (declspecs, ds_task))
++			  DECL_TLS_MODEL (decl) = TLS_MODEL_MPC_TASK;
++	  else if (decl_spec_seq_has_spec_p (declspecs, ds_thread))
++			  DECL_TLS_MODEL (decl) = TLS_MODEL_MPC_THREAD;
++	  else if (decl_spec_seq_has_spec_p (declspecs, ds_openmp))
++			  DECL_TLS_MODEL (decl) = TLS_MODEL_MPC_OPENMP;
++  }
++  else if (decl_spec_seq_has_spec_p (declspecs, ds_thread))
+     {
+-      DECL_TLS_MODEL (decl) = decl_default_tls_model (decl);
++		  DECL_TLS_MODEL (decl) = decl_default_tls_model (decl);
+       if (declspecs->gnu_thread_keyword_p)
+ 	DECL_GNU_TLS_P (decl) = true;
+     }
 diff --git a/gcc/cp/decl2.c b/gcc/cp/decl2.c
-index 1a604a4..6a089b2 100644
+index 1a604a4..294b405 100644
 --- a/gcc/cp/decl2.c
 +++ b/gcc/cp/decl2.c
 @@ -970,7 +970,42 @@ grokfield (const cp_declarator *declarator,
@@ -2379,7 +2437,7 @@ index 1a604a4..6a089b2 100644
  
      case FIELD_DECL:
        if (asmspec)
-@@ -3923,7 +3974,19 @@ handle_tls_init (void)
+@@ -3923,7 +3972,19 @@ handle_tls_init (void)
    DECL_ARTIFICIAL (guard) = true;
    DECL_IGNORED_P (guard) = true;
    TREE_USED (guard) = true;
@@ -2400,10 +2458,46 @@ index 1a604a4..6a089b2 100644
  
    tree fn = get_local_tls_init_fn ();
 diff --git a/gcc/cp/parser.c b/gcc/cp/parser.c
-index 6d8bef4..5741ab1 100644
+index 6d8bef4..2e7a113 100644
 --- a/gcc/cp/parser.c
 +++ b/gcc/cp/parser.c
-@@ -22934,7 +22934,6 @@ set_and_check_decl_spec_loc (cp_decl_specifier_seq *decl_specs,
+@@ -864,6 +864,11 @@ cp_lexer_next_token_is_decl_specifier_keyword (cp_lexer *lexer)
+     case RID_EXTERN:
+     case RID_MUTABLE:
+     case RID_THREAD:
++		/*MPC TLS BEGIN*/
++	case RID_PROCESS:
++	case RID_TASK:
++	case RID_OPENMP:
++		/* MPC TLS END */
+       /* Elaborated type specifiers.  */
+     case RID_ENUM:
+     case RID_CLASS:
+@@ -10959,6 +10964,23 @@ cp_parser_decl_specifier_seq (cp_parser* parser,
+ 	  ds = ds_thread;
+ 	  cp_lexer_consume_token (parser->lexer);
+ 	  break;
++	/* MPC TLS BEGIN */
++	case RID_PROCESS:
++	  /* Consume the token.  */
++	  ds = ds_process;
++	  cp_lexer_consume_token (parser->lexer);
++	  break;
++	case RID_TASK:
++	  /* Consume the token.  */
++	  ds = ds_task;
++	  cp_lexer_consume_token (parser->lexer);
++	  break;
++	case RID_OPENMP:
++	  /* Consume the token.  */
++	  ds = ds_openmp;
++	  cp_lexer_consume_token (parser->lexer);
++	  break;
++	 /* MPC TLS END */
+ 
+ 	default:
+ 	  /* We did not yet find a decl-specifier yet.  */
+@@ -22934,7 +22956,6 @@ set_and_check_decl_spec_loc (cp_decl_specifier_seq *decl_specs,
  			     cp_decl_spec ds, cp_token *token)
  {
    gcc_assert (ds < ds_last);
@@ -2411,7 +2505,7 @@ index 6d8bef4..5741ab1 100644
    if (decl_specs == NULL)
      return;
  
-@@ -22944,7 +22943,7 @@ set_and_check_decl_spec_loc (cp_decl_specifier_seq *decl_specs,
+@@ -22944,7 +22965,7 @@ set_and_check_decl_spec_loc (cp_decl_specifier_seq *decl_specs,
      {
        decl_specs->locations[ds] = location;
        if (ds == ds_thread)
@@ -2420,7 +2514,7 @@ index 6d8bef4..5741ab1 100644
      }
    else
      {
-@@ -27826,6 +27825,267 @@ cp_parser_omp_construct (cp_parser *parser, cp_token *pragma_tok)
+@@ -27826,6 +27847,267 @@ cp_parser_omp_construct (cp_parser *parser, cp_token *pragma_tok)
      SET_EXPR_LOCATION (stmt, pragma_tok->location);
  }
  
@@ -2688,7 +2782,7 @@ index 6d8bef4..5741ab1 100644
  /* Transactional Memory parsing routines.  */
  
  /* Parse a transaction attribute.
-@@ -28267,7 +28527,25 @@ cp_parser_pragma (cp_parser *parser, enum pragma_context context)
+@@ -28267,7 +28549,25 @@ cp_parser_pragma (cp_parser *parser, enum pragma_context context)
  		"%<#pragma omp section%> may only be used in "
  		"%<#pragma omp sections%> construct");
        break;
@@ -2832,7 +2926,7 @@ index 60d790b..7e3eb37 100644
  
    gfc_define_builtin ("__builtin_trap", builtin_types[BT_FN_VOID],
 diff --git a/gcc/fortran/gfortran.h b/gcc/fortran/gfortran.h
-index 2428b51..44b1db4 100644
+index 2428b51..3d56439 100644
 --- a/gcc/fortran/gfortran.h
 +++ b/gcc/fortran/gfortran.h
 @@ -219,6 +219,12 @@ typedef enum
@@ -4711,7 +4805,7 @@ index 52fbfc5..2864f92 100644
      }
 diff --git a/gcc/hls-builtins.def b/gcc/hls-builtins.def
 new file mode 100644
-index 0000000..638e2c8
+index 0000000..ab8a85e
 --- /dev/null
 +++ b/gcc/hls-builtins.def
 @@ -0,0 +1,8 @@
@@ -5940,7 +6034,7 @@ index e8a0c77..e0bf7d9 100644
  		gcc_unreachable ();
  	    }
 diff --git a/gcc/rtl.h b/gcc/rtl.h
-index 91f3387..92f9c7c 100644
+index 91f3387..07c66f2 100644
 --- a/gcc/rtl.h
 +++ b/gcc/rtl.h
 @@ -1616,28 +1616,55 @@ do {									\
@@ -6069,10 +6163,10 @@ index a4ddb6e..b815295 100644
      }
  
 diff --git a/gcc/tree.c b/gcc/tree.c
-index 077eed8..b676b17 100644
+index 077eed8..77e0ff2 100644
 --- a/gcc/tree.c
 +++ b/gcc/tree.c
-@@ -2632,23 +2634,38 @@ staticp (tree arg)
+@@ -2632,23 +2632,38 @@ staticp (tree arg)
        return arg;
  
      case VAR_DECL:
@@ -6114,7 +6208,7 @@ index 077eed8..b676b17 100644
  	 something language specific.  */
        gcc_assert (TREE_CODE (TREE_OPERAND (arg, 1)) == FIELD_DECL);
 diff --git a/gcc/tree.h b/gcc/tree.h
-index 33d8c5d..e4721a0 100644
+index 33d8c5d..ca89d45 100644
 --- a/gcc/tree.h
 +++ b/gcc/tree.h
 @@ -3177,6 +3177,12 @@ struct GTY(()) tree_parm_decl {
@@ -6146,7 +6240,7 @@ index 33d8c5d..e4721a0 100644
   unsigned init_priority_p : 1;
   /* Used by C++ only.  Might become a generic decl flag.  */
 diff --git a/gcc/varasm.c b/gcc/varasm.c
-index d39d291..6df4d62 100644
+index d39d291..975edcf 100644
 --- a/gcc/varasm.c
 +++ b/gcc/varasm.c
 @@ -1872,10 +1872,38 @@ assemble_variable_contents (tree decl, const char *name,
@@ -6743,7 +6837,7 @@ index 62b9f7a..a7f26e4 100644
  	distclean-generic distclean-hdr distclean-libtool \
  	distclean-multi distclean-tags dvi dvi-am html html-am info \
 diff --git a/libgfortran/gfortran.map b/libgfortran/gfortran.map
-index 80a9a00..9f726e4 100644
+index 80a9a00..4de6de0 100644
 --- a/libgfortran/gfortran.map
 +++ b/libgfortran/gfortran.map
 @@ -30,6 +30,7 @@ GFORTRAN_1.0 {
@@ -6771,7 +6865,7 @@ index 80a9a00..9f726e4 100644
      *;
  };
 diff --git a/libgfortran/io/unit.c b/libgfortran/io/unit.c
-index 3b46bba..c4f52e2 100644
+index 3b46bba..4a27ad7 100644
 --- a/libgfortran/io/unit.c
 +++ b/libgfortran/io/unit.c
 @@ -27,6 +27,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
@@ -6798,23 +6892,6 @@ index 3b46bba..c4f52e2 100644
  
  
  /* High level interface to truncate a file, i.e. flush format buffers,
-@@ -862,3 +865,16 @@ get_unique_unit_number (st_parameter_open *opp)
-     }
-   return num;
- }
-+
-+/* Just a fake __sctk__tls_get_addr__task_scope to allow MPC to test the compiler during configuration */
-+typedef struct
-+{
-+  unsigned long int ti_module;
-+  unsigned long int ti_offset;
-+} tls_index;
-+
-+void * __attribute__ ((weak))
-+__extls_get_addr_task (tls_index * tmp)
-+{
-+    return NULL;
-+}
 diff --git a/libgfortran/libgfortran.h b/libgfortran/libgfortran.h
 index 9a713d8..ba3eea7 100644
 --- a/libgfortran/libgfortran.h
