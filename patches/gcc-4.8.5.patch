@@ -6865,7 +6865,7 @@ index 80a9a00..4de6de0 100644
      *;
  };
 diff --git a/libgfortran/io/unit.c b/libgfortran/io/unit.c
-index 3b46bba..4a27ad7 100644
+index 3b46bba..4d366be 100644
 --- a/libgfortran/io/unit.c
 +++ b/libgfortran/io/unit.c
 @@ -27,6 +27,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
@@ -6892,6 +6892,23 @@ index 3b46bba..4a27ad7 100644
  
  
  /* High level interface to truncate a file, i.e. flush format buffers,
+@@ -862,3 +865,16 @@ get_unique_unit_number (st_parameter_open *opp)
+     }
+   return num;
+ }
++
++/* Just a fake __sctk__tls_get_addr__task_scope to allow MPC to test the compiler during configuration */
++typedef struct
++{
++  unsigned long int ti_module;
++  unsigned long int ti_offset;
++} tls_index;
++
++void * __attribute__ ((weak))
++__extls_get_addr_task (tls_index * tmp)
++{
++    return NULL;
++}
 diff --git a/libgfortran/libgfortran.h b/libgfortran/libgfortran.h
 index 9a713d8..ba3eea7 100644
 --- a/libgfortran/libgfortran.h
