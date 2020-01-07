@@ -1,0 +1,7 @@
+1.0:
+	* Initial implementation for GCC 4.8.0
+
+1.1 :
+	* Add Gcc detection to support 6.2.0
+	* Add a post 4.9 Plugin version
+	* Add detection for plugin version

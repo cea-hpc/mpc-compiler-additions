@@ -1,0 +1,43 @@
+#!/bin/sh
+#get values
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+
+#pre-actions
+unset EXTLS_PREFIX
+unset EXTLS_BINPATH
+unset EXTLS_MANPATH
+unset EXTLS_INCPATH
+unset EXTLS_LIBPATH
+
+unset EXTLS_CFLAGS
+unset EXTLS_CXXFLAGS
+unset EXTLS_LDFLAGS
+
+
+printf " Loading libextls install (location: ${prefix})\n"
+#setup
+EXTLS_PREFIX=${prefix}
+EXTLS_BINPATH="${bindir}"
+EXTLS_MANPATH="${mandir}"
+EXTLS_INCPATH="${includedir}"
+EXTLS_LIBPATH="${libdir}"
+
+EXTLS_CFLAGS="-I${EXTLS_INCPATH} $CFLAGS"
+EXTLS_CXXFLAGS="-I${EXTLS_INCPATH} $CXXFLAGS"
+EXTLS_LDFLAGS="-L${EXTLS_LIBPATH} -lextls $LDFLAGS"
+
+#export
+export EXTLS_PREFIX
+export EXTLS_BINPATH
+export EXTLS_MANPATH
+export EXTLS_INCPATH
+export EXTLS_LIBPATH
+
+export EXTLS_CFLAGS
+export EXTLS_CXXFLAGS
+export EXTLS_LDFLAGS

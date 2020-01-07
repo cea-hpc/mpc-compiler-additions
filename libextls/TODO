@@ -1,0 +1,12 @@
+###### TO DO #####
+- Add locks to protect "optim tls" from possible reallocation (rw-locks)
+- Add dlsym() handle through "optim TLS" indirection table
+- Remove test code inside extls_generic_tls_get_addr() once merged
+- Some troubles when compiling with NDEBUG (Werror + Wextra)
+- Adding new architecture support in "optim_tls.c"
+- Consider the implementation of _tls_get_addr w/ one or two GOT entries (tls_index or module & offset)
+- Remove pragma weak in "optim_tls.c", MPC-specific
+
+###### NEXT MILESTONE ######
+- Adding HLS support
+- Merge the lib inside thread library (MPC)

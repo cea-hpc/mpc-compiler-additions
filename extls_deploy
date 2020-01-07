@@ -1,5 +1,5 @@
 #!/bin/sh
-ROOT_DIRECTORY=$PWD/`dirname $0`
+SOURCE_PREFIX=$PWD/`dirname $0`
 BUILD_PREFIX=$PWD/build
 INSTALLATION_PREFIX=$BUILD_PREFIX/install
 COMPILATION_PREFIX=
@@ -8,7 +8,7 @@ DEBUG_MODE=yes
 COLOR_SUPPORT=no
 MAKE_J=1
 EXTRA_ARGS=
-MODE=rc
+SPACK_ALLOWED="no"
 
 extls_arg_parse()
 {
@@ -26,14 +26,14 @@ extls_help()
 	extls_printf 
 	extls_printf "-------- PREFIX --------"
 	extls_printf " --prefix          set installation prefix"
-	extls_printf " --prefix-build    set build prefix (GCC & Binutils tarball decompression)"
-	extls_printf " --prefix-compil   set install prefix for compiling tools (override --prefix)"
-	extls_printf " --prefix-runtime  set install prefix for runtime libraries (override --prefix)"
+	extls_printf " --tmpdir          set build prefix (GCC & Binutils tarball decompression)"
 	extls_printf 
 	extls_printf "-------- OTHERS --------"
 	extls_printf " --enable-debug    Activate debug mode for all components"
+	#extls_printf " --debug-symbols   Add '-g' for debugging symbols"
 	extls_printf " -j<val>           Set a concurrency level to build a component"
 	extls_printf " --enable-color    Activate color support in components (if any)"
+	extls_printf " --spack           Rely on Spack to build the compiler"
 	extls_printf " --help            Display this help"
 	extls_printf 
 	extls_printf "=================================================="
@@ -50,32 +50,12 @@ extls_print_config()
 	extls_printf "============> EXTLS CONFIGURE SUMMARY <==========="
 	extls_printf "- Install Prefix     : $INSTALLATION_PREFIX"
 	extls_printf "- Build Prefix       : $BUILD_PREFIX"
-	if test "$COMPILATION_PREFIX" != "$INSTALLATION_PREFIX";
-	then
-	extls_printf "- Compilation Prefix : $COMPILATION_PREFIX"
-	fi
-	if test "$RUNTIME_PREFIX" != "$INSTALLATION_PREFIX";
-	then
-	extls_printf "- Runtime Prefix     : $RUNTIME_PREFIX"
-	fi
-
 	extls_printf "- Debug Mode         : $DEBUG_MODE"
 	extls_printf "- Color Support      : $COLOR_SUPPORT"
 	extls_printf "- Make concurrency   : $MAKE_J"
 	extls_printf "- Root directory     : $ROOT_DIRECTORY"
 }
 
-read_external_dep()
-{
-	line="$1"
-	dep="`echo $line | cut -f1 -d"="`"
-	dep_upper=`echo $dep | sed -e "s;$2;;g" -e "s@-@_@g" | tr '[:lower:]' '[:upper:]'`
-	path=`echo $line | cut -f2 -d"="`
-
-	final="${dep_upper}_PREFIX_OPTION=\"${dep}=${path}\""
-	eval "$final"
-
-}
 for arg in $@
 do
 	case $arg in
@@ -85,14 +65,8 @@ do
 		--prefix=*)
 			INSTALLATION_PREFIX="`extls_arg_parse "$arg" "--prefix="`"
 			;;
-		--prefix-build=*)
-			BUILD_PREFIX="`extls_arg_parse "$arg" "--prefix-build="`"
-			;;
-		--prefix-compil=*)
-			COMPILATION_PREFIX="`extls_arg_parse "$arg" "--prefix-compil="`"
-			;;
-		--prefix-runtime=*)
-			RUNTIME_PREFIX="`extls_arg_parse "$arg" "--prefix-runtime="`"
+		--tmpdir=*)
+			BUILD_PREFIX=""`extls_arg_parse "$arg" "--tmpdir="`""
 			;;
 		--enable-debug|-d)
 			DEBUG_MODE=yes
@@ -103,17 +77,8 @@ do
 		--enable-color)
 			COLOR_SUPPORT=yes
 			;;
-		--with-*)
-			read_external_dep "$arg" "--with-"
-			;;
-		--lib-mode)
-			MODE="r"
-			;;
-		--compil-mode)
-			MODE="c"
-			;;
-		--all)
-			MODE="rc"
+		--spack)
+			SPACK_ALLOWED=yes
 			;;
 		--help|-help|-h|--h)
 			extls_help
@@ -126,41 +91,46 @@ do
 	esac
 done
 
-if test -z $COMPILATION_PREFIX;
-then
-	COMPILATION_PREFIX=$INSTALLATION_PREFIX
-fi
-if test -z $RUNTIME_PREFIX;
-then
-	RUNTIME_PREFIX=$INSTALLATION_PREFIX
-fi
-
 extls_print_config
 
+__get_root_extract()
+{
+	tar tzf "$1" | head -1 | sed -e "s/\/.*//"
+}
 
 extls_prepare_sources()
 {
 	extls_printf "\n==========> PREPARING SOURCES TO BUILD <=========="
 	extls_printf "* Clean Build Folder $BUILD_PREFIX"
 	test -n $BUILD_PREFIX && rm -rf -- $BUILD_PREFIX
-	mkdir -p $BUILD_PREFIX && cd $BUILD_PREFIX || exit 1
-	
-	if test -n "`echo $MODE | grep -o "r"`" ; then
-		version=`sh $ROOT_DIRECTORY/libextls/.extls_version`
-		extls_printf "* Creating libextls-$version"
-		mkdir -p $BUILD_PREFIX/libextls-$version
+	mkdir -p $BUILD_PREFIX/sources && cd $BUILD_PREFIX || exit 1
+
+	if test "x$SPACK_ALLOWED" = "xyes"; then
+		extls_error "Spack is not supported yet."
+	else
+
+		binutils=`find $SOURCE_PREFIX/archives/ -name "binutils*"`
+		gcc=`find $SOURCE_PREFIX/archives/ -name "gcc*"`
+		gcc_dir=`__get_root_extract "$gcc"`
+		gmp=`find $SOURCE_PREFIX/archives/ -name "gmp*"`
+		gmp_dir=`__get_root_extract "$gmp"`
+		mpfr=`find $SOURCE_PREFIX/archives/ -name "mpfr*"`
+		mpfr_dir=`__get_root_extract "$mpfr"`
+		mpc=`find $SOURCE_PREFIX/archives/ -name "mpc*"`
+		mpc_dir=`__get_root_extract "$mpc"`
+
+		tar -C $BUILD_PREFIX -xf $binutils
+		tar -C $BUILD_PREFIX -xf $gcc
+		tar -C $BUILD_PREFIX/$gcc_dir -xf $gmp 
+		tar -C $BUILD_PREFIX/$gcc_dir -xf $gcc
+		tar -C $BUILD_PREFIX/$gcc_dir -xf $gcc
+
+		mv $BUILD_PREFIX/$gmp_dir $BUILD_PREFIX/gmp
+		mv $BUILD_PREFIX/$mpfr_dir $BUILD_PREFIX/mpfr
+		mv $BUILD_PREFIX/$mpc_dir $BUILD_PREFIX/mpc
 	fi
 
 	if test -n "`echo $MODE | grep -o "c"`" ; then
-
-		version=`sh $ROOT_DIRECTORY/priv-plugin/.priv-plugin_version`
-		extls_printf "* Creating priv-plugin-$version"
-		mkdir -p $BUILD_PREFIX/priv-plugin-$version
-		
-		export LD_LIBRARY_PATH="$COMPILATION_PREFIX/lib:$COMPILATION_PREFIX/lib64:$RUNTIME_PREFIX/lib:$RUNTIME_PREFIX/lib64:${LD_LIBRARY_PATH}"
-		export PATH="$COMPILATION_PREFIX/bin:$RUNTIME_PREFIX/bin:${PATH}"
-		export INCLUDE_PATH="$COMPILATION_PREFIX/include:$RUNTIME_PREFIX/include:${INCLUDE_PATH}"
-		
 		for dep in `ls $ROOT_DIRECTORY/archives/*`
 		do 
 			cd $BUILD_PREFIX
@@ -176,20 +146,12 @@ extls_prepare_sources()
 				extls_printf "  + Patching with $patch_name"
 				cd $dep_name
 				patch -p1 < ${patch} > .${dep_name}-patch.log 2>&1 || exit 1
-
 			fi
 		done
 	fi
 
 }
 extls_prepare_sources
-
-extls_set_default_deps()
-{
-		if test -z "${GMP_PREFIX_OPTION}"; then GMP_PREFIX_OPTION="--with-gmp=${COMPILATION_PREFIX}"; fi
-		if test -z "${MPFR_PREFIX_OPTION}"; then MPFR_PREFIX_OPTION="--with-mpfr=${COMPILATION_PREFIX}"; fi
-		if test -z "${MPC_PREFIX_OPTION}"; then MPC_PREFIX_OPTION="--with-mpc=${COMPILATION_PREFIX}"; fi
-}
 
 extls_run()
 {

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+MAJOR=0
+MINOR=5
+PATCH=0
+
+echo ${MAJOR}.${MINOR}.${PATCH}

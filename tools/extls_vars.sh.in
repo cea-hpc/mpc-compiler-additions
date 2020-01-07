@@ -1,0 +1,36 @@
+#!/bin/sh
+
+COMPILATION_PREFIX=@COMPILATION_PREFIX@
+RUNTIME_PREFIX=@RUNTIME_PREFIX@
+
+prune_prev_path()
+{
+	test "$#" = "2" || exit 42 
+	prev="$2"
+	echo "$1" | awk -v RS=: -v ORS=: '/'"$prev"'/ {next} {print}' | sed 's/:*$//'
+}
+
+#vars should be cleaned before set 
+##################################
+
+if test ! -z "${COMPILATION_PREFIX}" ; then
+	cprefix=`echo "$COMPILATION_PREFIX" | sed -e 's/\//\\\\\//g'`
+	PATH=`prune_prev_path "$PATH" "$cprefix"`
+	LD_LIBRARY_PATH=`prune_prev_path "$LD_LIBRARY_PATH" "$cprefix"`
+	LIBRARY_PATH=`prune_prev_path "$LIBRARRY_PATH" "$cprefix"`
+	MANPATH=`prune_prev_path "$MANPATH" "$cprefix"`
+fi
+
+if test ! -z "${RUNTIME_PREFIX}"; then
+	rprefix=`echo "$RUNTIME_PREFIX" | sed -e 's/\//\\\\\//g'`
+	PATH=`prune_prev_path "$PATH" "$rprefix"`
+	LD_LIBRARY_PATH=`prune_prev_path "$LD_LIBRARY_PATH" "$rprefix"`
+	LIBRARY_PATH=`prune_prev_path "$LIBRARRY_PATH" "$rprefix"`
+	MANPATH=`prune_prev_path "$MANPATH" "$rprefix"`
+fi
+
+export PATH=$COMPILATION_PREFIX/bin:$RUNTIME_PREFIX/bin:$PATH
+export INCLUDE_PATH=$COMPILATION_PREFIX/include:$RUNTIME_PREFIX/include:$INCLUDE_PATH
+export LD_LIBRARY_PATH=$COMPILATION_PREFIX/lib:$COMPILATION_PREFIX/lib64::$RUNTIME_PREFIX/lib:$RUNTIME_PREFIX/lib64:$LD_LIBRARY_PATH
+export MANPATH=$COMPILATION_PREFIX/man:$RUNTIME_PREFIX/man:$MANPATH
+
