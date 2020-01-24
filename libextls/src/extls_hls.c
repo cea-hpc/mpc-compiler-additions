@@ -32,8 +32,8 @@ static inline const char* extls_get_obj_name(extls_topo_obj_t obj)
 			return "NUMA"; break;
 		case HWLOC_OBJ_SOCKET:
 			return "SOCKET"; break;
-		case HWLOC_OBJ_CACHE:
-			return "CACHE"; break;
+		//case HWLOC_OBJ_CACHE:
+		//	return "CACHE"; break;
 		case HWLOC_OBJ_CORE:
 			return "CORE"; break;
 		case HWLOC_OBJ_PU:
@@ -53,7 +53,7 @@ static inline int extls_obj_hls_handled(extls_topo_obj_t obj)
 		case HWLOC_OBJ_MACHINE:
 		case HWLOC_OBJ_NODE:
 		case HWLOC_OBJ_SOCKET:
-		case HWLOC_OBJ_CACHE:
+		//case HWLOC_OBJ_CACHE:
 		case HWLOC_OBJ_CORE:
 		case HWLOC_OBJ_PU:
 		case HWLOC_OBJ_GROUP:
@@ -107,9 +107,9 @@ extls_ret_t extls_hls_init_levels(extls_object_level_t* start_array, int pu)
 	
 	/* cur_level is updated w/ the found object */
 	cur_level = extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_CORE,    start_array, LEVEL_CORE);
-	cur_level = extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_CACHE,   start_array, LEVEL_CACHE_1);
-	cur_level = extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_CACHE,   start_array, LEVEL_CACHE_2);
-	cur_level = extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_CACHE,   start_array, LEVEL_CACHE_3);
+	//cur_level = extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_CACHE,   start_array, LEVEL_CACHE_1);
+	//cur_level = extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_CACHE,   start_array, LEVEL_CACHE_2);
+	//cur_level = extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_CACHE,   start_array, LEVEL_CACHE_3);
 
 	/* we do not update cur_level, to avoid squashing current ref */
 	extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_SOCKET,  start_array, LEVEL_SOCKET);	

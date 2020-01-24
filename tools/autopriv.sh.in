@@ -1,0 +1,32 @@
+#!/bin/sh
+
+prefix=@prefix@
+
+prune_prev_path()
+{
+	test "$#" = "2" || exit 42 
+	prev="`echo "$2" | sed -e 's/\//\\\\\//g'`"
+	echo "$1" | awk -v RS=: -v ORS=: '/'"$prev"'/ {next} {print}' | sed 's/:*$//'
+}
+
+PATH=`prune_prev_path "$PATH" "$prefix"`
+INCLUDE_PATH=`prune_prev_path "$INCLUDE_PATH" "$prefix"`
+CPATH=`prune_prev_path "$CPATH" "$prefix"`
+LD_LIBRARY_PATH=`prune_prev_path "$LD_LIBRARY_PATH" "$prefix"`
+LIBRARY_PATH=`prune_prev_path "$LIBRARRY_PATH" "$prefix"`
+MANPATH=`prune_prev_path "$MANPATH" "$prefix"`
+
+
+if test -n "$AUTOPRIV_PRUNE"; then
+	export PATH
+	export INCLUDE_PATH
+	export CPATH
+	export LD_LIBRARY_PATH
+	export MANPATH
+else
+	export PATH=$prefix/bin:$PATH
+	export INCLUDE_PATH=$prefix/include:$INCLUDE_PATH
+	export CPATH=$prefix/include:$CPATH
+	export LD_LIBRARY_PATH=$prefix/lib:$prefix/lib64:$LD_LIBRARY_PATH
+	export MANPATH=$prefix/man:$MANPATH
+fi

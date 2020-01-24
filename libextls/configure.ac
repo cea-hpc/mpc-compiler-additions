@@ -30,7 +30,7 @@ AM_PROG_LIBTOOL
 #########################
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([src/Makefile])
-AC_CONFIG_FILES([doc/Makefile tools/Makefile tools/extls.sh])
+AC_CONFIG_FILES([doc/Makefile tools/Makefile tools/libextls.sh])
 
 ###################################################################################
 ###################################################################################
@@ -38,7 +38,7 @@ AC_CONFIG_FILES([doc/Makefile tools/Makefile tools/extls.sh])
 #################
 #### DOXYGEN ####
 #################
-AC_ARG_WITH([doxygen], AC_HELP_STRING([--with-doxygen=PATH], [Provide custom Doxygen binary path for documentation]), [DOXYGEN_BIN=${withval}], [DOXYGEN_BIN=doxygen])
+AC_ARG_WITH([doxygen], AS_HELP_STRING([--with-doxygen=PATH], [Provide custom Doxygen binary path for documentation]), [DOXYGEN_BIN=${withval}], [DOXYGEN_BIN=doxygen])
 
 AC_CHECK_PROGS(DOXYGEN, [${DOXYGEN_BIN}])
 
@@ -50,7 +50,7 @@ AM_COND_IF([HAVE_DOXYGEN],
 #################
 ##### HWLOC #####
 #################
-AC_ARG_WITH([hwloc], AC_HELP_STRING([--with-hwloc=PATH], [Provide hwloc installation path]))
+AC_ARG_WITH([hwloc], AS_HELP_STRING([--with-hwloc=PATH], [Provide hwloc installation path]))
 
 if test -n "x$with_hwloc" ; then
 		if test ! -d $with_hwloc; then
@@ -58,6 +58,7 @@ if test -n "x$with_hwloc" ; then
 		fi
 		LIBS="-L$with_hwloc/lib -L$with_hwloc/lib64 $LIBS"
 		CFLAGS="-I$with_hwloc/include $CFLAGS"
+		CPPFLAGS="-I$with_hwloc/include $CPPFLAGS"
 fi
 AC_SEARCH_LIBS([hwloc_topology_init], [hwloc], [HWLOC_OK=1], [HWLOC_OK=0])
 AS_IF([test "x$HWLOC_OK" = "x1"],
@@ -67,7 +68,7 @@ AS_IF([test "x$HWLOC_OK" = "x1"],
 ##################
 ##### OpenPA #####
 ##################
-AC_ARG_WITH([openpa], AC_HELP_STRING([--with-openpa=PATH], [Provide OpenPA installation path]))
+AC_ARG_WITH([openpa], AS_HELP_STRING([--with-openpa=PATH], [Provide OpenPA installation path]))
 
 if test -n "x$with_openpa" ; then
 		if test ! -d $with_openpa; then
@@ -75,7 +76,7 @@ if test -n "x$with_openpa" ; then
 		fi
 		LIBS="-L$with_openpa/lib -L$with_openpa/lib64 $LIBS"
 		CFLAGS="-I$with_openpa/include $CFLAGS"
-		CPPFLAGS="-I$with_openpa/include $PPCFLAGS"
+		CPPFLAGS="-I$with_openpa/include $CPPCFLAGS"
 fi
 AC_CHECK_HEADER([opa_config.h], [OPA_OK=1], [OPA_OK=0])
 AS_IF([test "x$OPA_OK" = "x1"],
@@ -87,7 +88,7 @@ AS_IF([test "x$OPA_OK" = "x1"],
 ##### LibELF #####
 ##################
 
-AC_ARG_WITH([libelf], AC_HELP_STRING([--with-libelf=PATH], [Provide libelf installation path]))
+AC_ARG_WITH([libelf], AS_HELP_STRING([--with-libelf=PATH], [Provide libelf installation path]))
 
 if test -n "x$with_libelf" ; then
 		if test ! -d $with_libelf; then
@@ -97,7 +98,7 @@ if test -n "x$with_libelf" ; then
 		CFLAGS="-I$with_libelf/include $CFLAGS"
 fi
 
-AC_CHECK_HEADER([libelf.h], [LIBELF_OK=1], [LIBELF_OK=0])
+AC_SEARCH_LIBS([elf_version], [libelf], [LIBELF_OK=1], [LIBELF_OK=0])
 AS_IF([test "x$LIBELF_OK" = "x1"],
 				[AC_DEFINE([HAVE_LIBELF], [1], [Define libelf support])],
 				[AC_MSG_WARN([Libelf library not found ! - Disabling optimized introspection])])

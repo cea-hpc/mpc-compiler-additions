@@ -1,3 +1,4 @@
+#include "config.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -6,7 +7,6 @@
 #include <basic-block.h>
 #include <gimple.h>
 
-#include "config.h"
 #include "system.h"
 #include "coretypes.h"
 #include "tm.h"

@@ -26,5 +26,5 @@ libextls_la_CFLAGS=-Wall -Wextra -Werror -g -O0
 else
 libextls_la_CFLAGS=-DNDEBUG
 endif
-libextls_la_LDFLAGS = -ldl $(OPA_LDFLAGS) -lpthread $(HWLOC_LDFLAGS)
+libextls_la_LDFLAGS = -ldl $(OPA_LDFLAGS) -lpthread $(HWLOC_LDFLAGS) $(LIBELF_LDFLAGS)
 include_HEADERS=$(HFILES)

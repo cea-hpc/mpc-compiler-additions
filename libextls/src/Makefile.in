@@ -252,6 +252,7 @@ LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
@@ -353,7 +354,7 @@ lib_LTLIBRARIES = libextls.la
 libextls_la_SOURCES = $(CFILES)
 @DEBUG_MODE_FALSE@libextls_la_CFLAGS = -DNDEBUG
 @DEBUG_MODE_TRUE@libextls_la_CFLAGS = -Wall -Wextra -Werror -g -O0
-libextls_la_LDFLAGS = -ldl $(OPA_LDFLAGS) -lpthread $(HWLOC_LDFLAGS)
+libextls_la_LDFLAGS = -ldl $(OPA_LDFLAGS) -lpthread $(HWLOC_LDFLAGS) $(LIBELF_LDFLAGS)
 include_HEADERS = $(HFILES)
 all: all-am
 

@@ -1,1 +1,2 @@
-bin_SCRIPTS = extls.sh
+bin_SCRIPTS = libextls.sh
+CLEANFILES = $(bin_SCRIPTS)
