@@ -125,7 +125,7 @@ safe_exec make install ${MAKE_J}
 safe_exec cd $BLDIR/$gcc_rootname
 safe_exec patch -p1 < $SRCDIR/deps/patches/${gcc_rootname}.patch
 safe_exec cd build
-safe_exec ../configure --prefix=$DSTDIR --enable-languages=c,c++,fortran --disable-multilib --disable-bootstrap --program-suffix=-ap
+safe_exec ../configure --prefix=$DSTDIR --enable-languages=c,c++,fortran --disable-multilib --disable-bootstrap --program-prefix=ap-
 safe_exec make ${MAKE_J}
 safe_exec make install ${MAKE_J}
 
@@ -140,6 +140,6 @@ safe_exec make ${MAKE_J}
 safe_exec make install ${MAKE_J}
 
 safe_exec cd $BLDIR/autopriv
-safe_exec $SRCDIR/configure --prefix=$DSTDIR $EXTRA_ARGS CC=$DSTDIR/bin/gcc-ap CXX=$DSTDIR/bin/g++-ap FC=$DSTDIR/bin/gfortran-ap CXXFLAGS="-I$BLDIR/$gcc_rootname/build/gmp" --with-hwloc=$DSTDIR/ --with-openpa=$DSTDIR/
+safe_exec $SRCDIR/configure --prefix=$DSTDIR $EXTRA_ARGS CC=$DSTDIR/bin/ap-gcc CXX=$DSTDIR/bin/ap-g++ FC=$DSTDIR/bin/ap-gfortran CXXFLAGS="-I$BLDIR/$gcc_rootname/build/gmp" --with-hwloc=$DSTDIR/ --with-openpa=$DSTDIR/
 safe_exec make ${MAKE_J}
 safe_exec make install ${MAKE_J}
