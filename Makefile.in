@@ -333,7 +333,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I config-aux/m4
-SUBDIRS = libextls dynpriv tools
+SUBDIRS = libextls dynpriv-plugin tools tests
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

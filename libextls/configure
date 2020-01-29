@@ -12409,7 +12409,7 @@ return elf_version ();
   return 0;
 }
 _ACEOF
-for ac_lib in '' libelf; do
+for ac_lib in '' elf; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else

@@ -7,7 +7,6 @@ AC_INIT([AUTOPRIV], [AUTOPRIV_VERSION], [marc.perache@cea.fr])  # Init project c
 AC_CONFIG_AUX_DIR([config-aux])                      # Autotools config files
 AC_CONFIG_MACRO_DIR([config-aux/m4])                 # dependencies macros files
 AM_INIT_AUTOMAKE([-Wall -Werror])
-
 #AM_SILENT_RULES([yes])                              # Silent Make
 
 ##################
@@ -20,9 +19,9 @@ AM_PROG_AR
 ##### LIBTOOL #####
 ###################
 LT_INIT                                              # Init libtool
-AC_CONFIG_SUBDIRS([libextls dynpriv])
+AC_CONFIG_SUBDIRS([libextls dynpriv-plugin])
 AC_CONFIG_HEADERS([config.h])                        # header-generated config files
-AC_CONFIG_FILES([Makefile tools/Makefile tools/autopriv.sh])
+AC_CONFIG_FILES([Makefile tests/nopriv/Makefile tests/Makefile tests/priv/Makefile tools/Makefile tools/autopriv.sh])
 
 ################
 #### OUTPUT ####

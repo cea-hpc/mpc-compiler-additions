@@ -132,15 +132,18 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libdynpriv_la_LIBADD =
-am__libdynpriv_la_SOURCES_DIST = plugin.cpp plugin_backward.cpp
-@OLDGCC_FALSE@am_libdynpriv_la_OBJECTS = plugin.lo
-@OLDGCC_TRUE@am_libdynpriv_la_OBJECTS = plugin_backward.lo
-libdynpriv_la_OBJECTS = $(am_libdynpriv_la_OBJECTS)
+dynpriv_la_LIBADD =
+am__dynpriv_la_SOURCES_DIST = plugin.cpp plugin_backward.cpp
+@OLDGCC_FALSE@am_dynpriv_la_OBJECTS = dynpriv_la-plugin.lo
+@OLDGCC_TRUE@am_dynpriv_la_OBJECTS = dynpriv_la-plugin_backward.lo
+dynpriv_la_OBJECTS = $(am_dynpriv_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+dynpriv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(dynpriv_la_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -175,8 +178,8 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(libdynpriv_la_SOURCES)
-DIST_SOURCES = $(am__libdynpriv_la_SOURCES_DIST)
+SOURCES = $(dynpriv_la_SOURCES)
+DIST_SOURCES = $(am__dynpriv_la_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -326,10 +329,11 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CPPFLAGS = -I$(GCCDIR)/include
-lib_LTLIBRARIES = libdynpriv.la 
-@OLDGCC_FALSE@libdynpriv_la_SOURCES = plugin.cpp
-@OLDGCC_TRUE@libdynpriv_la_SOURCES = plugin_backward.cpp
+lib_LTLIBRARIES = dynpriv.la 
+dynpriv_la_LDFLAGS = -module
+dynpriv_la_CPPFLAGS = -I$(GCCDIR)/include
+@OLDGCC_FALSE@dynpriv_la_SOURCES = plugin.cpp
+@OLDGCC_TRUE@dynpriv_la_SOURCES = plugin_backward.cpp
 all: all-am
 
 .SUFFIXES:
@@ -399,8 +403,8 @@ clean-libLTLIBRARIES:
 	  rm -f $${locs}; \
 	}
 
-libdynpriv.la: $(libdynpriv_la_OBJECTS) $(libdynpriv_la_DEPENDENCIES) $(EXTRA_libdynpriv_la_DEPENDENCIES) 
-	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libdynpriv_la_OBJECTS) $(libdynpriv_la_LIBADD) $(LIBS)
+dynpriv.la: $(dynpriv_la_OBJECTS) $(dynpriv_la_DEPENDENCIES) $(EXTRA_dynpriv_la_DEPENDENCIES) 
+	$(AM_V_CXXLD)$(dynpriv_la_LINK) -rpath $(libdir) $(dynpriv_la_OBJECTS) $(dynpriv_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -408,8 +412,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/plugin.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/plugin_backward.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dynpriv_la-plugin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dynpriv_la-plugin_backward.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -431,6 +435,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
+
+dynpriv_la-plugin.lo: plugin.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dynpriv_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dynpriv_la-plugin.lo -MD -MP -MF $(DEPDIR)/dynpriv_la-plugin.Tpo -c -o dynpriv_la-plugin.lo `test -f 'plugin.cpp' || echo '$(srcdir)/'`plugin.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dynpriv_la-plugin.Tpo $(DEPDIR)/dynpriv_la-plugin.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='plugin.cpp' object='dynpriv_la-plugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dynpriv_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dynpriv_la-plugin.lo `test -f 'plugin.cpp' || echo '$(srcdir)/'`plugin.cpp
+
+dynpriv_la-plugin_backward.lo: plugin_backward.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dynpriv_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dynpriv_la-plugin_backward.lo -MD -MP -MF $(DEPDIR)/dynpriv_la-plugin_backward.Tpo -c -o dynpriv_la-plugin_backward.lo `test -f 'plugin_backward.cpp' || echo '$(srcdir)/'`plugin_backward.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dynpriv_la-plugin_backward.Tpo $(DEPDIR)/dynpriv_la-plugin_backward.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='plugin_backward.cpp' object='dynpriv_la-plugin_backward.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(dynpriv_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dynpriv_la-plugin_backward.lo `test -f 'plugin_backward.cpp' || echo '$(srcdir)/'`plugin_backward.cpp
 
 mostlyclean-libtool:
 	-rm -f *.lo

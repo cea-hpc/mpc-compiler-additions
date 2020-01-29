@@ -31,6 +31,7 @@
 #include "tree-iterator.h"
 #include "context.h"
 #include "tree-ssa.h"
+#include "plugin-version.h"
 
 int plugin_is_GPL_compatible;
 
@@ -1344,18 +1345,9 @@ int plugin_init (struct plugin_name_args *plugin_ctx,
 		fprintf(stderr,"(gcc-DYNTLS) Loading MPC Dynamic Privatization Plugin...\n");
 	}
 
-        const char * target_vers = "7.2";
-
-#ifdef IS_73SERIES
-        target_vers = "7.3";
-#endif
-	
-	/* Check GCC version */
-	if( strncmp( version->basever, target_vers, strlen(target_vers) ) ) 
+	if (!plugin_default_version_check (version, &gcc_version))
 	{
-		fprintf(stderr,"(gcc-DYNTLS) Error bad GCC version (%s) instead of %s.*\n",
-				version->basever, target_vers);
-				return -1;
+		warning(0, G_("Mismatch version for dynpriv plugin !"));
 	}
 
 	/* Fill in new pass informations */

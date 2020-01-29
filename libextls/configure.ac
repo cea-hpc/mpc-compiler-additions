@@ -98,7 +98,7 @@ if test -n "x$with_libelf" ; then
 		CFLAGS="-I$with_libelf/include $CFLAGS"
 fi
 
-AC_SEARCH_LIBS([elf_version], [libelf], [LIBELF_OK=1], [LIBELF_OK=0])
+AC_SEARCH_LIBS([elf_version], [elf], [LIBELF_OK=1], [LIBELF_OK=0])
 AS_IF([test "x$LIBELF_OK" = "x1"],
 				[AC_DEFINE([HAVE_LIBELF], [1], [Define libelf support])],
 				[AC_MSG_WARN([Libelf library not found ! - Disabling optimized introspection])])
