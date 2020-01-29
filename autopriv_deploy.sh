@@ -50,7 +50,7 @@ do
 			DSTDIR=${OPTARG}
 			;;
 		j)
-			MAKE_J="-j${OPTARG}"
+			MAKE_J="-j ${OPTARG}"
 			;;
 		b)
 			BLDIR=${OPTARG}
