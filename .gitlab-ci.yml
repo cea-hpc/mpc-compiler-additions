@@ -70,18 +70,18 @@ Build:
   <<: *run_by_main
   stage: Setup
   script:
-  - srun -J GL-build_$CI_PIPELINE_ID -N 1 -c 8 ${CI_PROJECT_DIR}/autopriv_deploy.sh -i $HOME/GL_$CI_PIPELINE_ID/install -b $HOME/GL_$CI_PIPELINE_ID/build -j8 -s
+  - srun -J GL-build_$CI_PIPELINE_ID -N 1 -c 8 ${CI_PROJECT_DIR}/autopriv_deploy.sh -i $HOME/GL_$CI_PIPELINE_ID/install -b $HOME/GL_$CI_PIPELINE_ID/build -j8 -s -o "--enable-debug --enable-color"
 
 Base tests:
   <<: *run_by_main
   stage: No-priv
   script:
-        - cd GL_$CI_PIPELINE_ID/build/autopriv
-        - make check -C tests/nopriv VERBOSE=1
+        - cd $HOME/GL_$CI_PIPELINE_ID/build/autopriv
+        - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
 
 Priv tests:
   <<: *run_by_main
   stage: Privatization
   script:
-        - cd GL_$CI_PIPELINE_ID/build/autopriv
-        - make check -C tests/priv VERBOSE=1
+        - cd $HOME/GL_$CI_PIPELINE_ID/build/autopriv
+        - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1

@@ -32,6 +32,7 @@ usage()
 	printf "                 Set to '$SRCDIR/build' by default.\n"
 	printf "     -i <prefix> Select the directory where autopriv and deps will be installed.\n"
 	printf "                 Set to '$SRCDIR/build/install' by default.\n"
+	printf "     -o <arg>    Extra argument to Autopriv configure script. (cumulative)\n"
 }
 
 RUN="yes"
@@ -41,9 +42,10 @@ SRCDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 DSTDIR="$SRCDIR/build/install"
 BLDIR="${SRCDIR}/build/"
 MAKE_J=""
+EXTRA_ARGS=""
 gcc_deps="gmp-* mpfr-* mpc-* isl-*"
 
-while getopts "i:j:b:hdsSf" arg;
+while getopts "i:j:b:hdsSfo:" arg;
 do
 	case $arg in
 		i)
@@ -66,6 +68,9 @@ do
 			;;
 		f)
 			FORCE="yes"
+			;;
+		o)
+			EXTRA_ARGS="$EXTRA_ARGS ${OPTARG}"
 			;;
 		h)
 			usage
@@ -121,6 +126,6 @@ safe_exec make ${MAKE_J}
 safe_exec make install ${MAKE_J}
 
 safe_exec cd $BLDIR/autopriv
-safe_exec $SRCDIR/configure --prefix=$DSTDIR CC=$DSTDIR/bin/gcc-ap CXX=$DSTDIR/bin/g++-ap FC=$DSTDIR/bin/gfortran-ap
+safe_exec $SRCDIR/configure --prefix=$DSTDIR $EXTRA_ARGS CC=$DSTDIR/bin/gcc-ap CXX=$DSTDIR/bin/g++-ap FC=$DSTDIR/bin/gfortran-ap CXXFLAGS="-I$BLDIR/$gcc_rootname/build/gmp"
 safe_exec make ${MAKE_J}
 safe_exec make install ${MAKE_J}

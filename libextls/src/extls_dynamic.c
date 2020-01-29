@@ -626,8 +626,6 @@ extls_ret_t extls_call_dynamic_initializers()
 
 	while (current)
 	{
-		extls_warn("call %s (%p)", current->name, current->addr);
-			
 		if (current->addr)
 		{
 			((void (*)())current->addr)();

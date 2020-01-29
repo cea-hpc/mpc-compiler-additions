@@ -1,11 +1,7 @@
 #include <config.h>
 #include "extls_common.h"
 
-#ifdef NDEBUG
 static extls_verb_t verbosity = EXTLS_VERB_WARN;/**< default verbosity level */
-#else
-static extls_verb_t verbosity = EXTLS_VERB_DEBUG;/**< default verbosity level */
-#endif
 
 /**
  * Set default verbosity level, depending on environment variable EXTLS_VERBOSE

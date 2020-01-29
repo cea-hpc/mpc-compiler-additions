@@ -9,7 +9,6 @@
 #include <gimple.h>
 #include <stringpool.h>
 #include <varasm.h>
-#include "system.h"
 #include "coretypes.h"
 #include "tm.h"
 #include "tree-inline.h"
