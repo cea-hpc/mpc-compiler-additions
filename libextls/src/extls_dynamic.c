@@ -2,6 +2,7 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <link.h>
+#include <linux/limits.h>
 
 #include "config.h"
 
