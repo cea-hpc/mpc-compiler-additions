@@ -1,6 +1,7 @@
-#define _GNU_SOURCES
+#define _GNU_SOURCE
 #include <dlfcn.h>
 #include <stdio.h>
+#include <link.h>
 
 #include "config.h"
 
@@ -21,14 +22,12 @@
 #include "extls.h"
 #include "extls_locks.h"
 #include "extls_common.h"
-#include "extls_init.h"
+#include "extls_dynamic.h"
 
 /** head of dynamic symbol list having a initializer to be called */
 static struct dyn_sym_s *_extls_dyn_symbs = NULL;
 /** head of discovered executable DSOs from /proc/self/maps reading */
 static struct dsos_s *_extls_dsos = NULL;
-/** head of discovered private DSOs from /proc/self/maps reading */
-static struct dsos_s *_extls_dsos_readonly = NULL;
 /** DSO handler pointing to the current binary */
 static void *__extls_tls_locate_tls_dyn_initializer_lib_handle = NULL;
 /** Avoiding concurrency over dyn_init lookup */
@@ -41,38 +40,19 @@ extls_lock_t __extls_tls_locate_tls_dyn_lock = EXTLS_LOCK_INITIALIZER;
  * @param name the DSO name to be checked
  * @param addr the address to validate
  */
-static inline int is_in_given_dso( struct dsos_s * list, const char * name, void * addr)
+static inline int __extls_is_in_dso(const char * name, void * addr)
 {
-	while(list)
+	struct dsos_s* tmp = _extls_dsos;
+	while(tmp)
 	{
-		if(!strcmp(list->name, name))
+		if(!strcmp(tmp->name, name))
 		{
-			if( (list->dso_start <= addr)
-					&&  (addr < list->dso_end))
-			{
-				return 1;
-			}
-			else
-			{
-				return 0;
-			}
+			return (tmp->dso_start <= addr && addr < tmp->dso_end);
 		}
-
-		list = list->next;
+		tmp = tmp->next;
 	}
 
 	return 0;
-}
-
-static inline int is_in_readonly_dso( const char * name, void * addr )
-{
-	return is_in_given_dso(_extls_dsos_readonly, name, addr);
-}
-
-
-static inline int is_in_exec_dso( const char * name, void * addr )
-{
-	return is_in_given_dso(_extls_dsos, name, addr);
 }
 
 /**
@@ -110,6 +90,40 @@ void extls_locate_tls_dyn_initializer(char *fname)
 		(fn)();
 	}
 }
+#include <unistd.h>
+static inline char* __extls_program_path()
+{
+	static char* program = NULL;
+	
+	if(!program)
+	{
+		program = malloc(PATH_MAX);
+		extls_assert(program);
+		if(readlink("/proc/self/exe", program, PATH_MAX) == -1)
+		{
+			extls_fatal("Unable to get the actual program path");
+		}
+	}
+	extls_dbg("program = %s", program);
+	return program;
+
+}
+static int __extls_lookfor_dsos(struct dl_phdr_info* info, size_t sz, void* data)
+{
+	UNUSED(data);
+	UNUSED(sz);
+	struct dsos_s *new = malloc(sizeof(struct dsos_s));
+	new->name = (char*)((strcmp(info->dlpi_name, "")!=0) ? info->dlpi_name : __extls_program_path());
+	new->cdtor_start = NULL;
+	new->cdtor_end = NULL;
+	new->dso_start = (strcmp(info->dlpi_name, "")!=0) ? (void*)info->dlpi_addr : 0;
+	new->dso_end=new->dso_start + info->dlpi_phdr[info->dlpi_phnum -1].p_vaddr + info->dlpi_phdr[info->dlpi_phnum -1].p_memsz;
+
+	new->next = _extls_dsos;
+	_extls_dsos = new;
+
+	return 0;
+}
 
 /**
  * Read /proc/self/maps and populate the list with all discovered DSOs.
@@ -117,105 +131,12 @@ void extls_locate_tls_dyn_initializer(char *fname)
  *
  * @returns 1 if any element list failed to be allocated, 0 otherwise
  */
-int extls_load_proc_self_maps()
+static inline int __extls_register_loaded_dsos()
 {
-	char *maps = calloc(4 * 1024 * 1024, 1);
-
-	if (!maps)
-	{
-		return 1;
-	}
-
-	FILE *self = fopen("/proc/self/maps", "r");
-
-	size_t ret = fread(maps, 1, 4 * 1024 * 1024, self);
-
-	if( ret < 0 )
-	{
-		return ret;
-	}
-
-	char *line = maps;
-	char *next_line;
-
-	int cont = 1;
-	int current_object = 0;
-
-	unsigned long begin, end, inode;
-	char skip[50], perm[5], dev[50], dsoname[500];
-
-	do
-	{
-		next_line = strstr(line, "\n");
-
-		if (next_line)
-		{
-			*next_line = '\0';
-			next_line++;
-		}
-		else
-		{
-			cont = 0;
-		}
-
-		if (!strstr(line, "/"))
-		{
-			line = next_line;
-			continue;
-		}
-
-		sscanf(line, "%lx-%lx %4s %49s %49s %ld %499s", &begin, &end,
-				perm, skip, dev, &inode, dsoname);
-
-		if (!(dsoname[0] == '['))
-		{
-			if( (perm[2] == 'x') /* Executable */
-					|| !(strcmp(perm, "r--p"))) /* Read-only */
-			{
-
-				struct dsos_s *new = malloc(sizeof(struct dsos_s));
-
-				if (!new)
-				{
-					return 1;
-				}
-
-				new->name = strdup(dsoname);
-				new->is_main_bin = !current_object;
-				new->init_start = NULL;
-				new->init_end = NULL;
-				new->dso_start = (void*)begin;
-				new->dso_end = (void*)end;
-
-				if(perm[2] == 'x')
-				{
-					/* Executable segments */
-					new->next = _extls_dsos;
-					_extls_dsos = new;
-				}
-				else
-				{
-					/* Readonly segment of DSO */
-					new->next = _extls_dsos_readonly;
-					_extls_dsos_readonly = new;
-				}
-			}
-		}
-
-		current_object++;
-
-		line = next_line;
-
-	} while (cont);
-
-	fclose(self);
-
-	free(maps);
-
-	return 0;
+	return dl_iterate_phdr(__extls_lookfor_dsos, NULL);
 }
 
-static inline int extls_wrapper_name_is_equal(char *a, char * b)
+static inline int __extls_wrapper_name_is_equal(char *a, char * b)
 {
 	/* We use the invariant that differences start
 	   at byte 12 */
@@ -229,14 +150,14 @@ static inline int extls_wrapper_name_is_equal(char *a, char * b)
 }
 
 
-static inline int extls_add_new_symbol( char * name , void * handle)
+static inline int __extls_add_new_symbol( char * name , void * handle)
 {
 	/* Make sure it is not already present */
 	struct dyn_sym_s *tmp = _extls_dyn_symbs;
 
 	while(tmp)
 	{
-		if( extls_wrapper_name_is_equal(tmp->name, name) )
+		if( __extls_wrapper_name_is_equal(tmp->name, name) )
 		{
 			return 1;
 		}
@@ -245,7 +166,6 @@ static inline int extls_add_new_symbol( char * name , void * handle)
 
 	/* Resolve the function address */
 	void * resolv =  dlsym(handle, name);
-
 	if( !resolv )
 	{
 		extls_warn("EXTLS : Failed to resolve dynamic initializer %s", name);
@@ -260,6 +180,7 @@ static inline int extls_add_new_symbol( char * name , void * handle)
 		return 1;
 	}
 
+	extls_dbg("DYNAMIC: register %s (%p)", name, resolv );
 	new->name = strdup(name);
 	new->addr = resolv;
 	new->next = _extls_dyn_symbs;
@@ -269,60 +190,32 @@ static inline int extls_add_new_symbol( char * name , void * handle)
 }
 
 
-static inline void extls_load_constructors_check_range_and_insert(struct dsos_s * dso, void * init_start, void * init_end)
+static inline void __extls_load_constructors_check_range_and_insert(struct dsos_s * dso, void * region_start, void * region_end)
 {
-	if( init_start &&  init_end )
+	if( !region_start ||  !region_end )
+		return;
+
+	/* register ctor/dtor array in the DSO */
+	dso->cdtor_start = (char*)region_start + (size_t)dso->dso_start;
+	dso->cdtor_end = (char*)region_end + (size_t)dso->dso_start;
+
+	extls_dbg("DYNAMIC: register ctors/dtors from %s", (dso->name));
+
+	/* sanity checks */
+	size_t i, nbentries = ((size_t)(dso->cdtor_end - dso->cdtor_start))/sizeof(void*);
+	void **to_check = (void**)dso->cdtor_start;
+
+	int mod = ((dso->cdtor_end - dso->cdtor_start)%8);
+	extls_assert( mod == 0); /* outside of assert() because of "%" sign */
+	for(i = 0; to_check++, i < nbentries; i++)
 	{
-		size_t base_offset = 0;
-
-		if(!dso->is_main_bin)
+			
+		if( !__extls_is_in_dso(dso->name, *to_check) )
 		{
-			base_offset = (size_t)dso->dso_start;
-		}
-
-		dso->init_start = init_start + base_offset;
-		dso->init_end = init_end + base_offset;
-
-		extls_info(" - CTOR/DTOR Array in  %s [BASE %p] %p %p", dso->name, dso->dso_start, init_start , init_end);
-
-		/* Check that what we computed is actually in the RO section of this DSO */
-		if(is_in_readonly_dso(dso->name, dso->init_start) && is_in_readonly_dso(dso->name, dso->init_end))
-		{
-			void **to_check = NULL;
-			int did_fail = 0;
-
-			if( dso->init_start != dso->init_end)
-			{
-				/* Make sure it is an array of pointers */
-				if( ((dso->init_end - dso->init_start)%8) == 0 )
-				{
-					to_check = (void**)dso->init_start;
-
-					/* Check that each pointer is in the exec */
-					while(to_check <= (void **)dso->init_end )
-					{
-						if( !is_in_exec_dso(dso->name, *to_check) )
-						{
-							did_fail = 1;
-							break;
-						}
-						to_check++;
-					}
-				}
-				else
-				{
-					did_fail = 1;
-				}
-			}
-
-			if( did_fail )
-			{
-				extls_info("CTOR/DTOR DISCARD for %s\n", dso->name);
-
-				/* Something is wrong discard initializers */
-				dso->init_start = NULL;
-				dso->init_end = NULL;
-			}
+			extls_warn("ctor/dtor seems to refers an address outside its DSO. Prefer to discard it.");
+			dso->cdtor_start = NULL;
+			dso->cdtor_end = NULL;
+			break;
 		}
 	}
 }
@@ -330,22 +223,13 @@ static inline void extls_load_constructors_check_range_and_insert(struct dsos_s 
 
 
 #ifdef HAVE_LIBELF
-static inline int is_tls_wrapping_function(char * name)
+static inline int __extls_is_tls_wrapping_function(char * name)
 {
-	char expected[12] = "___mpc_TLS_w";
-
-	int i = 0;
-	do{
-		if(expected[i] != name[i])
-		{
-			return 0;
-		}
-	}while( i++, (i < 12) && (name[i] != '\0'));
-
-	return 1;
+	char expected[] = "___mpc_TLS_w";
+	return ((strncmp(name, expected, strlen(expected)) == 0));
 }
 
-int extls_load_wrapper_symbols_elf(char *dso, void *handle)
+static inline int __extls_load_wrapper_symbols_elf(char *dso, void *handle)
 {
 	int ret = 0;
 	int dso_fd = open(dso, O_RDONLY);
@@ -386,7 +270,7 @@ int extls_load_wrapper_symbols_elf(char *dso, void *handle)
 	/* It is now time to walk sections */
 	Elf_Scn *section = NULL;
 
-	extls_info(" - Loading TLS_w symbols in %s with ELF", dso);
+	extls_dbg("DYNAMIC: (ELF) loading from %s", dso);
 
 	/* For each section */
 	while((section = elf_nextscn(elf, section)) != NULL )
@@ -429,11 +313,9 @@ int extls_load_wrapper_symbols_elf(char *dso, void *handle)
 					char * name = elf_strptr(elf, sheader->sh_link, symb->st_name);
 					if( name )
 					{
-						if( is_tls_wrapping_function(name) )
+						if( __extls_is_tls_wrapping_function(name) )
 						{
-							extls_add_new_symbol( name , handle);
-							extls_info("    * ELF found %s", name );
-
+							__extls_add_new_symbol( name , handle);
 						}
 					}
 				}
@@ -446,7 +328,7 @@ ELF_END:
 	return ret;
 }
 
-int extls_load_constructors_elf(struct dsos_s * dso)
+static inline int __extls_load_constructors_elf(struct dsos_s * dso)
 {
 	int ret = 0;
 	int dso_fd = open(dso->name, O_RDONLY);
@@ -537,8 +419,8 @@ int extls_load_constructors_elf(struct dsos_s * dso)
 			}
 		}
 	}
-
-	extls_load_constructors_check_range_and_insert(dso, init_start, init_end);
+	if(init_start && init_end)
+		__extls_load_constructors_check_range_and_insert(dso, init_start, init_end);
 
 	elf_end(elf);
 CONST_ELF_END:
@@ -554,19 +436,16 @@ CONST_ELF_END:
  * @param[in] dso the dynamic object to look up
  * @returns 1 if an error is encountered, 0 otherwise
  */
-int extls_load_constructors_compat(struct dsos_s * dso, char * prefix_command)
+static inline int __extls_load_constructors_compat(struct dsos_s * dso)
 {
 	int ret = 0;
 
 
-	void * init_start = NULL;
-	void * init_end = NULL;
+	void * cdtor_start = NULL;
+	void * cdtor_end = NULL;
 
-	/* because DMTCP waste too much time to track these commands */
 	char command[1000];
-	/* because DMTCP waste too much time to track these commands */
-	char *ckpt_wrapper = (prefix_command) ? prefix_command : "";
-	snprintf(command, 1000, "%s nm  %s 2>&1 | %s grep \"__frame_dummy_init_array_entry\\|__do_global_dtors_aux_fini_array_entry\"", ckpt_wrapper, dso->name, ckpt_wrapper);
+	snprintf(command, 1000, "nm  %s 2>&1 | grep \"__frame_dummy_init_array_entry\\|__do_global_dtors_aux_fini_array_entry\"", dso->name);
 
 	FILE *constructor_array = popen(command, "r");
 
@@ -586,29 +465,26 @@ int extls_load_constructors_compat(struct dsos_s * dso, char * prefix_command)
 		}
 
 		void * addr = NULL;
-
-		int ret = sscanf(buff, "%lx t %*s", &addr);
+		int ret = sscanf(buff, "%lx t %*s", (long unsigned int*)&addr);
 
 		if( ret == 1 )
 		{
 			if( strstr(buff, "__do_global_dtors_aux_fini_array_entry") )
 			{
 				/* FINI */
-				init_end = addr;
+				cdtor_end = addr;
 			}
 			else if( strstr(buff, "__frame_dummy_init_array_entry") )
 			{
 				/* START */
-				init_start = addr;
-
+				cdtor_start = addr;
 			}
-
 		}
 	}
 
 	pclose(constructor_array);
 
-	extls_load_constructors_check_range_and_insert(dso, init_start, init_end);
+	__extls_load_constructors_check_range_and_insert(dso, cdtor_start, cdtor_end);
 
 	return ret;
 }
@@ -622,15 +498,11 @@ int extls_load_constructors_compat(struct dsos_s * dso, char * prefix_command)
  * @param[in] prefix_command command to wrap the symbol resolution in compat mode (useful for DMTCP)
  * @returns 1 if an error is encountered, 0 otherwise
  */
-int extls_load_wrapper_symbols_compat(char *dso, void *handle, char *prefix_command)
+static inline int __extls_load_wrapper_symbols_compat(char *dso, void *handle)
 {
 	char command[1000];
 
-	extls_info(" - Loading TLS_w symbols in %s  with COMPAT", dso);
-
-	/* because DMTCP waste too much time to track these commands */
-	char *ckpt_wrapper = (prefix_command) ? prefix_command : "";
-	snprintf(command, 1000, "%s nm  %s 2>&1 | %s grep \"___mpc_TLS_w\\|_ZTW\"", ckpt_wrapper, dso, ckpt_wrapper);
+	snprintf(command, 1000, "nm  %s 2>&1 | grep \"___mpc_TLS_w\\|_ZTW\"", dso);
 
 	FILE *wrapper_symbols = popen(command, "r");
 
@@ -673,9 +545,7 @@ int extls_load_wrapper_symbols_compat(char *dso, void *handle, char *prefix_comm
 				}
 			}
 
-			extls_add_new_symbol( wrapp , handle);
-
-			extls_info("    * COMPAT found %s", wrapp );
+			__extls_add_new_symbol( wrapp , handle);
 		}
 	}
 
@@ -691,15 +561,15 @@ int extls_load_wrapper_symbols_compat(char *dso, void *handle, char *prefix_comm
  * @param[in] prefix_command command to wrap the symbol resolution in compat mode (useful for DMTCP)
  * @returns 1 if any element list failed to be allocated, 0 otherwise
  */
-int extls_load_wrapper_symbols(struct dsos_s *dso, void *handle, char *prefix_command)
+static inline int __extls_load_wrapper_symbols(struct dsos_s *dso, void *handle)
 {
 #ifdef HAVE_LIBELF
-	int ret = extls_load_wrapper_symbols_elf(dso->name, handle);
+	int ret = __extls_load_wrapper_symbols_elf(dso->name, handle);
 
 	if( ret == 0 )
 	{
 		/* If elf succeeded proceed to extract constructors */
-		extls_load_constructors_elf(dso);
+		__extls_load_constructors_elf(dso);
 		/* If no error return */
 		return ret;
 	}
@@ -707,9 +577,9 @@ int extls_load_wrapper_symbols(struct dsos_s *dso, void *handle, char *prefix_co
 	/* Use the compatibility model with NM */
 
 	/* Extract constuctors using the compat model */
-	extls_load_constructors_compat(dso, prefix_command);
+	__extls_load_constructors_compat(dso);
 	/* Extract the TLS wrappers using compat model */
-	return extls_load_wrapper_symbols_compat(dso->name, handle, prefix_command);
+	return __extls_load_wrapper_symbols_compat(dso->name, handle);
 }
 
 /**
@@ -719,26 +589,21 @@ int extls_load_wrapper_symbols(struct dsos_s *dso, void *handle, char *prefix_co
  *
  * @returns EXTLS_ENKNWN if something's gone wrong, EXTLS_SUCCESS otherwise
  */
-extls_ret_t extls_locate_dynamic_initializers(char * wrap_prefix)
+extls_ret_t extls_locate_dynamic_initializers()
 {
-	if (extls_load_proc_self_maps())
-	{
-		extls_warn("Failed to load /proc/self/maps");
-		return EXTLS_ENKNWN;
-	}
-
+	__extls_register_loaded_dsos();
+	
 	struct dsos_s *current = _extls_dsos;
-
 	void *lib_handle = dlopen(NULL, RTLD_LAZY);
+
+	extls_info("DYNAMIC: Locate initializers");	
 
 	while (current)
 	{
-		extls_info("===== Processing DSO %s", current->name);
-		if (extls_load_wrapper_symbols(current, lib_handle, wrap_prefix))
+		if (__extls_load_wrapper_symbols(current, lib_handle))
 		{
 			return EXTLS_ENKNWN;
 		}
-
 		current = current->next;
 	}
 
@@ -760,9 +625,10 @@ extls_ret_t extls_call_dynamic_initializers()
 
 	while (current)
 	{
+		extls_warn("call %s (%p)", current->name, current->addr);
+			
 		if (current->addr)
 		{
-			extls_dbg("TLS : Calling dynamic init %s", current->name);
 			((void (*)())current->addr)();
 		}
 
@@ -782,13 +648,13 @@ extls_ret_t extls_call_static_constructors()
 
 	while (current)
 	{
-		if(current->init_start && current->init_end)
+		if(current->cdtor_start && current->cdtor_end)
 		{
 			/* Init array found */
-			unsigned int count = (void (**)())current->init_end - (void (**)())current->init_start;
-			int i;
-			void (**pfunc)() = (void (**)())current->init_start;
-
+			size_t count = (void (**)())current->cdtor_end - (void (**)())current->cdtor_start;
+			size_t i;
+			void (**pfunc)() = (void (**)())current->cdtor_start;
+			
 			for( i = 0 ; i < count ; i++)
 			{
 				pfunc[i]();

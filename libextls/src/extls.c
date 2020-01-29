@@ -2,6 +2,7 @@
 #include "extls.h"
 #include "extls_optim_tls.h"
 #include "extls_segmt_hdler.h"
+#include "extls_dynamic.h"
 
 #if defined(HAVE_TOPOLOGY) && defined(HAVE_ATOMICS) && defined(ENABLE_HLS)
 #include "extls_hls.h"
@@ -71,6 +72,8 @@ extls_ret_t extls_init(void)
 	}
 	extls_hls_topology_init();
 #endif
+
+	extls_locate_dynamic_initializers();
 
 	(void)extls_register_tls_segments();
 	extls_ctx_init(&ctx_root, NULL);
@@ -342,9 +345,11 @@ extls_ret_t extls_ctx_init(extls_ctx_t* ctx, extls_ctx_grp_t* grp)
 	ctx->async_gen_num = 0;
 	ctx->sync_gen_num = 0;
 
+
 	return
-		extls_ctx_init_vector_tls(ctx, grp) == EXTLS_SUCCESS &&
-		extls_ctx_init_reg_tls(ctx, grp) == EXTLS_SUCCESS;
+		extls_ctx_init_vector_tls(ctx, grp) == EXTLS_SUCCESS
+		&& extls_ctx_init_reg_tls(ctx, grp) == EXTLS_SUCCESS
+		;
 }
 
 /**

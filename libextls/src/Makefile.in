@@ -137,7 +137,7 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libextls_la_LIBADD =
 am__objects_1 = libextls_la-extls.lo libextls_la-extls_optim_tls.lo \
 	libextls_la-extls_common.lo libextls_la-extls_hls.lo \
-	libextls_la-extls_mpc.lo libextls_la-extls_init.lo \
+	libextls_la-extls_mpc.lo libextls_la-extls_dynamic.lo \
 	libextls_la-extls_segmt_hdler.lo
 am_libextls_la_OBJECTS = $(am__objects_1)
 libextls_la_OBJECTS = $(am_libextls_la_OBJECTS)
@@ -335,7 +335,7 @@ CFILES = \
 	   extls_common.c\
 	   extls_hls.c\
 	   extls_mpc.c\
-	   extls_init.c\
+	   extls_dynamic.c\
        extls_segmt_hdler.c
 
 HFILES = \
@@ -348,13 +348,14 @@ HFILES = \
 	   extls_hls.h\
 	   extls_list.h\
 	   extls_mpc.h\
+	   extls_dynamic.h\
 	   extls_segmt_hdler.h
 
 lib_LTLIBRARIES = libextls.la
 libextls_la_SOURCES = $(CFILES)
 @DEBUG_MODE_FALSE@libextls_la_CFLAGS = -DNDEBUG
 @DEBUG_MODE_TRUE@libextls_la_CFLAGS = -Wall -Wextra -Werror -g -O0
-libextls_la_LDFLAGS = -ldl $(OPA_LDFLAGS) -lpthread $(HWLOC_LDFLAGS) $(LIBELF_LDFLAGS)
+libextls_la_LDFLAGS = -ldl $(OPA_LDFLAGS) -lpthread $(HWLOC_LDFLAGS)
 include_HEADERS = $(HFILES)
 all: all-am
 
@@ -436,8 +437,8 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls_common.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls_dynamic.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls_hls.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls_init.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls_mpc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls_optim_tls.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls_segmt_hdler.Plo@am__quote@
@@ -498,12 +499,12 @@ libextls_la-extls_mpc.lo: extls_mpc.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libextls_la_CFLAGS) $(CFLAGS) -c -o libextls_la-extls_mpc.lo `test -f 'extls_mpc.c' || echo '$(srcdir)/'`extls_mpc.c
 
-libextls_la-extls_init.lo: extls_init.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libextls_la_CFLAGS) $(CFLAGS) -MT libextls_la-extls_init.lo -MD -MP -MF $(DEPDIR)/libextls_la-extls_init.Tpo -c -o libextls_la-extls_init.lo `test -f 'extls_init.c' || echo '$(srcdir)/'`extls_init.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libextls_la-extls_init.Tpo $(DEPDIR)/libextls_la-extls_init.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='extls_init.c' object='libextls_la-extls_init.lo' libtool=yes @AMDEPBACKSLASH@
+libextls_la-extls_dynamic.lo: extls_dynamic.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libextls_la_CFLAGS) $(CFLAGS) -MT libextls_la-extls_dynamic.lo -MD -MP -MF $(DEPDIR)/libextls_la-extls_dynamic.Tpo -c -o libextls_la-extls_dynamic.lo `test -f 'extls_dynamic.c' || echo '$(srcdir)/'`extls_dynamic.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libextls_la-extls_dynamic.Tpo $(DEPDIR)/libextls_la-extls_dynamic.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='extls_dynamic.c' object='libextls_la-extls_dynamic.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libextls_la_CFLAGS) $(CFLAGS) -c -o libextls_la-extls_init.lo `test -f 'extls_init.c' || echo '$(srcdir)/'`extls_init.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libextls_la_CFLAGS) $(CFLAGS) -c -o libextls_la-extls_dynamic.lo `test -f 'extls_dynamic.c' || echo '$(srcdir)/'`extls_dynamic.c
 
 libextls_la-extls_segmt_hdler.lo: extls_segmt_hdler.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libextls_la_CFLAGS) $(CFLAGS) -MT libextls_la-extls_segmt_hdler.lo -MD -MP -MF $(DEPDIR)/libextls_la-extls_segmt_hdler.Tpo -c -o libextls_la-extls_segmt_hdler.lo `test -f 'extls_segmt_hdler.c' || echo '$(srcdir)/'`extls_segmt_hdler.c

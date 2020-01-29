@@ -4,7 +4,7 @@ CFILES=\
 	   extls_common.c\
 	   extls_hls.c\
 	   extls_mpc.c\
-	   extls_init.c\
+	   extls_dynamic.c\
        extls_segmt_hdler.c
 
 HFILES=\
@@ -17,6 +17,7 @@ HFILES=\
 	   extls_hls.h\
 	   extls_list.h\
 	   extls_mpc.h\
+	   extls_dynamic.h\
 	   extls_segmt_hdler.h
 
 lib_LTLIBRARIES= libextls.la

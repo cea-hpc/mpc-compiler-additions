@@ -27,10 +27,8 @@ extls_ret_t extls_ctx_restore(extls_ctx_t* ctx);
 
 extls_ret_t extls_ctx_reg_get_addr(extls_ctx_t* ctx, extls_object_id_t id, extls_object_t* obj);
 
-/* dynamic initializer extraction and invocation */
-extls_ret_t extls_locate_dynamic_initializers(char * wrap_prefix);
-extls_ret_t extls_call_dynamic_initializers();
-extls_ret_t extls_call_static_constructors();
+/* Static TLS segment query */
+extls_size_t extls_get_sz_static_tls_segments(void);
 
 #ifdef __cplusplus
 }

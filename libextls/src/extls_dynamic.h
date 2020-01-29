@@ -1,5 +1,5 @@
-#ifndef EXTLS_INIT_H
-#define EXTLS_INIT_H
+#ifndef EXTLS_DYNAMIC_H
+#define EXTLS_DYNAMIC_H
 
 /**
  * Represent a dynamic symbol for the dynamic initializer interface.
@@ -19,12 +19,16 @@ struct dyn_sym_s
 struct dsos_s
 {
 	char * name;          /**< the DSO's name */
-	int is_main_bin;    /**< True if this is the main binary */
 	void * dso_start;     /**< Start of the DSO address space */
 	void * dso_end;       /**< End of the DSO address space */
-	void * init_start;    /**< Start of the constructor array (main exe) */
-	void * init_end;	  /**< End of the constructor array (main exe) */
+	void * cdtor_start;    /**< Start of the constructor array (main exe) */
+	void * cdtor_end;	  /**< End of the constructor array (main exe) */
 	struct dsos_s * next; /**< the next discovered DSO in the list (if any) */
 };
 
-#endif /* EXTLS_INIT_H */
+extls_ret_t extls_locate_dynamic_initializers();
+extls_ret_t extls_call_dynamic_initializers();
+extls_ret_t extls_call_static_constructors(); 
+
+
+#endif /* EXTLS_DYNAMIC_H */

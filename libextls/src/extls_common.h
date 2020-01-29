@@ -175,13 +175,23 @@ typedef struct extls_ctx_s
 #define min(a, b) ( (a) <= (b) ? (a) : (b) )
 #define PRINT_TOPOLOGY(str,...) do{if(fd != NULL){extls_lock(&fd_lock); fprintf(fd, str, ##__VA_ARGS__);extls_unlock(&fd_lock);}}while(0)
 
+#define extls_not_impl() do{extls_warn("Function %s() not implemented Yet !"DEF, __func__); }while(0)
+
+#ifndef NDEBUG
 /* different routines to print information at different verbosity levels */
 #define extls_dbg(u,...)   do{if(extls_get_verbosity() >= EXTLS_VERB_DEBUG)fprintf(stderr, BLU "EXTLS-DEBUG: " u DEF" (%s():"RED"%d"DEF")\n", ##__VA_ARGS__, __FUNCTION__, __LINE__);}while(0)
-#define extls_not_impl() do{if(extls_get_verbosity() >= EXTLS_VERB_WARN)fprintf(stderr, YEL "EXTLS-WARN : Function %s() not implemented Yet !"DEF"\n", __func__);}while(0)
 #define extls_info(u,...)  do{if(extls_get_verbosity() >= EXTLS_VERB_INFO)fprintf(stderr, GRE "EXTLS-INFO : " u DEF"\n", ##__VA_ARGS__);}while(0)
 #define extls_warn(u,...)  do{if(extls_get_verbosity() >= EXTLS_VERB_WARN)fprintf(stderr, YEL "EXTLS-WARN : " u DEF"\n", ##__VA_ARGS__);}while(0)
 #define extls_fatal(u,...) do{if(extls_get_verbosity() >= EXTLS_VERB_ERROR)fprintf(stderr, RED "EXTLS-FATAL: " u DEF"\n", ##__VA_ARGS__);abort();}while(0)
+#define extls_assert(u) do{if(!u) extls_fatal("Assertion " #u " returned false.");} while(0)
 
+#else
+#define extls_dbg(u,...)  (void)(u)
+#define extls_info(u,...) (void)(u)
+#define extls_warn(u,...)  do{fprintf(stderr, YEL "EXTLS-WARN : " u DEF"\n", ##__VA_ARGS__);}while(0)
+#define extls_fatal(u,...) do{fprintf(stderr, RED "EXTLS-FATAL: " u DEF"\n", ##__VA_ARGS__);abort();}while(0)
+#define extls_assert(u) (void)(u)
+#endif
 #endif
 
 /* return code interpreter */
