@@ -1,6 +1,11 @@
 #ifndef HAVE_EXTLS_COMMON_H
 #define HAVE_EXTLS_COMMON_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -171,8 +176,6 @@ typedef struct extls_ctx_s
 
 /** macro to remove warnings when a function parameter is not used but have to be a parameter */
 #define UNUSED(a) (void)sizeof(a)
-#define max(a, b) ( (a) >= (b) ? (a) : (b) )
-#define min(a, b) ( (a) <= (b) ? (a) : (b) )
 #define PRINT_TOPOLOGY(str,...) do{if(fd != NULL){extls_lock(&fd_lock); fprintf(fd, str, ##__VA_ARGS__);extls_unlock(&fd_lock);}}while(0)
 
 #define extls_not_impl() do{extls_warn("Function %s() not implemented Yet !"DEF, __func__); }while(0)
@@ -192,7 +195,6 @@ typedef struct extls_ctx_s
 #define extls_fatal(u,...) do{fprintf(stderr, RED "EXTLS-FATAL: " u DEF"\n", ##__VA_ARGS__);abort();}while(0)
 #define extls_assert(u) (void)(u)
 #endif
-#endif
 
 /* return code interpreter */
 void extls_strerror_r(extls_ret_t type, char* str, size_t sz);
@@ -209,7 +211,13 @@ void extls_set_verbosity(extls_verb_t set);
 /* user-implemented function */
 void* extls_get_context_storage_addr(void);
 void extls_wait_for_value(volatile int*, int);
+
 #if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 #include <extls_topo.h>
 extls_topo_t* extls_get_topology_addr(void);
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 #endif

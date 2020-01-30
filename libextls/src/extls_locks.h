@@ -1,6 +1,11 @@
 #ifndef HAVE_EXTLS_LOCK_H
 #define HAVE_EXTLS_LOCK_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <pthread.h>
 
 typedef pthread_mutex_t extls_lock_t;
@@ -23,4 +28,7 @@ typedef pthread_rwlock_t extls_rwlock_t;
 #define extls_wunlock            pthread_rwlock_unlock
 #define extls_trywlock           pthread_rwlock_trywrlock
 
+#ifdef __cplusplus
+}
+#endif
 #endif

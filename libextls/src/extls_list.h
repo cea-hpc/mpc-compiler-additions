@@ -1,6 +1,11 @@
 #ifndef EXTLS_LIST_H
 #define EXTLS_LIST_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef struct elem_s
 {
 	extls_size_t idx;
@@ -57,4 +62,9 @@ typedef struct elem_s
 	elem = elem->next;\
 	free(old);\
 	}while(0)
+
+
+#ifdef __cplusplus
+}
+#endif
 #endif

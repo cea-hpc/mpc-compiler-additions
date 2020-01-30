@@ -2,6 +2,12 @@
 #ifndef HAVE_EXTLS_SEGMT_HDLER_H
 #define HAVE_EXTLS_SEGMT_HDLER_H
 
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <elf.h>
 #include <link.h>
 #include "extls_common.h"
@@ -57,4 +63,8 @@ void * extls_ldlsym(void* handle, const char*symbol, extls_object_level_type_t l
 void * extls_dlsym(void* handle, const char*symbol);
 int extls_dlclose(void* handle);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

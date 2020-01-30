@@ -1,6 +1,11 @@
 #ifndef HAVE_EXTLS_TOPO_H
 #define HAVE_EXTLS_TOPO_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifdef HAVE_TOPOLOGY
 #include <hwloc.h>
 
@@ -30,5 +35,7 @@ typedef void* extls_topo_obj_t;
 
 #endif
 
-
+#ifdef __cplusplus
+}
+#endif
 #endif

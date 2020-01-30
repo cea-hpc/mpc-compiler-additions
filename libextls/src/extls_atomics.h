@@ -1,6 +1,11 @@
 #ifndef HAVE_EXTLS_ATOMICS_H
 #define HAVE_EXTLS_ATOMICS_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifdef HAVE_ATOMICS
 #include <opa_primitives.h>
 
@@ -18,4 +23,7 @@ typedef OPA_int_t extls_atomic_int;
 typedef int extls_atomic_int;
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

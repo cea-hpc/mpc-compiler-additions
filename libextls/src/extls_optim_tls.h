@@ -3,6 +3,11 @@
 
 #include "extls_common.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /* Used by GNU variant */
 struct tls_index_s
 {
@@ -40,4 +45,7 @@ void * __extls_get_addr_cache_level_1(tls_index* idx);
 void * __extls_get_addr_core(tls_index* idx);
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

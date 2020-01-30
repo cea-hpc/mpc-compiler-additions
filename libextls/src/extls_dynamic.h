@@ -1,6 +1,13 @@
 #ifndef EXTLS_DYNAMIC_H
 #define EXTLS_DYNAMIC_H
 
+#include <extls.h>
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /**
  * Represent a dynamic symbol for the dynamic initializer interface.
  * Built as a chained list.
@@ -30,5 +37,8 @@ extls_ret_t extls_locate_dynamic_initializers();
 extls_ret_t extls_call_dynamic_initializers();
 extls_ret_t extls_call_static_constructors(); 
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* EXTLS_DYNAMIC_H */
