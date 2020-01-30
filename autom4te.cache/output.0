@@ -12051,7 +12051,7 @@ subdirs="$subdirs libextls dynpriv-plugin"
 
 ac_config_headers="$ac_config_headers config.h"
                         # header-generated config files
-ac_config_files="$ac_config_files Makefile tests/Makefile tests/nopriv/Makefile tests/priv/Makefile tools/Makefile"
+ac_config_files="$ac_config_files Makefile tests/Makefile tests/nopriv/Makefile tests/priv/Makefile tests/unsupported/Makefile tools/Makefile"
 
 ac_config_files="$ac_config_files tools/autopriv.sh"
 
@@ -12060,6 +12060,8 @@ ac_config_files="$ac_config_files tools/apcc"
 ac_config_files="$ac_config_files tools/ap++"
 
 ac_config_files="$ac_config_files tools/apfortran"
+
+ac_config_files="$ac_config_files tools/extls.pc"
 
 
 ################
@@ -13080,11 +13082,13 @@ do
     "tests/Makefile") CONFIG_FILES="$CONFIG_FILES tests/Makefile" ;;
     "tests/nopriv/Makefile") CONFIG_FILES="$CONFIG_FILES tests/nopriv/Makefile" ;;
     "tests/priv/Makefile") CONFIG_FILES="$CONFIG_FILES tests/priv/Makefile" ;;
+    "tests/unsupported/Makefile") CONFIG_FILES="$CONFIG_FILES tests/unsupported/Makefile" ;;
     "tools/Makefile") CONFIG_FILES="$CONFIG_FILES tools/Makefile" ;;
     "tools/autopriv.sh") CONFIG_FILES="$CONFIG_FILES tools/autopriv.sh" ;;
     "tools/apcc") CONFIG_FILES="$CONFIG_FILES tools/apcc" ;;
     "tools/ap++") CONFIG_FILES="$CONFIG_FILES tools/ap++" ;;
     "tools/apfortran") CONFIG_FILES="$CONFIG_FILES tools/apfortran" ;;
+    "tools/extls.pc") CONFIG_FILES="$CONFIG_FILES tools/extls.pc" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

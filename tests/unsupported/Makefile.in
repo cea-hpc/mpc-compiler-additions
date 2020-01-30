@@ -87,9 +87,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = basic_test$(EXEEXT) kwd_test$(EXEEXT) \
-	dyn_test$(EXEEXT)
-subdir = tests/priv
+check_PROGRAMS = noctx_test$(EXEEXT)
+subdir = tests/unsupported
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config-aux/m4/libtool.m4 \
 	$(top_srcdir)/config-aux/m4/ltoptions.m4 \
@@ -104,28 +103,16 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am_basic_test_OBJECTS = basic_test-basic.$(OBJEXT)
-basic_test_OBJECTS = $(am_basic_test_OBJECTS)
-basic_test_LDADD = $(LDADD)
+am_noctx_test_OBJECTS = noctx_test-noctx.$(OBJEXT)
+noctx_test_OBJECTS = $(am_noctx_test_OBJECTS)
+noctx_test_LDADD = $(LDADD)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-basic_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(basic_test_CFLAGS) \
-	$(CFLAGS) $(basic_test_LDFLAGS) $(LDFLAGS) -o $@
-am_dyn_test_OBJECTS = dyn_test-dyn.$(OBJEXT)
-dyn_test_OBJECTS = $(am_dyn_test_OBJECTS)
-dyn_test_LDADD = $(LDADD)
-dyn_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(dyn_test_CFLAGS) \
-	$(CFLAGS) $(dyn_test_LDFLAGS) $(LDFLAGS) -o $@
-am_kwd_test_OBJECTS = kwd_test-keywords.$(OBJEXT)
-kwd_test_OBJECTS = $(am_kwd_test_OBJECTS)
-kwd_test_LDADD = $(LDADD)
-kwd_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(kwd_test_CFLAGS) \
-	$(CFLAGS) $(kwd_test_LDFLAGS) $(LDFLAGS) -o $@
+noctx_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(noctx_test_CFLAGS) \
+	$(CFLAGS) $(noctx_test_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -160,10 +147,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(basic_test_SOURCES) $(dyn_test_SOURCES) \
-	$(kwd_test_SOURCES)
-DIST_SOURCES = $(basic_test_SOURCES) $(dyn_test_SOURCES) \
-	$(kwd_test_SOURCES)
+SOURCES = $(noctx_test_SOURCES)
+DIST_SOURCES = $(noctx_test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -516,15 +501,9 @@ top_srcdir = @top_srcdir@
 TESTS = $(check_PROGRAMS)
 GLOB_COPT = -fmpc-privatize -I$(top_srcdir)/tests/include -Wall -Werror
 GLOB_LOPT = -lextls
-basic_test_CFLAGS = $(GLOB_COPT)
-basic_test_LDFLAGS = $(GLOB_LOPT)
-basic_test_SOURCES = basic.c
-kwd_test_CFLAGS = $(GLOB_COPT)
-kwd_test_LDFLAGS = $(GLOB_LOPT)
-kwd_test_SOURCES = keywords.c
-dyn_test_CFLAGS = $(GLOB_COPT) -fplugin=$(top_builddir)/dynpriv-plugin/src/.libs/dynpriv.so
-dyn_test_LDFLAGS = $(GLOB_LOPT)
-dyn_test_SOURCES = dyn.c
+noctx_test_CFLAGS = $(GLOB_COPT)
+noctx_test_LDFLAGS = $(GLOB_LOPT)
+noctx_test_SOURCES = noctx.c
 all: all-am
 
 .SUFFIXES:
@@ -538,9 +517,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu tests/priv/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu tests/unsupported/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu tests/priv/Makefile
+	  $(AUTOMAKE) --gnu tests/unsupported/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -568,17 +547,9 @@ clean-checkPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
-basic_test$(EXEEXT): $(basic_test_OBJECTS) $(basic_test_DEPENDENCIES) $(EXTRA_basic_test_DEPENDENCIES) 
-	@rm -f basic_test$(EXEEXT)
-	$(AM_V_CCLD)$(basic_test_LINK) $(basic_test_OBJECTS) $(basic_test_LDADD) $(LIBS)
-
-dyn_test$(EXEEXT): $(dyn_test_OBJECTS) $(dyn_test_DEPENDENCIES) $(EXTRA_dyn_test_DEPENDENCIES) 
-	@rm -f dyn_test$(EXEEXT)
-	$(AM_V_CCLD)$(dyn_test_LINK) $(dyn_test_OBJECTS) $(dyn_test_LDADD) $(LIBS)
-
-kwd_test$(EXEEXT): $(kwd_test_OBJECTS) $(kwd_test_DEPENDENCIES) $(EXTRA_kwd_test_DEPENDENCIES) 
-	@rm -f kwd_test$(EXEEXT)
-	$(AM_V_CCLD)$(kwd_test_LINK) $(kwd_test_OBJECTS) $(kwd_test_LDADD) $(LIBS)
+noctx_test$(EXEEXT): $(noctx_test_OBJECTS) $(noctx_test_DEPENDENCIES) $(EXTRA_noctx_test_DEPENDENCIES) 
+	@rm -f noctx_test$(EXEEXT)
+	$(AM_V_CCLD)$(noctx_test_LINK) $(noctx_test_OBJECTS) $(noctx_test_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -586,9 +557,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/basic_test-basic.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dyn_test-dyn.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kwd_test-keywords.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/noctx_test-noctx.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -611,47 +580,19 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
-basic_test-basic.o: basic.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(basic_test_CFLAGS) $(CFLAGS) -MT basic_test-basic.o -MD -MP -MF $(DEPDIR)/basic_test-basic.Tpo -c -o basic_test-basic.o `test -f 'basic.c' || echo '$(srcdir)/'`basic.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/basic_test-basic.Tpo $(DEPDIR)/basic_test-basic.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='basic.c' object='basic_test-basic.o' libtool=no @AMDEPBACKSLASH@
+noctx_test-noctx.o: noctx.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(noctx_test_CFLAGS) $(CFLAGS) -MT noctx_test-noctx.o -MD -MP -MF $(DEPDIR)/noctx_test-noctx.Tpo -c -o noctx_test-noctx.o `test -f 'noctx.c' || echo '$(srcdir)/'`noctx.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/noctx_test-noctx.Tpo $(DEPDIR)/noctx_test-noctx.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='noctx.c' object='noctx_test-noctx.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(basic_test_CFLAGS) $(CFLAGS) -c -o basic_test-basic.o `test -f 'basic.c' || echo '$(srcdir)/'`basic.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(noctx_test_CFLAGS) $(CFLAGS) -c -o noctx_test-noctx.o `test -f 'noctx.c' || echo '$(srcdir)/'`noctx.c
 
-basic_test-basic.obj: basic.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(basic_test_CFLAGS) $(CFLAGS) -MT basic_test-basic.obj -MD -MP -MF $(DEPDIR)/basic_test-basic.Tpo -c -o basic_test-basic.obj `if test -f 'basic.c'; then $(CYGPATH_W) 'basic.c'; else $(CYGPATH_W) '$(srcdir)/basic.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/basic_test-basic.Tpo $(DEPDIR)/basic_test-basic.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='basic.c' object='basic_test-basic.obj' libtool=no @AMDEPBACKSLASH@
+noctx_test-noctx.obj: noctx.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(noctx_test_CFLAGS) $(CFLAGS) -MT noctx_test-noctx.obj -MD -MP -MF $(DEPDIR)/noctx_test-noctx.Tpo -c -o noctx_test-noctx.obj `if test -f 'noctx.c'; then $(CYGPATH_W) 'noctx.c'; else $(CYGPATH_W) '$(srcdir)/noctx.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/noctx_test-noctx.Tpo $(DEPDIR)/noctx_test-noctx.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='noctx.c' object='noctx_test-noctx.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(basic_test_CFLAGS) $(CFLAGS) -c -o basic_test-basic.obj `if test -f 'basic.c'; then $(CYGPATH_W) 'basic.c'; else $(CYGPATH_W) '$(srcdir)/basic.c'; fi`
-
-dyn_test-dyn.o: dyn.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dyn_test_CFLAGS) $(CFLAGS) -MT dyn_test-dyn.o -MD -MP -MF $(DEPDIR)/dyn_test-dyn.Tpo -c -o dyn_test-dyn.o `test -f 'dyn.c' || echo '$(srcdir)/'`dyn.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dyn_test-dyn.Tpo $(DEPDIR)/dyn_test-dyn.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dyn.c' object='dyn_test-dyn.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dyn_test_CFLAGS) $(CFLAGS) -c -o dyn_test-dyn.o `test -f 'dyn.c' || echo '$(srcdir)/'`dyn.c
-
-dyn_test-dyn.obj: dyn.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dyn_test_CFLAGS) $(CFLAGS) -MT dyn_test-dyn.obj -MD -MP -MF $(DEPDIR)/dyn_test-dyn.Tpo -c -o dyn_test-dyn.obj `if test -f 'dyn.c'; then $(CYGPATH_W) 'dyn.c'; else $(CYGPATH_W) '$(srcdir)/dyn.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dyn_test-dyn.Tpo $(DEPDIR)/dyn_test-dyn.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dyn.c' object='dyn_test-dyn.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dyn_test_CFLAGS) $(CFLAGS) -c -o dyn_test-dyn.obj `if test -f 'dyn.c'; then $(CYGPATH_W) 'dyn.c'; else $(CYGPATH_W) '$(srcdir)/dyn.c'; fi`
-
-kwd_test-keywords.o: keywords.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(kwd_test_CFLAGS) $(CFLAGS) -MT kwd_test-keywords.o -MD -MP -MF $(DEPDIR)/kwd_test-keywords.Tpo -c -o kwd_test-keywords.o `test -f 'keywords.c' || echo '$(srcdir)/'`keywords.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/kwd_test-keywords.Tpo $(DEPDIR)/kwd_test-keywords.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='keywords.c' object='kwd_test-keywords.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(kwd_test_CFLAGS) $(CFLAGS) -c -o kwd_test-keywords.o `test -f 'keywords.c' || echo '$(srcdir)/'`keywords.c
-
-kwd_test-keywords.obj: keywords.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(kwd_test_CFLAGS) $(CFLAGS) -MT kwd_test-keywords.obj -MD -MP -MF $(DEPDIR)/kwd_test-keywords.Tpo -c -o kwd_test-keywords.obj `if test -f 'keywords.c'; then $(CYGPATH_W) 'keywords.c'; else $(CYGPATH_W) '$(srcdir)/keywords.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/kwd_test-keywords.Tpo $(DEPDIR)/kwd_test-keywords.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='keywords.c' object='kwd_test-keywords.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(kwd_test_CFLAGS) $(CFLAGS) -c -o kwd_test-keywords.obj `if test -f 'keywords.c'; then $(CYGPATH_W) 'keywords.c'; else $(CYGPATH_W) '$(srcdir)/keywords.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(noctx_test_CFLAGS) $(CFLAGS) -c -o noctx_test-noctx.obj `if test -f 'noctx.c'; then $(CYGPATH_W) 'noctx.c'; else $(CYGPATH_W) '$(srcdir)/noctx.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -852,23 +793,9 @@ recheck: all $(check_PROGRAMS)
 	        am__force_recheck=am--force-recheck \
 	        TEST_LOGS="$$log_list"; \
 	exit $$?
-basic_test.log: basic_test$(EXEEXT)
-	@p='basic_test$(EXEEXT)'; \
-	b='basic_test'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-kwd_test.log: kwd_test$(EXEEXT)
-	@p='kwd_test$(EXEEXT)'; \
-	b='kwd_test'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-dyn_test.log: dyn_test$(EXEEXT)
-	@p='dyn_test$(EXEEXT)'; \
-	b='dyn_test'; \
+noctx_test.log: noctx_test$(EXEEXT)
+	@p='noctx_test$(EXEEXT)'; \
+	b='noctx_test'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -1047,9 +974,6 @@ uninstall-am:
 .PRECIOUS: Makefile
 
 
-####################
-# PRIVATISATION TESTS
-#####################
 export MPC_DYN_PRIV_ENABLED=1
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

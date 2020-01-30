@@ -26,12 +26,14 @@ AC_CONFIG_FILES([
 		 tests/Makefile
 		 tests/nopriv/Makefile
 		 tests/priv/Makefile
+		 tests/unsupported/Makefile
 		 tools/Makefile
 		 ])
 AC_CONFIG_FILES([tools/autopriv.sh] , [chmod +x tools/autopriv.sh])
 AC_CONFIG_FILES([tools/apcc]        , [chmod +x tools/apcc])
 AC_CONFIG_FILES([tools/ap++]        , [chmod +x tools/ap++])
 AC_CONFIG_FILES([tools/apfortran]   , [chmod +x tools/apfortran])
+AC_CONFIG_FILES([tools/extls.pc])
 
 ################
 #### OUTPUT ####

@@ -3,8 +3,9 @@
 stages:
   - Initialization
   - Setup
-  - No-priv
-  - Privatization
+  - Tests
+  - Wrappers
+  - Not supported
   - Finalization
 
 .run_by_main: &run_by_main
@@ -72,16 +73,31 @@ Build:
   script:
   - srun -J GL-build_$CI_PIPELINE_ID -N 1 -c 8 ${CI_PROJECT_DIR}/autopriv_deploy.sh -i $HOME/GL_$CI_PIPELINE_ID/install -b $HOME/GL_$CI_PIPELINE_ID/build -j8 -s -o "--enable-debug --enable-color"
 
-Base tests:
+No-privatization:
   <<: *run_by_main
-  stage: No-priv
+  stage: Tests
   script:
         - cd $HOME/GL_$CI_PIPELINE_ID/build/autopriv
         - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
 
-Priv tests:
+With-privatization:
   <<: *run_by_main
-  stage: Privatization
+  stage: Tests
   script:
         - cd $HOME/GL_$CI_PIPELINE_ID/build/autopriv
         - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
+
+          #Compil Wrappers:
+          #  <<: *run_by_main
+          #  stage: Wrappers
+          #  script: 
+  #- cd $HOME/GL_$CI_PIPELINE_ID/build/autopriv
+  #     - EXTLS_VERBOSE=debug make check -C tests/wrapper VERBOSE=1
+
+Not supported:
+  <<: *run_by_main
+  stage: Not supported
+  allow_failure: true
+  script: 
+        - cd $HOME/GL_$CI_PIPELINE_ID/build/autopriv
+        - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1

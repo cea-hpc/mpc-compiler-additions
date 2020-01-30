@@ -1,2 +1,1 @@
-SUBDIRS=nopriv priv
-
+SUBDIRS=nopriv priv unsupported
