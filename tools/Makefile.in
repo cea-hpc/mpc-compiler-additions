@@ -101,7 +101,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES = autopriv.sh
+CONFIG_CLEAN_FILES = autopriv.sh apcc ap++ apfortran
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -152,7 +152,9 @@ am__can_run_installinfo = \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
-am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/autopriv.sh.in
+am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/ap++.in \
+	$(srcdir)/apcc.in $(srcdir)/apfortran.in \
+	$(srcdir)/autopriv.sh.in
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
@@ -271,7 +273,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-bin_SCRIPTS = autopriv.sh
+bin_SCRIPTS = autopriv.sh apcc ap++ apfortran
 CLEANFILES = $(bin_SCRIPTS)
 all: all-am
 
@@ -306,6 +308,12 @@ $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 autopriv.sh: $(top_builddir)/config.status $(srcdir)/autopriv.sh.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+apcc: $(top_builddir)/config.status $(srcdir)/apcc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+ap++: $(top_builddir)/config.status $(srcdir)/ap++.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+apfortran: $(top_builddir)/config.status $(srcdir)/apfortran.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 install-binSCRIPTS: $(bin_SCRIPTS)
 	@$(NORMAL_INSTALL)

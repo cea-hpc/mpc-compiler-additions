@@ -21,7 +21,17 @@ AM_PROG_AR
 LT_INIT                                              # Init libtool
 AC_CONFIG_SUBDIRS([libextls dynpriv-plugin])
 AC_CONFIG_HEADERS([config.h])                        # header-generated config files
-AC_CONFIG_FILES([Makefile tests/nopriv/Makefile tests/Makefile tests/priv/Makefile tools/Makefile tools/autopriv.sh])
+AC_CONFIG_FILES([
+		 Makefile
+		 tests/Makefile
+		 tests/nopriv/Makefile
+		 tests/priv/Makefile
+		 tools/Makefile
+		 ])
+AC_CONFIG_FILES([tools/autopriv.sh] , [chmod +x tools/autopriv.sh])
+AC_CONFIG_FILES([tools/apcc]        , [chmod +x tools/apcc])
+AC_CONFIG_FILES([tools/ap++]        , [chmod +x tools/ap++])
+AC_CONFIG_FILES([tools/apfortran]   , [chmod +x tools/apfortran])
 
 ################
 #### OUTPUT ####

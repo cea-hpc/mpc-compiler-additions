@@ -1,0 +1,24 @@
+#!/bin/sh
+
+inst=@prefix@
+bin_inst=${inst}/bin
+lib_inst=${inst}/lib
+lib64_inst=${inst}/lib64
+
+AP_COMPILE="-L${lib_inst} -L${lib64_inst} -Wl,-rpath=${lib_inst} -Wl,-rpath=${lib64_inst}"
+AP_LINK="-lextls"
+
+for arg in "$@";
+do
+	case $arg in
+		-fmpc-privatize|-fmpcprivatize)
+			export MPC_DYN_PRIV_ENABLED=1
+			;;
+		-fnompcprivatize|-fno-mpcprivatize|-fno-mpc-privatize|-fmpc-noprivatize|-fmpc-no-privatize|-fmpcnoprivatize)
+			unset MPC_DYN_PRIV_ENABLED
+			;;
+		*)
+			;;
+	esac
+done
+${bin_inst}/g++-ap ${AP_COMPILE} "$@" ${AP_LINK}

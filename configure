@@ -12051,7 +12051,15 @@ subdirs="$subdirs libextls dynpriv-plugin"
 
 ac_config_headers="$ac_config_headers config.h"
                         # header-generated config files
-ac_config_files="$ac_config_files Makefile tests/nopriv/Makefile tests/Makefile tests/priv/Makefile tools/Makefile tools/autopriv.sh"
+ac_config_files="$ac_config_files Makefile tests/Makefile tests/nopriv/Makefile tests/priv/Makefile tools/Makefile"
+
+ac_config_files="$ac_config_files tools/autopriv.sh"
+
+ac_config_files="$ac_config_files tools/apcc"
+
+ac_config_files="$ac_config_files tools/ap++"
+
+ac_config_files="$ac_config_files tools/apfortran"
 
 
 ################
@@ -13069,11 +13077,14 @@ do
     "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
-    "tests/nopriv/Makefile") CONFIG_FILES="$CONFIG_FILES tests/nopriv/Makefile" ;;
     "tests/Makefile") CONFIG_FILES="$CONFIG_FILES tests/Makefile" ;;
+    "tests/nopriv/Makefile") CONFIG_FILES="$CONFIG_FILES tests/nopriv/Makefile" ;;
     "tests/priv/Makefile") CONFIG_FILES="$CONFIG_FILES tests/priv/Makefile" ;;
     "tools/Makefile") CONFIG_FILES="$CONFIG_FILES tools/Makefile" ;;
     "tools/autopriv.sh") CONFIG_FILES="$CONFIG_FILES tools/autopriv.sh" ;;
+    "tools/apcc") CONFIG_FILES="$CONFIG_FILES tools/apcc" ;;
+    "tools/ap++") CONFIG_FILES="$CONFIG_FILES tools/ap++" ;;
+    "tools/apfortran") CONFIG_FILES="$CONFIG_FILES tools/apfortran" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -14304,6 +14315,10 @@ ltmain=$ac_aux_dir/ltmain.sh
   chmod +x "$ofile"
 
  ;;
+    "tools/autopriv.sh":F) chmod +x tools/autopriv.sh ;;
+    "tools/apcc":F) chmod +x tools/apcc ;;
+    "tools/ap++":F) chmod +x tools/ap++ ;;
+    "tools/apfortran":F) chmod +x tools/apfortran ;;
 
   esac
 done # for ac_tag
