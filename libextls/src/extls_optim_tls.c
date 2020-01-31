@@ -136,7 +136,7 @@ void * __extls_get_addr_openmp(tls_index* idx)
 
 
 /***** HLS ******/
-#if defined(HAVE_TOPOLOGY) && defined(HAVE_ATOMICS) && defined(ENABLE_HLS)
+#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 void * __extls_get_addr_node(tls_index* idx)
 {
 	extls_info("Get Addr(): "RED"NODE"GRE" request at (0x%x):0x%x", (unsigned int)idx->ti_module, (unsigned int)idx->ti_offset);

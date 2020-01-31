@@ -4,7 +4,7 @@
 #include "extls_segmt_hdler.h"
 #include "extls_dynamic.h"
 
-#if defined(HAVE_TOPOLOGY) && defined(HAVE_ATOMICS) && defined(ENABLE_HLS)
+#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 #include "extls_hls.h"
 #endif
 
@@ -62,7 +62,7 @@ extls_ret_t extls_init(void)
 		extls_info("Optim TLS: Architecture supported by the library");
 	}
 
-#if defined(HAVE_TOPOLOGY) && defined(HAVE_ATOMICS) && defined(ENABLE_HLS)
+#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 	extls_info("HLS: Enabling Topological TLS support");
 	const char* file = getenv("EXTLS_DUMP_TOPOLOGY");
 	if(file)
@@ -79,6 +79,9 @@ extls_ret_t extls_init(void)
 	extls_ctx_init(&ctx_root, NULL);
 	extls_ctx_restore(&ctx_root);
 
+#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
+	extls_ctx_bind(&ctx_root, 0);
+#endif
 	initialized = 1;
 	return EXTLS_SUCCESS;
 }
@@ -108,7 +111,7 @@ __attribute__((constructor)) void extls_constructor()
 extls_ret_t extls_fini(void)
 {
 	extls_info("Library: Finalization");
-#if defined(HAVE_TOPOLOGY) && defined(HAVE_ATOMICS) && defined(ENABLE_HLS)
+#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 	extls_hls_topology_fini();
 	if(fd)
 	{
@@ -312,7 +315,7 @@ static inline extls_ret_t extls_ctx_init_vector_tls(extls_ctx_t* ctx, extls_ctx_
 		level_obj->hls_data = NULL;
 	}
 
-#if defined(HAVE_TOPOLOGY) && defined(HAVE_ATOMICS) && defined(ENABLE_HLS)
+#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 	/* memset to 0, this is handled by ctx_bind() */
 	memset(ctx->tls_vector+LEVEL_TLS_MAX,0, sizeof(extls_object_level_t) * (LEVEL_MAX - LEVEL_TLS_MAX));
 #endif
@@ -429,7 +432,7 @@ extls_ret_t extls_ctx_herit(extls_ctx_t* ctx, extls_ctx_t* herit, extls_object_l
 			level_obj->hls_data = NULL;
 		}
 	}
-#if defined(HAVE_TOPOLOGY) && defined(HAVE_ATOMICS) && defined(ENABLE_HLS)
+#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 	/* We have to memset() first, to be sure that non-existent level will be void
 	 * For example, if the topology does not have a NUMA node level, the struct is set w/ '0'
 	 */
@@ -467,7 +470,7 @@ ret_func:
  */
 extls_ret_t extls_ctx_bind(extls_ctx_t* ctx, int pu)
 {
-#if defined(HAVE_TOPOLOGY) && defined(HAVE_ATOMICS) && defined(ENABLE_HLS)
+#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 	extls_info("Context: Binding");
 	ctx->pu = pu;
 	extls_hls_init_levels(ctx->tls_vector, pu);

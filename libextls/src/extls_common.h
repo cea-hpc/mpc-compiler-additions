@@ -77,7 +77,7 @@ typedef enum extls_object_level_type_e
 	LEVEL_OPENMP,      /**< Depicts the object at OpenMP scope  */
 
 	LEVEL_TLS_MAX,     /**< used as enumerator boundary */
-#if defined(HAVE_TOPOLOGY) && defined(HAVE_ATOMICS) && defined(ENABLE_HLS)
+#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 	/* to ensure synchronisation routines to work well,
 	 * the HLS level order has to be the same as in gcc/coretypes.h
 	 */

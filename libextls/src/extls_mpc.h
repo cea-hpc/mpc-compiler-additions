@@ -18,7 +18,7 @@ void * __sctk__tls_get_addr__thread_scope(tls_index* idx);
 void * __sctk__tls_get_addr__openmp_scope(tls_index* idx);
 
 /* HLS routines */
-#if defined(HAVE_TOPOLOGY) && defined(HAVE_ATOMICS) && defined(ENABLE_HLS)
+#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 void * __sctk__tls_get_addr__node_scope(tls_index* idx);
 void * __sctk__tls_get_addr__numa_level_2_scope(tls_index* idx);
 void * __sctk__tls_get_addr__numa_level_1_scope(tls_index* idx);

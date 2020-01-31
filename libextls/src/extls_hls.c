@@ -6,7 +6,7 @@
 #include "extls_hls.h"
 #include "extls_segmt_hdler.h"
 
-#if defined(HAVE_TOPOLOGY) && defined(HAVE_ATOMICS) && defined(ENABLE_HLS)
+#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 extern FILE* fd; /**< In extls.c */
 extern extls_lock_t fd_lock; /**< In extls.c */
 extern char extls_own_topology; /**< In extls_common.c */
@@ -147,8 +147,8 @@ extls_ret_t extls_hls_topology_construct(void)
 	stack[stack_idx]   = extls_root_obj (global_topology) ;
 	stack[stack_idx+1] = NULL ;
 	extls_info("HLS: Registering Global Objects");
-    if(hls_initialized)
-        extls_fatal("HLS tree should be initialized once !");
+	if(hls_initialized)
+        	extls_fatal("HLS tree should be initialized once !");
 	do
 	{
 		assert(stack_idx < topodepth+1 ) ;
@@ -196,10 +196,17 @@ extls_ret_t extls_hls_topology_construct(void)
 
 extls_ret_t extls_hls_topology_init(void)
 {
+	/* here is the first call to extls_get_topology_addr() 
+	 * This is a weak function, only called if the user code did not
+	 * overloaded it. In that particular case, the library is notified
+	 * through the use of `extls_own_topology` that it should take care
+	 * of init and destroy the underlying topology object.
+	 */
+	extls_topo_t* t = extls_get_topology_addr();
 	if(extls_own_topology)
 	{
-		extls_topology_init(extls_get_topology_addr());
-		extls_topology_load(*extls_get_topology_addr());
+		extls_topology_init(t);
+		extls_topology_load(*t);
 		return extls_hls_topology_construct();
 	}
 
