@@ -1,5 +1,7 @@
 check_PROGRAMS= \
-	noctx_test
+	dynhls_test \
+	noctx_test \
+	$(NULL)
 
 
 TESTS = $(check_PROGRAMS)
@@ -11,3 +13,7 @@ GLOB_LOPT=-lextls
 noctx_test_CFLAGS=$(GLOB_COPT)
 noctx_test_LDFLAGS=$(GLOB_LOPT)
 noctx_test_SOURCES=noctx.c
+
+dynhls_test_CFLAGS=$(GLOB_COPT) -fhls -fhls-verbose
+dynhls_test_LDFLAGS=$(GLOB_LOPT)
+dynhls_test_SOURCES=hls_dyn.c

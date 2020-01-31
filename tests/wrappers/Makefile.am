@@ -1,0 +1,3 @@
+TESTS = \
+	run.sh \
+	$(NULL)

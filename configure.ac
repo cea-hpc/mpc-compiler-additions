@@ -27,6 +27,7 @@ AC_CONFIG_FILES([
 		 tests/nopriv/Makefile
 		 tests/priv/Makefile
 		 tests/unsupported/Makefile
+		 tests/wrappers/Makefile
 		 tools/Makefile
 		 ])
 AC_CONFIG_FILES([tools/autopriv.sh] , [chmod +x tools/autopriv.sh])

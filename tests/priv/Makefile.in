@@ -88,7 +88,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = basic_test$(EXEEXT) kwd_test$(EXEEXT) \
-	dyn_test$(EXEEXT)
+	dyn_test$(EXEEXT) hls_test$(EXEEXT)
 subdir = tests/priv
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config-aux/m4/libtool.m4 \
@@ -120,6 +120,12 @@ dyn_test_LDADD = $(LDADD)
 dyn_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(dyn_test_CFLAGS) \
 	$(CFLAGS) $(dyn_test_LDFLAGS) $(LDFLAGS) -o $@
+am_hls_test_OBJECTS = hls_test-hls.$(OBJEXT)
+hls_test_OBJECTS = $(am_hls_test_OBJECTS)
+hls_test_LDADD = $(LDADD)
+hls_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(hls_test_CFLAGS) \
+	$(CFLAGS) $(hls_test_LDFLAGS) $(LDFLAGS) -o $@
 am_kwd_test_OBJECTS = kwd_test-keywords.$(OBJEXT)
 kwd_test_OBJECTS = $(am_kwd_test_OBJECTS)
 kwd_test_LDADD = $(LDADD)
@@ -161,9 +167,9 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(basic_test_SOURCES) $(dyn_test_SOURCES) \
-	$(kwd_test_SOURCES)
+	$(hls_test_SOURCES) $(kwd_test_SOURCES)
 DIST_SOURCES = $(basic_test_SOURCES) $(dyn_test_SOURCES) \
-	$(kwd_test_SOURCES)
+	$(hls_test_SOURCES) $(kwd_test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -525,6 +531,9 @@ kwd_test_SOURCES = keywords.c
 dyn_test_CFLAGS = $(GLOB_COPT) -fplugin=$(top_builddir)/dynpriv-plugin/src/.libs/dynpriv.so
 dyn_test_LDFLAGS = $(GLOB_LOPT)
 dyn_test_SOURCES = dyn.c
+hls_test_CFLAGS = $(GLOB_COPT) -fplugin=$(top_builddir)/dynpriv-plugin/src/.libs/dynpriv.so -fhls
+hls_test_LDFLAGS = $(GLOB_LOPT)
+hls_test_SOURCES = hls.c
 all: all-am
 
 .SUFFIXES:
@@ -576,6 +585,10 @@ dyn_test$(EXEEXT): $(dyn_test_OBJECTS) $(dyn_test_DEPENDENCIES) $(EXTRA_dyn_test
 	@rm -f dyn_test$(EXEEXT)
 	$(AM_V_CCLD)$(dyn_test_LINK) $(dyn_test_OBJECTS) $(dyn_test_LDADD) $(LIBS)
 
+hls_test$(EXEEXT): $(hls_test_OBJECTS) $(hls_test_DEPENDENCIES) $(EXTRA_hls_test_DEPENDENCIES) 
+	@rm -f hls_test$(EXEEXT)
+	$(AM_V_CCLD)$(hls_test_LINK) $(hls_test_OBJECTS) $(hls_test_LDADD) $(LIBS)
+
 kwd_test$(EXEEXT): $(kwd_test_OBJECTS) $(kwd_test_DEPENDENCIES) $(EXTRA_kwd_test_DEPENDENCIES) 
 	@rm -f kwd_test$(EXEEXT)
 	$(AM_V_CCLD)$(kwd_test_LINK) $(kwd_test_OBJECTS) $(kwd_test_LDADD) $(LIBS)
@@ -588,6 +601,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/basic_test-basic.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dyn_test-dyn.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hls_test-hls.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kwd_test-keywords.Po@am__quote@
 
 .c.o:
@@ -638,6 +652,20 @@ dyn_test-dyn.obj: dyn.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dyn.c' object='dyn_test-dyn.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(dyn_test_CFLAGS) $(CFLAGS) -c -o dyn_test-dyn.obj `if test -f 'dyn.c'; then $(CYGPATH_W) 'dyn.c'; else $(CYGPATH_W) '$(srcdir)/dyn.c'; fi`
+
+hls_test-hls.o: hls.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(hls_test_CFLAGS) $(CFLAGS) -MT hls_test-hls.o -MD -MP -MF $(DEPDIR)/hls_test-hls.Tpo -c -o hls_test-hls.o `test -f 'hls.c' || echo '$(srcdir)/'`hls.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/hls_test-hls.Tpo $(DEPDIR)/hls_test-hls.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hls.c' object='hls_test-hls.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(hls_test_CFLAGS) $(CFLAGS) -c -o hls_test-hls.o `test -f 'hls.c' || echo '$(srcdir)/'`hls.c
+
+hls_test-hls.obj: hls.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(hls_test_CFLAGS) $(CFLAGS) -MT hls_test-hls.obj -MD -MP -MF $(DEPDIR)/hls_test-hls.Tpo -c -o hls_test-hls.obj `if test -f 'hls.c'; then $(CYGPATH_W) 'hls.c'; else $(CYGPATH_W) '$(srcdir)/hls.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/hls_test-hls.Tpo $(DEPDIR)/hls_test-hls.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hls.c' object='hls_test-hls.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(hls_test_CFLAGS) $(CFLAGS) -c -o hls_test-hls.obj `if test -f 'hls.c'; then $(CYGPATH_W) 'hls.c'; else $(CYGPATH_W) '$(srcdir)/hls.c'; fi`
 
 kwd_test-keywords.o: keywords.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(kwd_test_CFLAGS) $(CFLAGS) -MT kwd_test-keywords.o -MD -MP -MF $(DEPDIR)/kwd_test-keywords.Tpo -c -o kwd_test-keywords.o `test -f 'keywords.c' || echo '$(srcdir)/'`keywords.c
@@ -869,6 +897,13 @@ kwd_test.log: kwd_test$(EXEEXT)
 dyn_test.log: dyn_test$(EXEEXT)
 	@p='dyn_test$(EXEEXT)'; \
 	b='dyn_test'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+hls_test.log: hls_test$(EXEEXT)
+	@p='hls_test$(EXEEXT)'; \
+	b='hls_test'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

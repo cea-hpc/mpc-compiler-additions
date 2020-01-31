@@ -12051,7 +12051,7 @@ subdirs="$subdirs libextls dynpriv-plugin"
 
 ac_config_headers="$ac_config_headers config.h"
                         # header-generated config files
-ac_config_files="$ac_config_files Makefile tests/Makefile tests/nopriv/Makefile tests/priv/Makefile tests/unsupported/Makefile tools/Makefile"
+ac_config_files="$ac_config_files Makefile tests/Makefile tests/nopriv/Makefile tests/priv/Makefile tests/unsupported/Makefile tests/wrappers/Makefile tools/Makefile"
 
 ac_config_files="$ac_config_files tools/autopriv.sh"
 
@@ -13083,6 +13083,7 @@ do
     "tests/nopriv/Makefile") CONFIG_FILES="$CONFIG_FILES tests/nopriv/Makefile" ;;
     "tests/priv/Makefile") CONFIG_FILES="$CONFIG_FILES tests/priv/Makefile" ;;
     "tests/unsupported/Makefile") CONFIG_FILES="$CONFIG_FILES tests/unsupported/Makefile" ;;
+    "tests/wrappers/Makefile") CONFIG_FILES="$CONFIG_FILES tests/wrappers/Makefile" ;;
     "tools/Makefile") CONFIG_FILES="$CONFIG_FILES tools/Makefile" ;;
     "tools/autopriv.sh") CONFIG_FILES="$CONFIG_FILES tools/autopriv.sh" ;;
     "tools/apcc") CONFIG_FILES="$CONFIG_FILES tools/apcc" ;;

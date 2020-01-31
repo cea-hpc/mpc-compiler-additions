@@ -1,1 +1,5 @@
-SUBDIRS=nopriv priv unsupported
+SUBDIRS=nopriv \
+	priv \
+	wrappers \
+	unsupported \
+	$(NULL)
