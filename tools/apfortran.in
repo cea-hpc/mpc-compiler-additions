@@ -21,4 +21,4 @@ do
 			;;
 	esac
 done
-${bin_inst}/gfortran-ap ${AP_COMPILE} "$@" ${AP_LINK}
+ap-gfortran ${AP_COMPILE} "$@" ${AP_LINK}

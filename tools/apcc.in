@@ -1,6 +1,7 @@
 #!/bin/sh
 
 inst=@prefix@
+
 bin_inst=${inst}/bin
 lib_inst=${inst}/lib
 lib64_inst=${inst}/lib64
@@ -21,4 +22,4 @@ do
 			;;
 	esac
 done
-${bin_inst}/gcc-ap ${AP_COMPILE} "$@" ${AP_LINK}
+ap-gcc ${AP_COMPILE} "$@" ${AP_LINK}
