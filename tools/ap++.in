@@ -8,6 +8,9 @@ lib64_inst=${inst}/lib64
 AP_COMPILE="-L${lib_inst} -L${lib64_inst} -Wl,-rpath=${lib_inst} -Wl,-rpath=${lib64_inst}"
 AP_LINK="-lextls"
 
+test -z "$AP_CXX" && AP_CXX=@CXX@
+
+
 for arg in "$@";
 do
 	case $arg in
@@ -21,4 +24,4 @@ do
 			;;
 	esac
 done
-ap-g++ ${AP_COMPILE} "$@" ${AP_LINK}
+$AP_CXX ${AP_COMPILE} "$@" ${AP_LINK}
