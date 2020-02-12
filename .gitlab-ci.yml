@@ -11,7 +11,7 @@ stages:
 .run_by_main: &run_by_main
   only:
   - devel
-  - pt_devel
+  - master
   - merge_requests
   - web
 
