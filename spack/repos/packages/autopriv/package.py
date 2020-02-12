@@ -28,7 +28,8 @@ class Autopriv(AutotoolsPackage):
     process, allowing process-based codes to run inside threads."""
 
     homepage = "http://mpc.hpcframework.com"
-    version('master', branch="master")
+    url = "https://france.paratools.com/autopriv/autopriv-0.5.0.tar.gz"
+    version('0.5.0', sha256='7cf9e10e5ebf99988b0e895293c863c5802abfed11cb8c35aa0606566096b966')
 
     depends_on("gmp", type="build") # need to keep it explicit for dynpriv build
     depends_on("ap-gcc")
