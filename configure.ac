@@ -13,6 +13,8 @@ AM_INIT_AUTOMAKE([-Wall -Werror])
 #### PROGRAMS ####
 ##################
 AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_FC
 AM_PROG_AR
 
 ###################
