@@ -48,7 +48,7 @@ class Autopriv(AutotoolsPackage):
         ]
 
         if spec.satisfies("+debug"):
-            options.extend('--enable-debug')
+            options.extend(['--enable-debug'])
 
         return options
 

@@ -1,27 +1,59 @@
 #!/bin/sh
 
+usage()
+{
+	printf "Usage: apcc [-fmpc-privatize] file\n"
+	printf "    -f[no-]mpc-privatize     Enable/disable automatic privatization.\n"
+	printf "    -f[no-]mpc-tlsopt        Enable/disable linker-optimized TLS.\n"
+t 	printf "    -show|--show             Print command line instead of running it.\n"
+	printf "    -ap-h | --ap-help        Print this help.\n"
+	printf "    <any GCC options>        Any GCC-compatible option will be forwarded.\n"
+}
+
 inst=@prefix@
+
 bin_inst=${inst}/bin
 lib_inst=${inst}/lib
 lib64_inst=${inst}/lib64
 
+AP_PRE_CMD=""
+AP_POST_CMD=""
+AP_ENABLED_FLAG=""
 AP_COMPILE="-L${lib_inst} -L${lib64_inst} -Wl,-rpath=${lib_inst} -Wl,-rpath=${lib64_inst}"
 AP_LINK="-lextls"
+AP_DOWNSTREAM_ARGS=""
 
 test -z "$AP_CXX" && AP_CXX=@CXX@
-
 
 for arg in "$@";
 do
 	case $arg in
 		-fmpc-privatize|-fmpcprivatize)
 			export MPC_DYN_PRIV_ENABLED=1
+			AP_ENABLED_FLAG="-fmpc-privatize -DAUTOPRIV_ENABLED"
 			;;
 		-fnompcprivatize|-fno-mpcprivatize|-fno-mpc-privatize|-fmpc-noprivatize|-fmpc-no-privatize|-fmpcnoprivatize)
 			unset MPC_DYN_PRIV_ENABLED
+			AP_ENABLED_FLAG=""
+			;;
+		-fmpc-tlsopt|-fmpctlsopt|-ftls-opt|-ftlsopt)
+			unset MPC_DISABLE_TLS_OPT
+			;;
+		-fmpc-notlopt|-fmpcnotlsopt|-fno-mpctlsopt|-fnompctlsopt|-fnotlsopt|-fno-tlsopt)
+			export MPC_DISABLE_TLS_OPT=1
+			;;
+		-ap-h|--ap-help)
+			usage
+			exit 0
+			;;
+		-show|--show)
+			AP_PRE_CMD="echo"
+			AP_POST_CMD=""
 			;;
 		*)
+			modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
+			AP_DOWNSTREAM_ARGS="$AP_DOWNSTREAM_ARGS $modarg"
 			;;
 	esac
 done
-$AP_CXX ${AP_COMPILE} "$@" ${AP_LINK}
+${AP_PRE_CMD} ${AP_CXX} ${AP_COMPILE} ${AP_ENABLED_FLAG} ${AP_PLUGIN_FLAG} $AP_DOWNSTREAM_ARGS ${AP_LINK} ${AP_POST_CMD}
