@@ -159,17 +159,38 @@ void extls_wait_for_value(volatile int* addr_val, int threshold)
 
 /** Set to 1 if extls handle its own topology object */
 char extls_own_topology = 0;
+/** extls-handled topology object, for corner cases */
+static extls_topo_t extls_global_topology;
 
 /**
  * This function is used if the thread engine does not provide a topology object
  * \return a pointer to the topology object
  */
 #pragma weak extls_get_topology_addr 
-extls_topo_t* extls_get_topology_addr()
+extls_topo_t* extls_get_topology_addr(void)
 {
-	static extls_topo_t extls_global_topology;
 	extls_own_topology = 1;
 	
+	return &extls_global_topology;
+}
+
+/**
+ * This function is different from extls_get_topology_addr. This function
+ * will always returns the manually handled topology object, whatever the
+ * relying runtime decides. This helps to deal with special corner cases
+ * (mainly when libextls need a topology context while the upstream runtime
+ * stil did not initialize its own).
+ * \return a pointer to the locally-handled topology object
+ */
+extls_topo_t* extls_get_own_topology_addr(void)
+{
+	static char init = 0;
+	if(!init)
+	{
+		init = 1;
+		extls_topology_init(&extls_global_topology);
+		extls_topology_load(extls_global_topology);
+	}
 	return &extls_global_topology;
 }
 #endif

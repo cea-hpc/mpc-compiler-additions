@@ -32,8 +32,8 @@ static inline const char* extls_get_obj_name(extls_topo_obj_t obj)
 			return "NUMA"; break;
 		case HWLOC_OBJ_SOCKET:
 			return "SOCKET"; break;
-		//case HWLOC_OBJ_CACHE:
-		//	return "CACHE"; break;
+		case HWLOC_OBJ_CACHE:
+			return "CACHE"; break;
 		case HWLOC_OBJ_CORE:
 			return "CORE"; break;
 		case HWLOC_OBJ_PU:
@@ -53,7 +53,7 @@ static inline int extls_obj_hls_handled(extls_topo_obj_t obj)
 		case HWLOC_OBJ_MACHINE:
 		case HWLOC_OBJ_NODE:
 		case HWLOC_OBJ_SOCKET:
-		//case HWLOC_OBJ_CACHE:
+		case HWLOC_OBJ_CACHE:
 		case HWLOC_OBJ_CORE:
 		case HWLOC_OBJ_PU:
 		case HWLOC_OBJ_GROUP:
@@ -63,10 +63,10 @@ static inline int extls_obj_hls_handled(extls_topo_obj_t obj)
 	}
 	return -1;
 }
-static extls_topo_obj_t extls_hls_set_with_first_ancestor(extls_topo_obj_t obj, extls_obj_type_t type, extls_object_level_t* level, extls_object_level_type_t set)
+static extls_topo_obj_t extls_hls_set_with_first_ancestor(extls_topo_t* topology, extls_topo_obj_t obj, extls_obj_type_t type, extls_object_level_t* level, extls_object_level_type_t set)
 {
 	extls_topo_obj_t ret = obj;
-	extls_topo_obj_t tmp = extls_parent_by_type(*extls_get_topology_addr(),type, obj);
+	extls_topo_obj_t tmp = extls_parent_by_type(*topology,type, obj);
 	
 	if(tmp == NULL)
 	{
@@ -91,34 +91,49 @@ static extls_topo_obj_t extls_hls_set_with_first_ancestor(extls_topo_obj_t obj, 
 extls_ret_t extls_hls_init_levels(extls_object_level_t* start_array, int pu)
 {
 
-    if(!hls_initialized)
-    {
-        extls_warn("HLS: Calling extls_hls_topology_construct(), which would have been called before binding the first context !");
-        extls_hls_topology_construct();
-    }
-
 	if(start_array[LEVEL_NODE].static_seg != NULL)
 		return EXTLS_SUCCESS;
 
 	/* We have to browse through the HLS levels only !!!! */
-	extls_topo_obj_t cur_level = extls_obj_by_type(*extls_get_topology_addr(), HWLOC_OBJ_PU, pu);
+	extls_topo_t* topology = extls_get_topology_addr();
+
+	/* This toplogy object can be NULL if the runtime does provide its own topology object (like MPC)
+	 * and thus defer the call to initialize the topology (call to extls_hls_topology_construct().
+	 * For that specific case, we don't want program to crash (even if the behavior should be undefined)
+	 * In order to do this, the library will "emulate" a temp toplogy, and build the current context on it.
+	 * (this may be the one created by extls_init() before anything has started up yet.
+	 */
+	if(!topology || !(*topology)) /* if _construct() haven't been called yet */
+	{
+		/* use the internal topology for now, will be replaced once runtime decided to do so*/
+		topology = extls_get_own_topology_addr();
+        	extls_hls_topology_construct();
+        	hls_initialized = 0; /* this is ugly, this boolean need to be set to 1 when the real topology is initialized */
+	}
+	else if(!hls_initialized)
+	{
+        	extls_fatal("HLS: extls_hls_topology_construct() should be called before running the first context !");
+        }
+
+
+	extls_topo_obj_t cur_level = extls_obj_by_type(*topology, HWLOC_OBJ_PU, pu);
 	if(cur_level == NULL)
 		extls_fatal("We cannot found the deepest topology object for the current binding %d", pu);
 	
 	/* cur_level is updated w/ the found object */
-	cur_level = extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_CORE,    start_array, LEVEL_CORE);
-	//cur_level = extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_CACHE,   start_array, LEVEL_CACHE_1);
-	//cur_level = extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_CACHE,   start_array, LEVEL_CACHE_2);
-	//cur_level = extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_CACHE,   start_array, LEVEL_CACHE_3);
+	cur_level = extls_hls_set_with_first_ancestor(topology, cur_level, HWLOC_OBJ_CORE,    start_array, LEVEL_CORE);
+	cur_level = extls_hls_set_with_first_ancestor(topology, cur_level, HWLOC_OBJ_CACHE,   start_array, LEVEL_CACHE_1);
+	cur_level = extls_hls_set_with_first_ancestor(topology, cur_level, HWLOC_OBJ_CACHE,   start_array, LEVEL_CACHE_2);
+	cur_level = extls_hls_set_with_first_ancestor(topology, cur_level, HWLOC_OBJ_CACHE,   start_array, LEVEL_CACHE_3);
 
 	/* we do not update cur_level, to avoid squashing current ref */
-	extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_SOCKET,  start_array, LEVEL_SOCKET);	
-	cur_level = extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_NODE,    start_array, LEVEL_NUMA_1);
+	extls_hls_set_with_first_ancestor(topology, cur_level, HWLOC_OBJ_SOCKET,  start_array, LEVEL_SOCKET);	
+	cur_level = extls_hls_set_with_first_ancestor(topology, cur_level, HWLOC_OBJ_NODE,    start_array, LEVEL_NUMA_1);
 
 	/* idem as above */
-	extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_NODE,    start_array, LEVEL_NUMA_2);
+	extls_hls_set_with_first_ancestor(topology, cur_level, HWLOC_OBJ_NODE,    start_array, LEVEL_NUMA_2);
 	
-	cur_level = extls_hls_set_with_first_ancestor(cur_level, HWLOC_OBJ_MACHINE, start_array, LEVEL_NODE);
+	cur_level = extls_hls_set_with_first_ancestor(topology, cur_level, HWLOC_OBJ_MACHINE, start_array, LEVEL_NODE);
 
 	extls_object_level_type_t i = 0;
 	for(i = LEVEL_NODE; i < LEVEL_MAX; i++)
@@ -136,25 +151,33 @@ extls_ret_t extls_hls_init_levels(extls_object_level_t* start_array, int pu)
 #define str(u) #u
 extls_ret_t extls_hls_topology_construct(void)
 {
-	extls_topo_t global_topology = *extls_get_topology_addr();
+	if(hls_initialized)
+	{
+        	extls_warn("HLS tree should be initialized only once !");
+        	return EXTLS_ENFIRST;
+	}
+
+	extls_topo_t* global_topology = extls_get_topology_addr();
+	if(!global_topology || !(*global_topology))
+	{
+		global_topology = extls_get_own_topology_addr();
+	}
 	/* get global tree depth an number of NUMA nodes */
-	const int topodepth = extls_topology_depth(global_topology);
+	const int topodepth = extls_topology_depth(*global_topology);
 	extls_topo_obj_t* stack ;
 	int stack_idx;
 
 	stack = alloca( (topodepth+1) * sizeof(extls_topo_obj_t) );
 	stack_idx = 0 ;
-	stack[stack_idx]   = extls_root_obj (global_topology) ;
+	stack[stack_idx]   = extls_root_obj (*global_topology) ;
 	stack[stack_idx+1] = NULL ;
 	extls_info("HLS: Registering Global Objects");
-	if(hls_initialized)
-        	extls_fatal("HLS tree should be initialized once !");
 	do
 	{
 		assert(stack_idx < topodepth+1 ) ;
 		extls_topo_obj_t cur_obj    = stack[stack_idx] ;
 		extls_topo_obj_t prev_child = stack[stack_idx+1] ;
-		extls_topo_obj_t next_child = extls_next_child(global_topology,cur_obj,prev_child);
+		extls_topo_obj_t next_child = extls_next_child(*global_topology,cur_obj,prev_child);
 
 		if ( prev_child == NULL && extls_obj_hls_handled(cur_obj))
 		{
@@ -215,8 +238,9 @@ extls_ret_t extls_hls_topology_init(void)
 
 extls_ret_t extls_hls_topology_fini(void)
 {
+	extls_topo_t* t = extls_get_topology_addr();
 	if(extls_own_topology)
-		extls_topology_destroy(*extls_get_topology_addr());
+		extls_topology_destroy(*t);
 	return EXTLS_SUCCESS;
 }
 

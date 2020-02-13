@@ -217,6 +217,7 @@ void extls_wait_for_value(volatile int*, int);
 #if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 #include <extls_topo.h>
 extls_topo_t* extls_get_topology_addr(void);
+extls_topo_t* extls_get_own_topology_addr(void);
 #endif
 
 #ifdef __cplusplus
