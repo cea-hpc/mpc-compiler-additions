@@ -175,7 +175,9 @@ typedef struct extls_ctx_s
 #endif
 
 /** macro to remove warnings when a function parameter is not used but have to be a parameter */
+#ifndef UNUSED
 #define UNUSED(a) (void)sizeof(a)
+#endif
 #define PRINT_TOPOLOGY(str,...) do{if(fd != NULL){extls_lock(&fd_lock); fprintf(fd, str, ##__VA_ARGS__);extls_unlock(&fd_lock);}}while(0)
 
 #define extls_not_impl() do{extls_warn("Function %s() not implemented Yet !"DEF, __func__); }while(0)

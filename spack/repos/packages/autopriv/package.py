@@ -35,6 +35,10 @@ class Autopriv(AutotoolsPackage):
     depends_on("ap-gcc")
     depends_on("hwloc@1.11.11")
     depends_on("openpa")
+    depends_on("libelf", when="+libelf")
+
+    variant("debug", default=False, description="Enable debug mode")
+    variant("libelf", default=True, description="Use libelf for symbol introspection")
 
     def configure_args(self):
         spec = self.spec
@@ -42,6 +46,9 @@ class Autopriv(AutotoolsPackage):
             '--with-openpa={0}'.format(spec['openpa'].prefix),
             '--with-hwloc={0}'.format(spec['hwloc'].prefix),
         ]
+
+        if spec.satisfies("+debug"):
+            options.extend('--enable-debug')
 
         return options
 

@@ -74,7 +74,7 @@ class ApGcc(AutotoolsPackage, GNUMirrorPackage):
             multi=True,
             description='Compilers and runtime libraries to build')
     variant('binutils',
-            default=False,
+            default=True,
             description='Build via binutils')
     variant('piclibs',
             default=False,
@@ -314,9 +314,9 @@ class ApGcc(AutotoolsPackage, GNUMirrorPackage):
                 '--with-boot-ldflags={0} {1}'.format(
                     self.rpath_args, static_bootstrap_flags),
                 '--with-gnu-ld',
-                '--with-ld={0}/ld'.format(spec['binutils'].prefix.bin),
+                '--with-ld={0}/ld'.format(spec['ap-binutils'].prefix.bin),
                 '--with-gnu-as',
-                '--with-as={0}/as'.format(spec['binutils'].prefix.bin),
+                '--with-as={0}/as'.format(spec['ap-binutils'].prefix.bin),
             ])
 
         # MPC
