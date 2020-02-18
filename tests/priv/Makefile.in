@@ -88,7 +88,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = basic_test$(EXEEXT) kwd_test$(EXEEXT) \
-	dyn_test$(EXEEXT) hls_test$(EXEEXT)
+	dyn_test$(EXEEXT) hls_test$(EXEEXT) threads_test$(EXEEXT)
 subdir = tests/priv
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config-aux/m4/libtool.m4 \
@@ -132,6 +132,12 @@ kwd_test_LDADD = $(LDADD)
 kwd_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(kwd_test_CFLAGS) \
 	$(CFLAGS) $(kwd_test_LDFLAGS) $(LDFLAGS) -o $@
+am_threads_test_OBJECTS = threads_test-threads.$(OBJEXT)
+threads_test_OBJECTS = $(am_threads_test_OBJECTS)
+threads_test_LDADD = $(LDADD)
+threads_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(threads_test_CFLAGS) \
+	$(CFLAGS) $(threads_test_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -167,9 +173,11 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(basic_test_SOURCES) $(dyn_test_SOURCES) \
-	$(hls_test_SOURCES) $(kwd_test_SOURCES)
+	$(hls_test_SOURCES) $(kwd_test_SOURCES) \
+	$(threads_test_SOURCES)
 DIST_SOURCES = $(basic_test_SOURCES) $(dyn_test_SOURCES) \
-	$(hls_test_SOURCES) $(kwd_test_SOURCES)
+	$(hls_test_SOURCES) $(kwd_test_SOURCES) \
+	$(threads_test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -542,6 +550,9 @@ dyn_test_SOURCES = dyn.c
 hls_test_CFLAGS = $(GLOB_COPT) -fplugin=$(top_builddir)/dynpriv-plugin/src/.libs/dynpriv.so -fhls
 hls_test_LDFLAGS = $(GLOB_LOPT)
 hls_test_SOURCES = hls.c
+threads_test_CFLAGS = $(GLOB_COPT)
+threads_test_LDFLAGS = $(GLOB_LOPT) -lpthread
+threads_test_SOURCES = threads.c
 all: all-am
 
 .SUFFIXES:
@@ -601,6 +612,10 @@ kwd_test$(EXEEXT): $(kwd_test_OBJECTS) $(kwd_test_DEPENDENCIES) $(EXTRA_kwd_test
 	@rm -f kwd_test$(EXEEXT)
 	$(AM_V_CCLD)$(kwd_test_LINK) $(kwd_test_OBJECTS) $(kwd_test_LDADD) $(LIBS)
 
+threads_test$(EXEEXT): $(threads_test_OBJECTS) $(threads_test_DEPENDENCIES) $(EXTRA_threads_test_DEPENDENCIES) 
+	@rm -f threads_test$(EXEEXT)
+	$(AM_V_CCLD)$(threads_test_LINK) $(threads_test_OBJECTS) $(threads_test_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -611,6 +626,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dyn_test-dyn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hls_test-hls.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kwd_test-keywords.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/threads_test-threads.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -688,6 +704,20 @@ kwd_test-keywords.obj: keywords.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='keywords.c' object='kwd_test-keywords.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(kwd_test_CFLAGS) $(CFLAGS) -c -o kwd_test-keywords.obj `if test -f 'keywords.c'; then $(CYGPATH_W) 'keywords.c'; else $(CYGPATH_W) '$(srcdir)/keywords.c'; fi`
+
+threads_test-threads.o: threads.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(threads_test_CFLAGS) $(CFLAGS) -MT threads_test-threads.o -MD -MP -MF $(DEPDIR)/threads_test-threads.Tpo -c -o threads_test-threads.o `test -f 'threads.c' || echo '$(srcdir)/'`threads.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/threads_test-threads.Tpo $(DEPDIR)/threads_test-threads.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='threads.c' object='threads_test-threads.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(threads_test_CFLAGS) $(CFLAGS) -c -o threads_test-threads.o `test -f 'threads.c' || echo '$(srcdir)/'`threads.c
+
+threads_test-threads.obj: threads.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(threads_test_CFLAGS) $(CFLAGS) -MT threads_test-threads.obj -MD -MP -MF $(DEPDIR)/threads_test-threads.Tpo -c -o threads_test-threads.obj `if test -f 'threads.c'; then $(CYGPATH_W) 'threads.c'; else $(CYGPATH_W) '$(srcdir)/threads.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/threads_test-threads.Tpo $(DEPDIR)/threads_test-threads.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='threads.c' object='threads_test-threads.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(threads_test_CFLAGS) $(CFLAGS) -c -o threads_test-threads.obj `if test -f 'threads.c'; then $(CYGPATH_W) 'threads.c'; else $(CYGPATH_W) '$(srcdir)/threads.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -912,6 +942,13 @@ dyn_test.log: dyn_test$(EXEEXT)
 hls_test.log: hls_test$(EXEEXT)
 	@p='hls_test$(EXEEXT)'; \
 	b='hls_test'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+threads_test.log: threads_test$(EXEEXT)
+	@p='threads_test$(EXEEXT)'; \
+	b='threads_test'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

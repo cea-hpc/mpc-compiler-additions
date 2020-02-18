@@ -3,6 +3,7 @@ check_PROGRAMS= \
 	kwd_test \
 	dyn_test \
 	hls_test \
+	threads_test \
 	$(NULL)
 
 TESTS = $(check_PROGRAMS)
@@ -29,3 +30,7 @@ dyn_test_SOURCES=dyn.c
 hls_test_CFLAGS=$(GLOB_COPT) -fplugin=$(top_builddir)/dynpriv-plugin/src/.libs/dynpriv.so -fhls
 hls_test_LDFLAGS=$(GLOB_LOPT)
 hls_test_SOURCES=hls.c
+
+threads_test_CFLAGS=$(GLOB_COPT)
+threads_test_LDFLAGS=$(GLOB_LOPT) -lpthread
+threads_test_SOURCES=threads.c
