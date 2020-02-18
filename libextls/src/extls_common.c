@@ -111,32 +111,16 @@ inline extls_ret_t extls_write_zeros(int fd, extls_size_t sz)
 	return (ret == sz * sizeof(char)) ? EXTLS_SUCCESS : EXTLS_EWRITE;
 }
 
-/**
- * This function is designed to avoid compilation error. Actually
- * the strong symbol should be provided by the thread engine. It returns
- * an address where it is possible to store a pointer. The pointer has
- * to be context-switched by the thread engine for each computing unit it
- * handles.
- *
- * Warning if you use the code below. It works only if you handle
- * TLS based on pthread (=> based on "__thread" + no context-switch
- *
- * \return the address of the storage pointer (access through referencing)
- */
-#pragma weak extls_get_context_storage_addr
-void* extls_get_context_storage_addr(void)
+void*(*extls_get_context_storage_addr)(void) = extls_get_dflt_context_storage_addr;
+extls_ret_t extls_set_context_storage_addr(void*(*func)(void))
+{
+	extls_get_context_storage_addr = func;
+	return EXTLS_SUCCESS;
+}
+
+void* extls_get_dflt_context_storage_addr(void)
 {
 	static __thread void* current_ctx = NULL;
-
-	/*if(current_ctx == NULL)*/
-	/*{*/
-		/*extern extls_ret_t extls_ctx_init(extls_ctx_t*, extls_ctx_grp_t*);*/
-		/*extls_warn("Content after %s:%d is about preload injection and should be removed once plugged into a runtime !", __FILE__, __LINE__);*/
-		/*extls_ctx_t* ctx = malloc(sizeof(extls_ctx_t));*/
-		/*extls_ctx_init(ctx, NULL);*/
-		/*current_ctx = ctx;*/
-	/*}*/
-
 	return &current_ctx;
 }
 
@@ -157,37 +141,18 @@ void extls_wait_for_value(volatile int* addr_val, int threshold)
 #if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 #include <extls_topo.h>
 
-/** Set to 1 if extls handle its own topology object */
-char extls_own_topology = 0;
-/** extls-handled topology object, for corner cases */
-static extls_topo_t extls_global_topology;
-
-/**
- * This function is used if the thread engine does not provide a topology object
- * \return a pointer to the topology object
- */
-#pragma weak extls_get_topology_addr 
-extls_topo_t* extls_get_topology_addr(void)
+extls_topo_t*(*extls_get_topology_addr)(void) = extls_get_dflt_topology_addr;
+extls_ret_t extls_set_topology_addr(extls_topo_t*(*func)(void))
 {
-	extls_own_topology = 1;
-	
-	return &extls_global_topology;
+	extls_get_topology_addr = func;
+	return EXTLS_SUCCESS;
 }
 
-/**
- * This function is different from extls_get_topology_addr. This function
- * will always returns the manually handled topology object, whatever the
- * relying runtime decides. This helps to deal with special corner cases
- * (mainly when libextls need a topology context while the upstream runtime
- * stil did not initialize its own).
- * \return a pointer to the locally-handled topology object
- */
-extls_topo_t* extls_get_own_topology_addr(void)
+extls_topo_t* extls_get_dflt_topology_addr(void)
 {
-	static char init = 0;
-	if(!init)
+	static extls_topo_t extls_global_topology = NULL;
+	if(!extls_global_topology)
 	{
-		init = 1;
 		extls_topology_init(&extls_global_topology);
 		extls_topology_load(extls_global_topology);
 	}

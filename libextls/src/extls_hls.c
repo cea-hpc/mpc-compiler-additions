@@ -9,7 +9,6 @@
 #if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 extern FILE* fd; /**< In extls.c */
 extern extls_lock_t fd_lock; /**< In extls.c */
-extern char extls_own_topology; /**< In extls_common.c */
 static short hls_initialized = 0; /**< check HLS init in case of remote topology */
 
 static inline extls_ret_t extls_hls_data_init(extls_hls_data_t** data)
@@ -106,7 +105,7 @@ extls_ret_t extls_hls_init_levels(extls_object_level_t* start_array, int pu)
 	if(!topology || !(*topology)) /* if _construct() haven't been called yet */
 	{
 		/* use the internal topology for now, will be replaced once runtime decided to do so*/
-		topology = extls_get_own_topology_addr();
+		topology = extls_get_dflt_topology_addr();
         	extls_hls_topology_construct();
         	hls_initialized = 0; /* this is ugly, this boolean need to be set to 1 when the real topology is initialized */
 	}
@@ -160,7 +159,7 @@ extls_ret_t extls_hls_topology_construct(void)
 	extls_topo_t* global_topology = extls_get_topology_addr();
 	if(!global_topology || !(*global_topology))
 	{
-		global_topology = extls_get_own_topology_addr();
+		global_topology = extls_get_dflt_topology_addr();
 	}
 	/* get global tree depth an number of NUMA nodes */
 	const int topodepth = extls_topology_depth(*global_topology);
@@ -213,7 +212,7 @@ extls_ret_t extls_hls_topology_construct(void)
 		}
 	}
 	while ( stack_idx >= 0 ) ;
-    hls_initialized = 1;
+	hls_initialized = 1;
 	return EXTLS_SUCCESS;
 }
 
@@ -226,7 +225,7 @@ extls_ret_t extls_hls_topology_init(void)
 	 * of init and destroy the underlying topology object.
 	 */
 	extls_topo_t* t = extls_get_topology_addr();
-	if(extls_own_topology)
+	if(extls_get_topology_addr == extls_get_dflt_topology_addr)
 	{
 		extls_topology_init(t);
 		extls_topology_load(*t);
@@ -239,7 +238,7 @@ extls_ret_t extls_hls_topology_init(void)
 extls_ret_t extls_hls_topology_fini(void)
 {
 	extls_topo_t* t = extls_get_topology_addr();
-	if(extls_own_topology)
+	if(extls_get_topology_addr == extls_get_dflt_topology_addr)
 		extls_topology_destroy(*t);
 	return EXTLS_SUCCESS;
 }
