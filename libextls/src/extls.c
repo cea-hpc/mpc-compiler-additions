@@ -441,17 +441,12 @@ extls_ret_t extls_ctx_herit(extls_ctx_t* ctx, extls_ctx_t* herit, extls_object_l
 	 */
 	memset(herit->tls_vector+LEVEL_TLS_MAX, 0,sizeof(extls_object_level_t) * (LEVEL_MAX - LEVEL_TLS_MAX));
 
-	/* if the ctx has been bound to a PU first, the herited ctx is supposed pinned on the same PU
-	 * a call to extls_ctx_bind() after the herit allows to migrate the current ctx.
-	 * No structure have to bee freed, as the contexts are globally allocated by extls_hls_topology_init()
+	/* Note: binding are not herited as it would force libextls to pay the price of 
+	 * a full migration when (if?) extls_ctx_bind() is called after that.
+	 * This tricky implies an undefined behavior when accessing HLS between _herit() and _bind() calls.
+	 * If a fatal() could be emitted when using TLS function calls, libextls cannot avoid a
+	 * potential SEGV when relying on Optimized accesses (yet)
 	 */
-	if(ctx->pu != -1)
-	{
-		for(i=LEVEL_NODE; i < LEVEL_MAX; i++)
-		{
-			herit->tls_vector[i] = ctx->tls_vector[i];
-		}
-	}
 #endif
 
 ret_func:

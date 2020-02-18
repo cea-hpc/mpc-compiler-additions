@@ -142,8 +142,12 @@ void extls_wait_for_value(volatile int* addr_val, int threshold)
 #include <extls_topo.h>
 
 extls_topo_t*(*extls_get_topology_addr)(void) = extls_get_dflt_topology_addr;
+
+char extls_hdl_topo = 1;
 extls_ret_t extls_set_topology_addr(extls_topo_t*(*func)(void))
 {
+	extls_hdl_topo = (func == extls_get_dflt_topology_addr);
+
 	extls_get_topology_addr = func;
 	return EXTLS_SUCCESS;
 }

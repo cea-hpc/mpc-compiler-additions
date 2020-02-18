@@ -11,6 +11,7 @@ extern void*(*extls_get_context_storage_addr)(void);
 #if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 extern FILE* fd; /**< In extls.c */
 extern extls_lock_t fd_lock; /**< In extls.c */
+extern char extls_hdl_topo; /**< in extls_comon.c */
 static short hls_initialized = 0; /**< check HLS init in case of remote topology */
 
 static inline extls_ret_t extls_hls_data_init(extls_hls_data_t** data)
@@ -82,6 +83,11 @@ static extls_topo_obj_t extls_hls_set_with_first_ancestor(extls_topo_t* topology
 	}
 	else
 	{
+		/* let just explain why it does not matter to copy the cell:
+		 * - "static_seg" field is a fixed mmap'd segment (pointer not mutable)
+		 * - "dyn*" fields are not relevant for HLS
+		 * - "hls_data" is a malloc'd pointer (the pointer is not mutable)
+		 */
 		level[set] = *((extls_object_level_t*)((uintptr_t)strtoull(extls_obj_get_info(tmp, "object_level"), NULL, 16)));
 		extls_atomic_incr(&level[set].hls_data->nb_toenter);
 		ret = tmp;
@@ -91,9 +97,10 @@ static extls_topo_obj_t extls_hls_set_with_first_ancestor(extls_topo_t* topology
 
 extls_ret_t extls_hls_init_levels(extls_object_level_t* start_array, int pu)
 {
-
 	if(start_array[LEVEL_NODE].static_seg != NULL)
-		return EXTLS_SUCCESS;
+	{
+		return EXTLS_ENFIRST;
+	}
 
 	/* We have to browse through the HLS levels only !!!! */
 	extls_topo_t* topology = extls_get_topology_addr();
@@ -104,17 +111,10 @@ extls_ret_t extls_hls_init_levels(extls_object_level_t* start_array, int pu)
 	 * In order to do this, the library will "emulate" a temp toplogy, and build the current context on it.
 	 * (this may be the one created by extls_init() before anything has started up yet.
 	 */
-	if(extls_get_topology_addr == extls_get_dflt_topology_addr) /* if _construct() haven't been called yet */
+	if(!hls_initialized && !extls_hdl_topo)
 	{
-		if(!hls_initialized)
-	        	extls_hls_topology_construct();
-        	hls_initialized = 0; /* this is ugly, this boolean need to be set to 1 when the real topology is initialized */
+		extls_fatal("HLS: Topology overriden but extls_hls_topology_construct() not called early enough");
 	}
-	else if(!hls_initialized)
-	{
-        	extls_fatal("HLS: extls_hls_topology_construct() should be called before running the first context !");
-        }
-
 
 	extls_topo_obj_t cur_level = extls_obj_by_type(*topology, HWLOC_OBJ_PU, pu);
 	if(cur_level == NULL)
@@ -151,16 +151,11 @@ extls_ret_t extls_hls_init_levels(extls_object_level_t* start_array, int pu)
 #define str(u) #u
 extls_ret_t extls_hls_topology_construct(void)
 {
-	if(hls_initialized)
-	{
-        	extls_warn("HLS tree should be initialized only once !");
-        	return EXTLS_ENFIRST;
-	}
-
 	extls_topo_t* global_topology = extls_get_topology_addr();
-	if(!global_topology || !(*global_topology))
+	if(hls_initialized && !extls_hdl_topo)
 	{
-		global_topology = extls_get_dflt_topology_addr();
+		extls_warn("HLS tree should be initialized only once !");
+		return EXTLS_ENFIRST;
 	}
 	/* get global tree depth an number of NUMA nodes */
 	const int topodepth = extls_topology_depth(*global_topology);
@@ -213,7 +208,9 @@ extls_ret_t extls_hls_topology_construct(void)
 		}
 	}
 	while ( stack_idx >= 0 ) ;
-	hls_initialized = 1;
+
+	if(!extls_hdl_topo)
+		hls_initialized = 1;
 	return EXTLS_SUCCESS;
 }
 
@@ -226,10 +223,11 @@ extls_ret_t extls_hls_topology_init(void)
 	 * of init and destroy the underlying topology object.
 	 */
 	extls_topo_t* t = extls_get_topology_addr();
-	if(extls_get_topology_addr == extls_get_dflt_topology_addr)
+	if(extls_hdl_topo)
 	{
 		extls_topology_init(t);
 		extls_topology_load(*t);
+		return extls_hls_topology_construct();
 	}
 
 	return EXTLS_ENFIRST;
@@ -238,7 +236,7 @@ extls_ret_t extls_hls_topology_init(void)
 extls_ret_t extls_hls_topology_fini(void)
 {
 	extls_topo_t* t = extls_get_topology_addr();
-	if(extls_get_topology_addr == extls_get_dflt_topology_addr)
+	if(extls_hdl_topo)
 		extls_topology_destroy(*t);
 	return EXTLS_SUCCESS;
 }
