@@ -9,6 +9,8 @@
 extern int arch_prctl(int, unsigned long);
 //#elif
 #endif
+extern extls_topo_t* (*extls_get_topology_addr)(void);
+extern void*(*extls_get_context_storage_addr)(void);
 
 /* Is the user wanting to disable optimized TLS handling ? */
 extern short tlsopt_support;

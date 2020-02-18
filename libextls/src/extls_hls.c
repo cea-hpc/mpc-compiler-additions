@@ -6,6 +6,8 @@
 #include "extls_hls.h"
 #include "extls_segmt_hdler.h"
 
+extern extls_topo_t* (*extls_get_topology_addr)(void);
+extern void*(*extls_get_context_storage_addr)(void);
 #if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 extern FILE* fd; /**< In extls.c */
 extern extls_lock_t fd_lock; /**< In extls.c */

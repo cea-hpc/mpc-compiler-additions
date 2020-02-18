@@ -211,14 +211,12 @@ extls_verb_t extls_get_verbosity(void);
 void extls_set_verbosity(extls_verb_t set);
 
 /* user-implemented function */
-extern void*(*extls_get_context_storage_addr)(void);
 extls_ret_t extls_set_context_storage_addr(void*(*)(void));
 void* extls_get_dflt_context_storage_addr(void);
 void extls_wait_for_value(volatile int*, int);
 
 #if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 #include <extls_topo.h>
-extern extls_topo_t* (*extls_get_topology_addr)(void);
 extls_ret_t extls_set_topology_addr(extls_topo_t*(*)(void));
 extls_topo_t* extls_get_dflt_topology_addr(void);
 #endif
