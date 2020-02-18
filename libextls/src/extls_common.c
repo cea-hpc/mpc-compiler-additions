@@ -151,11 +151,6 @@ extls_ret_t extls_set_topology_addr(extls_topo_t*(*func)(void))
 extls_topo_t* extls_get_dflt_topology_addr(void)
 {
 	static extls_topo_t extls_global_topology = NULL;
-	if(!extls_global_topology)
-	{
-		extls_topology_init(&extls_global_topology);
-		extls_topology_load(extls_global_topology);
-	}
 	return &extls_global_topology;
 }
 #endif

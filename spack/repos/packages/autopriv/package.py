@@ -29,7 +29,7 @@ class Autopriv(AutotoolsPackage):
 
     homepage = "http://mpc.hpcframework.com"
     url = "https://france.paratools.com/autopriv/autopriv-0.5.0.tar.gz"
-    version('0.5.0', sha256='7c581f33d9981ea118b942d3d6e8043aa55ecce18a0c5c1b54bc6ebb565e12e4')
+    version('0.5.0', sha256='297ed0c772b743048ab8de9a625e2ba3e5006930133e04be142c3b9dd0a070b1')
 
 
 

@@ -104,11 +104,10 @@ extls_ret_t extls_hls_init_levels(extls_object_level_t* start_array, int pu)
 	 * In order to do this, the library will "emulate" a temp toplogy, and build the current context on it.
 	 * (this may be the one created by extls_init() before anything has started up yet.
 	 */
-	if(!topology || !(*topology)) /* if _construct() haven't been called yet */
+	if(extls_get_topology_addr == extls_get_dflt_topology_addr) /* if _construct() haven't been called yet */
 	{
-		/* use the internal topology for now, will be replaced once runtime decided to do so*/
-		topology = extls_get_dflt_topology_addr();
-        	extls_hls_topology_construct();
+		if(!hls_initialized)
+	        	extls_hls_topology_construct();
         	hls_initialized = 0; /* this is ugly, this boolean need to be set to 1 when the real topology is initialized */
 	}
 	else if(!hls_initialized)
@@ -231,7 +230,6 @@ extls_ret_t extls_hls_topology_init(void)
 	{
 		extls_topology_init(t);
 		extls_topology_load(*t);
-		return extls_hls_topology_construct();
 	}
 
 	return EXTLS_ENFIRST;
