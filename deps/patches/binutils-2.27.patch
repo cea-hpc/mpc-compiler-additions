@@ -110,7 +110,7 @@ diff -Naur binutils-2.27/bfd/elf64-x86-64.c mpc-binutils-2.27/bfd/elf64-x86-64.c
 +				  }
 +
 +
-+				  if(!found || call_idx < 0 || call_idx >= nb_calls) /* handling errors */
++				  if(!found) /* handling errors */
 +				  {
 +					  /* get variable name for error message */
 +					  const char* name ;
@@ -123,7 +123,7 @@ diff -Naur binutils-2.27/bfd/elf64-x86-64.c mpc-binutils-2.27/bfd/elf64-x86-64.c
 +						  name = unknown_str ;
 +
 +					  (*_bfd_error_handler)
-+						  (_("%B(%A+0x%lx): Undefined EXTLS level for the symbol '%s'"), input_bfd, input_section, name);
++						  (_("%B: Undefined EXTLS level for the symbol '%s'"), input_bfd, name);
 +					  bfd_set_error (bfd_error_bad_value);
 +					  return FALSE;
 +				  } 
@@ -136,7 +136,7 @@ diff -Naur binutils-2.27/bfd/elf64-x86-64.c mpc-binutils-2.27/bfd/elf64-x86-64.c
 +				  if((call_idx * (5*8)) >= (1 << (sizeof(extls_scope_offset) * 8)))
 +				  {
 +				  	(*_bfd_error_handler)
-+						  (_("%B(%A+0x%lx): A symbol requires an offset larger than currently implemented offset capability (%d bytes)"), input_bfd, input_section, sizeof(extls_scope_offset));
++						  (_("%B: A symbol requires an offset larger than currently implemented offset capability (%d bytes)"), input_bfd, sizeof(extls_scope_offset));
 +				  }
 +			  } /* close extls symbol check */
 +		  } /* close sym index lookup */

@@ -29,7 +29,7 @@ class Autopriv(AutotoolsPackage):
 
     homepage = "http://mpc.hpcframework.com"
     url = "https://france.paratools.com/autopriv/autopriv-0.5.0.tar.gz"
-    version('0.5.0', sha256='9879104abed3134b45c1a88754e37cd6010330d1117b611882783386ee200e4a')
+    version('0.5.0', sha256='c9aeb640572bd7df3df6cfeb4337da2b8a8748cd0eaa8901f69b64ca0c58fb71')
 
     depends_on("gmp", type="build") # need to keep it explicit for dynpriv build
     depends_on("ap-gcc")
