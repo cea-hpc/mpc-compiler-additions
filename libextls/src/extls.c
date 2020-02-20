@@ -440,13 +440,8 @@ extls_ret_t extls_ctx_herit(extls_ctx_t* ctx, extls_ctx_t* herit, extls_object_l
 	 * For example, if the topology does not have a NUMA node level, the struct is set w/ '0'
 	 */
 	memset(herit->tls_vector+LEVEL_TLS_MAX, 0,sizeof(extls_object_level_t) * (LEVEL_MAX - LEVEL_TLS_MAX));
+	extls_hls_herit_levels(herit->tls_vector, ctx->tls_vector);
 
-	/* Note: binding are not herited as it would force libextls to pay the price of 
-	 * a full migration when (if?) extls_ctx_bind() is called after that.
-	 * This tricky implies an undefined behavior when accessing HLS between _herit() and _bind() calls.
-	 * If a fatal() could be emitted when using TLS function calls, libextls cannot avoid a
-	 * potential SEGV when relying on Optimized accesses (yet)
-	 */
 #endif
 
 ret_func:

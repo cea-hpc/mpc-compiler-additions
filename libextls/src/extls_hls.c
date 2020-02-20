@@ -95,11 +95,28 @@ static extls_topo_obj_t extls_hls_set_with_first_ancestor(extls_topo_t* topology
 	return ret;
 }
 
+extls_ret_t extls_hls_herit_levels(extls_object_level_t* new, extls_object_level_t* old)
+{
+	int i;
+	for (i = LEVEL_NODE; i < LEVEL_MAX; ++i)
+	{
+		new[i] = old[i];
+		extls_atomic_incr(&new[i].hls_data->nb_toenter);
+	}
+
+	return EXTLS_SUCCESS;
+}
+
 extls_ret_t extls_hls_init_levels(extls_object_level_t* start_array, int pu)
 {
+	/* De-register the previously bound context */
 	if(start_array[LEVEL_NODE].static_seg != NULL)
 	{
-		return EXTLS_ENFIRST;
+		int i;
+		for(i = LEVEL_NODE; i < LEVEL_MAX; i++)
+		{
+			extls_atomic_decr(&start_array[i].hls_data->nb_toenter);
+		}
 	}
 
 	/* We have to browse through the HLS levels only !!!! */
