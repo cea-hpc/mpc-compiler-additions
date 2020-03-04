@@ -118,7 +118,7 @@ static int __extls_lookfor_dsos(struct dl_phdr_info* info, size_t sz, void* data
 	new->name = (char*)((strcmp(info->dlpi_name, "")!=0) ? info->dlpi_name : __extls_program_path());
 	new->cdtor_start = NULL;
 	new->cdtor_end = NULL;
-	new->dso_start = (strcmp(info->dlpi_name, "")!=0) ? (void*)info->dlpi_addr : 0;
+	new->dso_start = (void*)info->dlpi_addr;
 	new->dso_end=new->dso_start + info->dlpi_phdr[info->dlpi_phnum -1].p_vaddr + info->dlpi_phdr[info->dlpi_phnum -1].p_memsz;
 
 	new->next = _extls_dsos;
