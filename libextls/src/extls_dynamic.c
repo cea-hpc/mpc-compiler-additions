@@ -95,31 +95,45 @@ void extls_locate_tls_dyn_initializer(char *fname)
 #include <unistd.h>
 static inline char* __extls_program_path()
 {
+	ssize_t sz = PATH_MAX;
 	static char* program = NULL;
 	
 	if(!program)
 	{
-		program = malloc(PATH_MAX);
+		program = malloc(sz);
 		extls_assert(program);
-		if(readlink("/proc/self/exe", program, PATH_MAX) == -1)
+		sz = readlink("/proc/self/exe", program, sz);
+		if(sz == -1 || sz >= PATH_MAX)
 		{
 			extls_fatal("Unable to get the actual program path");
 		}
+		/* 'man 3 readlink' clearly indicates no assumption should be made
+		 * to the presence of a null-terminated character... */
+		program[sz] = '\0';
 	}
-	extls_dbg("program = %s", program);
 	return program;
 
 }
 static int __extls_lookfor_dsos(struct dl_phdr_info* info, size_t sz, void* data)
 {
+	static char first_dso = 1;
 	UNUSED(data);
 	UNUSED(sz);
 	struct dsos_s *new = malloc(sizeof(struct dsos_s));
-	new->name = (char*)((strcmp(info->dlpi_name, "")!=0) ? info->dlpi_name : __extls_program_path());
+	new->name = (char*)info->dlpi_name;
 	new->cdtor_start = NULL;
 	new->cdtor_end = NULL;
 	new->dso_start = (void*)info->dlpi_addr;
 	new->dso_end=new->dso_start + info->dlpi_phdr[info->dlpi_phnum -1].p_vaddr + info->dlpi_phdr[info->dlpi_phnum -1].p_memsz;
+
+	/* This is an ugly way to remember the first iteration (known to be the executable.
+	 * Previously it was detected by considering an empty dlpi_name as the executable DSO.
+	 * Usage showed it was a wrong assumption. */
+	if(first_dso)
+	{
+		first_dso = 0;
+		new->name = __extls_program_path();
+	}
 
 	new->next = _extls_dsos;
 	_extls_dsos = new;
@@ -201,7 +215,7 @@ static inline void __extls_load_constructors_check_range_and_insert(struct dsos_
 	dso->cdtor_start = (char*)region_start + (size_t)dso->dso_start;
 	dso->cdtor_end = (char*)region_end + (size_t)dso->dso_start;
 
-	extls_dbg("DYNAMIC: register ctors/dtors from %s", (dso->name));
+	extls_dbg("DYNAMIC: register CDTOR (%p-%p) from %s", dso->dso_start, dso->dso_end, (dso->name));
 
 	/* sanity checks */
 	size_t i, nbentries = ((size_t)(dso->cdtor_end - dso->cdtor_start))/sizeof(void*);
@@ -442,6 +456,11 @@ static inline int __extls_load_constructors_compat(struct dsos_s * dso)
 {
 	int ret = 0;
 
+	/* if no name is detected, this method cannot be used.
+	 * This condition is required as running 'nm' without any argument
+	 * will process a potential 'a.out' file, leading to major breaks !*/
+	if(!dso->name || strcmp(dso->name, "") == 0)
+		return 1;
 
 	void * cdtor_start = NULL;
 	void * cdtor_end = NULL;
@@ -486,7 +505,8 @@ static inline int __extls_load_constructors_compat(struct dsos_s * dso)
 
 	pclose(constructor_array);
 
-	__extls_load_constructors_check_range_and_insert(dso, cdtor_start, cdtor_end);
+	if(cdtor_start && cdtor_end)
+		__extls_load_constructors_check_range_and_insert(dso, cdtor_start, cdtor_end);
 
 	return ret;
 }
