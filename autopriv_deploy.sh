@@ -23,7 +23,7 @@ usage()
 {
 	printf "Usage: $0 [-i <install-prefix>] [-b <build-prefix>] [-jX] [-sShDf]\n"
 	printf "     -h          Print this message.\n"
-	printf "     -J<number>  Number of jobs running simultaneously (see \`man make\`)"
+	printf "     -j<number>  Number of jobs running simultaneously (see \`man make\`)"
 	printf "     -d          Dry-run, only print commands that would be run.\n"
 	printf "     -s          Make output silent. (do not output build logs).\n"
 	printf "     -S          Make completely silent (even errors).\n"
