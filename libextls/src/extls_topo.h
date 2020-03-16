@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-#ifdef HAVE_TOPOLOGY
+#ifdef HAVE_HWLOC
 #include <hwloc.h>
 
 /* create an interface between hwloc and extls */
@@ -30,6 +30,7 @@ typedef hwloc_obj_type_t extls_obj_type_t;
 #define extls_type_depth       hwloc_get_type_depth
 #define extls_parent_by_depth  hwloc_get_ancestor_obj_by_depth
 #else
+#error "Need Hwloc to support HLS !"
 typedef void* extls_topo_t;
 typedef void* extls_topo_obj_t;
 

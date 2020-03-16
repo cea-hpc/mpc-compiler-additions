@@ -774,7 +774,6 @@ with_openpa
 with_libelf
 enable_debug
 enable_color
-enable_hls
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1428,7 +1427,6 @@ Optional Features:
   --disable-libtool-lock  avoid locking (might break parallel builds)
   --enable-debug          Enable library debug mode (disabled by default)
   --enable-color          Enable library color mode (disabled by default)
-  --disable-hls           Disable HLS support (enabled by default)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -12323,7 +12321,7 @@ fi
 
 if test "x$HWLOC_OK" = "x1"; then :
   
-$as_echo "@%:@define HAVE_TOPOLOGY 1" >>confdefs.h
+$as_echo "@%:@define HAVE_HWLOC 1" >>confdefs.h
 
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Hwloc library not found ! - Disabling HLS" >&5
@@ -12482,20 +12480,6 @@ if test "x$enable_color" = "xyes"; then :
   
 	   
 $as_echo "@%:@define EXTLS_COLOR_ENABLED 1" >>confdefs.h
-
-		 
-fi
-
-
-@%:@ Check whether --enable-hls was given.
-if test "${enable_hls+set}" = set; then :
-  enableval=$enable_hls; 
-fi
-
-if test "x$enable_hls" != "xno"; then :
-  
-	   
-$as_echo "@%:@define ENABLE_HLS 1" >>confdefs.h
 
 		 
 fi

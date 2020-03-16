@@ -62,7 +62,7 @@ if test -n "x$with_hwloc" ; then
 fi
 AC_SEARCH_LIBS([hwloc_topology_init], [hwloc], [HWLOC_OK=1], [HWLOC_OK=0])
 AS_IF([test "x$HWLOC_OK" = "x1"],
-				[AC_DEFINE([HAVE_TOPOLOGY], [1], [Define hardware topology support])],
+				[AC_DEFINE([HAVE_HWLOC], [1], [Define hardware topology support])],
 				[AC_MSG_WARN([Hwloc library not found ! - Disabling HLS])])
 
 ##################
@@ -116,12 +116,6 @@ AM_CONDITIONAL([DEBUG_MODE], [test "x$enable_debug" = "xyes"])
 AC_ARG_ENABLE([color], AS_HELP_STRING([--enable-color], [Enable library color mode (disabled by default)]))
 AS_IF([test "x$enable_color" = "xyes"], [
 	   AC_DEFINE([EXTLS_COLOR_ENABLED], [1], [Shell color enabled])
-		 ])
-
-
-AC_ARG_ENABLE([hls], AS_HELP_STRING([--disable-hls], [Disable HLS support (enabled by default)]))
-AS_IF([test "x$enable_hls" != "xno"], [
-	   AC_DEFINE([ENABLE_HLS], [1], [HLS Support enabled])
 		 ])
 ###################################################################################
 

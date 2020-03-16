@@ -30,6 +30,9 @@ extls_ret_t extls_ctx_reg_get_addr(extls_ctx_t* ctx, extls_object_id_t id, extls
 /* Static TLS segment query */
 extls_size_t extls_get_sz_static_tls_segments(void);
 
+extls_ret_t extls_set_context_storage_addr(void*(*)(void));
+extls_ret_t extls_set_topology_addr(void*(*)(void));
+
 #ifdef __cplusplus
 }
 #endif

@@ -6,12 +6,17 @@
 #include "extls_hls.h"
 #include "extls_segmt_hdler.h"
 
-extern extls_topo_t* (*extls_get_topology_addr)(void);
+extls_topo_t* extls_get_dflt_topology_addr(void);
+
 extern void*(*extls_get_context_storage_addr)(void);
-#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
-extern FILE* fd; /**< In extls.c */
-extern extls_lock_t fd_lock; /**< In extls.c */
-extern char extls_hdl_topo; /**< in extls_comon.c */
+extls_topo_t* (*extls_get_topology_addr)(void) = extls_get_dflt_topology_addr;
+
+/** Used by HLS module to print the topology if the user requested it (export EXTLS_DUMP_TOPOLOGY) */
+FILE* fd = NULL;
+/** the lock on the topology file */
+extls_lock_t fd_lock = EXTLS_LOCK_INITIALIZER;
+char extls_hdl_topo = 1;
+
 static short hls_initialized = 0; /**< check HLS init in case of remote topology */
 
 static inline extls_ret_t extls_hls_data_init(extls_hls_data_t** data)
@@ -88,20 +93,47 @@ static extls_topo_obj_t extls_hls_set_with_first_ancestor(extls_topo_t* topology
 		 * - "dyn*" fields are not relevant for HLS
 		 * - "hls_data" is a malloc'd pointer (the pointer is not mutable)
 		 */
-		level[set] = *((extls_object_level_t*)((uintptr_t)strtoull(extls_obj_get_info(tmp, "object_level"), NULL, 16)));
+		extls_object_level_t* new_obj = ((extls_object_level_t*)((uintptr_t)strtoull(extls_obj_get_info(tmp, "object_level"), NULL, 16)));
+		if(new_obj->static_seg == level[set].static_seg)
+			return tmp;
+		
+		if(level[set].static_seg != NULL)
+		{
+			//extls_dbg("DECR I-%s (%p): toenter = %d\n", LEVEL_NAME(set), &level[set].hls_data->nb_toenter, extls_atomic_load(&level[set].hls_data->nb_toenter));
+			extls_atomic_decr(&level[set].hls_data->nb_toenter);
+		}
+		level[set] = *new_obj;
 		extls_atomic_incr(&level[set].hls_data->nb_toenter);
+						
+		//extls_dbg("INCR I-%s (%p): toenter = %d\n", LEVEL_NAME(set), level[set].static_seg, extls_atomic_load(&level[set].hls_data->nb_toenter));
 		ret = tmp;
 	}
 	return ret;
 }
 
-extls_ret_t extls_hls_herit_levels(extls_object_level_t* new, extls_object_level_t* old)
+extls_ret_t extls_hls_herit_levels(extls_object_level_t* child, extls_object_level_t* parent)
 {
 	int i;
+
+	if(child[LEVEL_NODE].static_seg == NULL || parent[LEVEL_NODE].static_seg == NULL)
+		return EXTLS_ENFOUND;
+	
 	for (i = LEVEL_NODE; i < LEVEL_MAX; ++i)
 	{
-		new[i] = old[i];
-		extls_atomic_incr(&new[i].hls_data->nb_toenter);
+		if(child[i].static_seg != NULL)
+		{
+			//extls_err("H-DECR L-%s (%p): toenter = %d\n", LEVEL_NAME(i), &child[i].hls_data->nb_toenter, extls_atomic_load(&child[i].hls_data->nb_toenter));
+			
+			extls_atomic_decr(&child[i].hls_data->nb_toenter);
+		}
+
+		if(parent[i].static_seg != NULL)
+		{
+			extls_atomic_incr(&parent[i].hls_data->nb_toenter);
+			//extls_dbg("H-INCR L-%s (%p): toenter = %d\n", LEVEL_NAME(i), &parent[i].hls_data->nb_toenter, extls_atomic_load(&parent[i].hls_data->nb_toenter));
+		}
+
+		child[i] = parent[i];
 	}
 
 	return EXTLS_SUCCESS;
@@ -109,16 +141,6 @@ extls_ret_t extls_hls_herit_levels(extls_object_level_t* new, extls_object_level
 
 extls_ret_t extls_hls_init_levels(extls_object_level_t* start_array, int pu)
 {
-	/* De-register the previously bound context */
-	if(start_array[LEVEL_NODE].static_seg != NULL)
-	{
-		int i;
-		for(i = LEVEL_NODE; i < LEVEL_MAX; i++)
-		{
-			extls_atomic_decr(&start_array[i].hls_data->nb_toenter);
-		}
-	}
-
 	/* We have to browse through the HLS levels only !!!! */
 	extls_topo_t* topology = extls_get_topology_addr();
 
@@ -156,7 +178,10 @@ extls_ret_t extls_hls_init_levels(extls_object_level_t* start_array, int pu)
 	for(i = LEVEL_NODE; i < LEVEL_MAX; i++)
 	{
 		if(start_array[i].static_seg == NULL)
+		{
+			extls_assert(start_array[i-1].static_seg);
 			start_array[i] = start_array[i-1]; /* The first level (NODE) will not pass through this statement (extls_fatal()) */
+		}
 	}
 
 	/* big print to generate topology file */
@@ -228,6 +253,7 @@ extls_ret_t extls_hls_topology_construct(void)
 
 	if(!extls_hdl_topo)
 		hls_initialized = 1;
+
 	return EXTLS_SUCCESS;
 }
 
@@ -247,6 +273,14 @@ extls_ret_t extls_hls_topology_init(void)
 		return extls_hls_topology_construct();
 	}
 
+	extls_info("HLS: Enabling Topological TLS support");
+	const char* file = getenv("EXTLS_DUMP_TOPOLOGY");
+	if(file)
+	{
+		fd = fopen(file, "w");
+		fprintf(fd, "digraph G{\n");
+	}
+
 	return EXTLS_ENFIRST;
 }
 
@@ -255,6 +289,12 @@ extls_ret_t extls_hls_topology_fini(void)
 	extls_topo_t* t = extls_get_topology_addr();
 	if(extls_hdl_topo)
 		extls_topology_destroy(*t);
+
+	if(fd)
+	{
+		fprintf(fd, "}\n");
+		fclose(fd);
+	}
 	return EXTLS_SUCCESS;
 }
 
@@ -383,36 +423,20 @@ int __extls_hls_single_nowait(unsigned int hls_level)
 	ctx->async_gen_num++;
 
 	return ret;
-
 }
 
-#else /* WITHOUT HLS SUPPORT */
-
-void __extls_hls_barrier(unsigned int hls_level)
+extls_topo_t* extls_get_dflt_topology_addr(void)
 {
-	UNUSED(hls_level);
-	extls_fatal("A HLS BARRIER routine seems to be inserted but libextls has been built without HLS support. Please install with --enable-hls !");
+	static extls_topo_t extls_global_topology = NULL;
+	return &extls_global_topology;
 }
 
-int __extls_hls_single(unsigned int hls_level)
+extls_ret_t extls_set_topology_addr(void*(*arg)(void))
 {
-	UNUSED(hls_level);
-	extls_fatal("A HLS SINGLE routine seems to be inserted but libextls has been built without HLS support. Please install with --enable-hls !");
-	return 0;
+	extls_topo_t*(*func)(void) = (extls_topo_t*(*)(void))arg;
+	
+	extls_hdl_topo = (func == extls_get_dflt_topology_addr);
+
+	extls_get_topology_addr = func;
+	return EXTLS_SUCCESS;
 }
-
-int __extls_hls_single_nowait(unsigned int hls_level)
-{
-	UNUSED(hls_level);
-	extls_fatal("A HLS SINGLE_NOWAIT routine seems to be inserted but libextls has been built without HLS support. Please install with --enable-hls !");
-	return 0;
-}
-
-void __extls_hls_single_done(unsigned int hls_level)
-{
-	UNUSED(hls_level);
-	extls_fatal("A HLS SINGLE_DONE routine seems to be inserted but libextls has been built without HLS support. Please install with --enable-hls !");
-}
-
-#endif
-

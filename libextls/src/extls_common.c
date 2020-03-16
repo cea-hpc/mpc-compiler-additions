@@ -1,7 +1,11 @@
 #include <config.h>
 #include "extls_common.h"
+#include "extls.h"
+#include "extls_topo.h"
 
 static extls_verb_t verbosity = EXTLS_VERB_WARN;/**< default verbosity level */
+/** default context created to make the lib transparent if no thread engine are used */
+static extls_ctx_t ctx_root;
 
 /**
  * Set default verbosity level, depending on environment variable EXTLS_VERBOSE
@@ -111,17 +115,17 @@ inline extls_ret_t extls_write_zeros(int fd, extls_size_t sz)
 	return (ret == sz * sizeof(char)) ? EXTLS_SUCCESS : EXTLS_EWRITE;
 }
 
+void* extls_get_dflt_context_storage_addr(void)
+{
+	static __thread void* current_ctx = NULL;
+	return &current_ctx;
+}
+
 void*(*extls_get_context_storage_addr)(void) = extls_get_dflt_context_storage_addr;
 extls_ret_t extls_set_context_storage_addr(void*(*func)(void))
 {
 	extls_get_context_storage_addr = func;
 	return EXTLS_SUCCESS;
-}
-
-void* extls_get_dflt_context_storage_addr(void)
-{
-	static __thread void* current_ctx = NULL;
-	return &current_ctx;
 }
 
 /**
@@ -138,23 +142,22 @@ void extls_wait_for_value(volatile int* addr_val, int threshold)
 	}
 }
 
-#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
-#include <extls_topo.h>
-
-extls_topo_t*(*extls_get_topology_addr)(void) = extls_get_dflt_topology_addr;
-
-char extls_hdl_topo = 1;
-extls_ret_t extls_set_topology_addr(extls_topo_t*(*func)(void))
+extls_ctx_t* extls_fallback_ctx_get()
 {
-	extls_hdl_topo = (func == extls_get_dflt_topology_addr);
+	return &ctx_root;
+}
 
-	extls_get_topology_addr = func;
+extls_ret_t extls_fallback_ctx_init()
+{
+	extls_ctx_init(&ctx_root, NULL);
+	extls_ctx_restore(&ctx_root);
 	return EXTLS_SUCCESS;
 }
 
-extls_topo_t* extls_get_dflt_topology_addr(void)
+extls_ret_t extls_fallback_ctx_reset()
 {
-	static extls_topo_t extls_global_topology = NULL;
-	return &extls_global_topology;
+	extls_ctx_destroy(&ctx_root);
+	extls_ctx_init(&ctx_root, NULL);
+	return EXTLS_SUCCESS;
+
 }
-#endif

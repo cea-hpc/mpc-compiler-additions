@@ -34,7 +34,6 @@ void * __extls_get_addr_thread(tls_index* idx);
 void * __extls_get_addr_openmp(tls_index* idx);
 
 /* HLS */
-#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 void * __extls_get_addr_node(tls_index* idx);
 void * __extls_get_addr_numa_level_2(tls_index* idx);
 void * __extls_get_addr_numa_level_1(tls_index* idx);
@@ -43,7 +42,6 @@ void * __extls_get_addr_cache_level_3(tls_index* idx);
 void * __extls_get_addr_cache_level_2(tls_index* idx);
 void * __extls_get_addr_cache_level_1(tls_index* idx);
 void * __extls_get_addr_core(tls_index* idx);
-#endif
 
 #ifdef __cplusplus
 }

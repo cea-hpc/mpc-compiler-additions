@@ -13,7 +13,8 @@ int main(int argc, char *argv[])
 	extls_ctx_t ctx;
 
 	extls_ctx_init(&ctx, NULL);
-	extls_init();
+	extls_ctx_restore(&ctx);
+	extls_ctx_bind(&ctx, 0);
 	extls_call_dynamic_initializers();
 	printf("i = %d, &i = %p\n", i, &i);
 	AP_ASSERT(i, 2, "%d");

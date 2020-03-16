@@ -77,7 +77,6 @@ typedef enum extls_object_level_type_e
 	LEVEL_OPENMP,      /**< Depicts the object at OpenMP scope  */
 
 	LEVEL_TLS_MAX,     /**< used as enumerator boundary */
-#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
 	/* to ensure synchronisation routines to work well,
 	 * the HLS level order has to be the same as in gcc/coretypes.h
 	 */
@@ -90,10 +89,6 @@ typedef enum extls_object_level_type_e
 	LEVEL_CACHE_1,              /**< Depicts the object at cache scope */
 	LEVEL_CORE,                 /**< Depicts the object at core scope */
 	LEVEL_MAX
-
-#else
-	LEVEL_MAX = LEVEL_TLS_MAX
-#endif
 } extls_object_level_type_t;
 
 /** defined in extls.c */
@@ -187,6 +182,7 @@ typedef struct extls_ctx_s
 #define extls_dbg(u,...)   do{if(extls_get_verbosity() >= EXTLS_VERB_DEBUG)fprintf(stderr, BLU "EXTLS-DEBUG: " u DEF" (%s():"RED"%d"DEF")\n", ##__VA_ARGS__, __FUNCTION__, __LINE__);}while(0)
 #define extls_info(u,...)  do{if(extls_get_verbosity() >= EXTLS_VERB_INFO)fprintf(stderr, GRE "EXTLS-INFO : " u DEF"\n", ##__VA_ARGS__);}while(0)
 #define extls_warn(u,...)  do{if(extls_get_verbosity() >= EXTLS_VERB_WARN)fprintf(stderr, YEL "EXTLS-WARN : " u DEF"\n", ##__VA_ARGS__);}while(0)
+#define extls_err(u,...) do{if(extls_get_verbosity() >= EXTLS_VERB_ERROR)fprintf(stderr, RED "EXTLS-ERROR: " u DEF"\n", ##__VA_ARGS__);}while(0)
 #define extls_fatal(u,...) do{if(extls_get_verbosity() >= EXTLS_VERB_ERROR)fprintf(stderr, RED "EXTLS-FATAL: " u DEF"\n", ##__VA_ARGS__);abort();}while(0)
 #define extls_assert(u) do{if(!u) extls_fatal("Assertion " #u " returned false.");} while(0)
 
@@ -194,6 +190,7 @@ typedef struct extls_ctx_s
 #define extls_dbg(u,...)  (void)(u)
 #define extls_info(u,...) (void)(u)
 #define extls_warn(u,...)  do{fprintf(stderr, YEL "EXTLS-WARN : " u DEF"\n", ##__VA_ARGS__);}while(0)
+#define extls_err extls_fatal
 #define extls_fatal(u,...) do{fprintf(stderr, RED "EXTLS-FATAL: " u DEF"\n", ##__VA_ARGS__);abort();}while(0)
 #define extls_assert(u) (void)(u)
 #endif
@@ -210,16 +207,13 @@ void extls_init_verbosity(void);
 extls_verb_t extls_get_verbosity(void);
 void extls_set_verbosity(extls_verb_t set);
 
-/* user-implemented function */
-extls_ret_t extls_set_context_storage_addr(void*(*)(void));
-void* extls_get_dflt_context_storage_addr(void);
+///void* extls_get_dflt_context_storage_addr(void);
+//extls_topo_t* extls_get_dflt_topology_addr(void);
 void extls_wait_for_value(volatile int*, int);
 
-#if defined(HAVE_TOPOLOGY) && defined(ENABLE_HLS)
-#include <extls_topo.h>
-extls_ret_t extls_set_topology_addr(extls_topo_t*(*)(void));
-extls_topo_t* extls_get_dflt_topology_addr(void);
-#endif
+extls_ret_t extls_fallback_ctx_init();
+extls_ret_t extls_fallback_ctx_reset();
+extls_ctx_t* extls_fallback_ctx_get();
 
 #ifdef __cplusplus
 }
