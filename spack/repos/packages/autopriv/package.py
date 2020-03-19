@@ -29,7 +29,8 @@ class Autopriv(AutotoolsPackage):
 
     homepage = "http://mpc.hpcframework.com"
     url = "https://france.paratools.com/autopriv/autopriv-0.5.0.tar.gz"
-    version('0.5.0', sha256='657e1cbd6a68e493e4263d8384dfa5c5d467b470c2842c68f3f61590c03f6755')
+    version('0.5.0', sha256='cad659592d45604b2f5c1cf2e6367ce526828862be84980c1952b30b9a1e35cf')
+
 
     depends_on("gmp", type="build") # need to keep it explicit for dynpriv build
     depends_on("ap-gcc")
@@ -56,3 +57,20 @@ class Autopriv(AutotoolsPackage):
         env.set('CC', self.spec['ap-gcc'].apcc)
         env.set('CXX', self.spec['ap-gcc'].apcxx)
         env.set('FC', self.spec['ap-gcc'].apfc)
+
+        updated_cppflags="-I"+self.spec['gmp'].prefix+'/include'
+        updated_cflags= \
+                " -I"+self.spec['hwloc'].prefix+"/include"+ \
+                " -I"+self.spec['openpa'].prefix+"/include"
+
+        updated_ldflags= \
+                " -L"+self.spec['hwloc'].prefix+"/lib -Wl,-rpath="+self.spec['hwloc'].prefix+"/lib -lhwloc"+ \
+                " -L"+self.spec['openpa'].prefix+"/lib -Wl,-rpath="+self.spec['openpa'].prefix+"/lib -lopenpa"
+
+        if self.spec.satisfies("+libelf"):
+            updated_cflags=" -I"+self.spec['libelf'].prefix+"/include"
+            updated_ldflags=" -L"+self.spec['libelf'].prefix+'/lib -Wl,-rpath='+self.spec['libelf'].prefix+'/lib -lelf'
+
+        env.set('CPPFLAGS', updated_cppflags)
+        env.set('CFLAGS', updated_cflags)
+        env.set('LDFLAGS', updated_ldflags)
