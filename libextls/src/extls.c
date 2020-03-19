@@ -355,7 +355,7 @@ extls_ret_t extls_ctx_herit(extls_ctx_t* ctx, extls_ctx_t* herit, extls_object_l
 		goto ret_func;
 	}
 
-	if(ctx == NULL) /* herit from our root */
+	if(ctx == EXTLS_DEFAULT_CTX) /* herit from our root */
 	{
 		ctx = extls_fallback_ctx_get();
 	}
@@ -431,6 +431,8 @@ ret_func:
 extls_ret_t extls_ctx_bind(extls_ctx_t* ctx, int pu)
 {
 #if defined(HAVE_HWLOC)
+	if(ctx == EXTLS_DEFAULT_CTX)
+		ctx = extls_fallback_ctx_get();
 	extls_info("Context: Binding");
 	ctx->pu = pu;
 	extls_hls_init_levels(ctx->tls_vector, pu);

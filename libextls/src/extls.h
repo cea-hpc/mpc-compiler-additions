@@ -8,6 +8,8 @@ extern "C"
 {
 #endif
 
+#define EXTLS_DEFAULT_CTX (NULL)
+
 /* library's main entry points */
 extls_ret_t extls_init(void);
 extls_ret_t extls_fini(void);
