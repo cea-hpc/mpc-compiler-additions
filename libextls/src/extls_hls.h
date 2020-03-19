@@ -6,6 +6,9 @@ extern "C"
 {
 #endif
 
+#include "extls.h"
+#include "extls_types.h"
+
 extls_ret_t extls_hls_topology_init(void);
 extls_ret_t extls_hls_topology_fini(void);
 extls_ret_t extls_hls_topology_construct(void);

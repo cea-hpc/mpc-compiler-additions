@@ -1,12 +1,13 @@
 #ifndef EXTLS_DYNAMIC_H
 #define EXTLS_DYNAMIC_H
 
-#include <extls.h>
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+#include "extls.h"
+#include "extls_types.h"
 
 /**
  * Represent a dynamic symbol for the dynamic initializer interface.

@@ -1,7 +1,14 @@
 #define _GNU_SOURCE
+#include "extls_types.h"
 #include "extls_dl.h"
 #include "extls_common.h"
+#include "extls_segmt_hdler.h"
+#include "extls_optim_tls.h"
+#include "extls_dynamic.h"
+#include "extls_hls.h"
 #include <dlfcn.h>
+
+extern void*(*extls_get_context_storage_addr)(void);
 
 #undef dlopen
 #undef dlsym

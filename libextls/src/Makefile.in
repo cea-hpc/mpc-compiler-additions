@@ -132,13 +132,14 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)" \
+	"$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libextls_la_LIBADD =
 am__objects_1 = libextls_la-extls.lo libextls_la-extls_optim_tls.lo \
 	libextls_la-extls_common.lo libextls_la-extls_hls.lo \
 	libextls_la-extls_mpc.lo libextls_la-extls_dynamic.lo \
-	libextls_la-extls_segmt_hdler.lo
+	libextls_la-extls_dl.lo libextls_la-extls_segmt_hdler.lo
 am_libextls_la_OBJECTS = $(am__objects_1)
 libextls_la_OBJECTS = $(am_libextls_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -189,7 +190,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-HEADERS = $(include_HEADERS)
+HEADERS = $(include_HEADERS) $(nodist_include_HEADERS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
@@ -336,27 +337,33 @@ CFILES = \
 	   extls_hls.c\
 	   extls_mpc.c\
 	   extls_dynamic.c\
+	   extls_dl.c\
        extls_segmt_hdler.c
 
-HFILES = \
-	   extls.h\
+PRIVATE_HFILES = \
 	   extls_locks.h\
 	   extls_topo.h\
 	   extls_atomics.h\
 	   extls_common.h\
 	   extls_optim_tls.h\
-	   extls_hls.h\
 	   extls_list.h\
 	   extls_mpc.h\
-	   extls_dynamic.h\
 	   extls_segmt_hdler.h
 
+nodist_include_HEADERS = $(PRIVATE_HFILES)
+PUBLIC_HFILES = \
+	   extls.h\
+	   extls_types.h\
+	   extls_dl.h\
+	   extls_hls.h\
+	   extls_dynamic.h
+
+include_HEADERS = $(PUBLIC_HFILES)
 lib_LTLIBRARIES = libextls.la
 libextls_la_SOURCES = $(CFILES)
 @DEBUG_MODE_FALSE@libextls_la_CFLAGS = -DNDEBUG
 @DEBUG_MODE_TRUE@libextls_la_CFLAGS = -Wall -Wextra -Werror -g -O0
 libextls_la_LDFLAGS = -ldl $(OPA_LDFLAGS) -lpthread $(HWLOC_LDFLAGS) $(LIBELF_LDFLAGS)
-include_HEADERS = $(HFILES)
 all: all-am
 
 .SUFFIXES:
@@ -437,6 +444,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls_common.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls_dl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls_dynamic.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls_hls.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libextls_la-extls_mpc.Plo@am__quote@
@@ -506,6 +514,13 @@ libextls_la-extls_dynamic.lo: extls_dynamic.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libextls_la_CFLAGS) $(CFLAGS) -c -o libextls_la-extls_dynamic.lo `test -f 'extls_dynamic.c' || echo '$(srcdir)/'`extls_dynamic.c
 
+libextls_la-extls_dl.lo: extls_dl.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libextls_la_CFLAGS) $(CFLAGS) -MT libextls_la-extls_dl.lo -MD -MP -MF $(DEPDIR)/libextls_la-extls_dl.Tpo -c -o libextls_la-extls_dl.lo `test -f 'extls_dl.c' || echo '$(srcdir)/'`extls_dl.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libextls_la-extls_dl.Tpo $(DEPDIR)/libextls_la-extls_dl.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='extls_dl.c' object='libextls_la-extls_dl.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libextls_la_CFLAGS) $(CFLAGS) -c -o libextls_la-extls_dl.lo `test -f 'extls_dl.c' || echo '$(srcdir)/'`extls_dl.c
+
 libextls_la-extls_segmt_hdler.lo: extls_segmt_hdler.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libextls_la_CFLAGS) $(CFLAGS) -MT libextls_la-extls_segmt_hdler.lo -MD -MP -MF $(DEPDIR)/libextls_la-extls_segmt_hdler.Tpo -c -o libextls_la-extls_segmt_hdler.lo `test -f 'extls_segmt_hdler.c' || echo '$(srcdir)/'`extls_segmt_hdler.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libextls_la-extls_segmt_hdler.Tpo $(DEPDIR)/libextls_la-extls_segmt_hdler.Plo
@@ -537,6 +552,27 @@ install-includeHEADERS: $(include_HEADERS)
 uninstall-includeHEADERS:
 	@$(NORMAL_UNINSTALL)
 	@list='$(include_HEADERS)'; test -n "$(includedir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(includedir)'; $(am__uninstall_files_from_dir)
+install-nodist_includeHEADERS: $(nodist_include_HEADERS)
+	@$(NORMAL_INSTALL)
+	@list='$(nodist_include_HEADERS)'; test -n "$(includedir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(includedir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(includedir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(includedir)'"; \
+	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(includedir)" || exit $$?; \
+	done
+
+uninstall-nodist_includeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(nodist_include_HEADERS)'; test -n "$(includedir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(includedir)'; $(am__uninstall_files_from_dir)
 
@@ -626,7 +662,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -682,7 +718,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-includeHEADERS
+install-data-am: install-includeHEADERS install-nodist_includeHEADERS
 
 install-dvi: install-dvi-am
 
@@ -728,7 +764,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
+uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES \
+	uninstall-nodist_includeHEADERS
 
 .MAKE: install-am install-strip
 
@@ -740,13 +777,14 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
 	install-data-am install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am \
 	install-includeHEADERS install-info install-info-am \
-	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
+	install-libLTLIBRARIES install-man \
+	install-nodist_includeHEADERS install-pdf install-pdf-am \
 	install-ps install-ps-am install-strip installcheck \
 	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags tags-am uninstall uninstall-am uninstall-includeHEADERS \
-	uninstall-libLTLIBRARIES
+	uninstall-libLTLIBRARIES uninstall-nodist_includeHEADERS
 
 .PRECIOUS: Makefile
 

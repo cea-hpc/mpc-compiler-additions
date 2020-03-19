@@ -5,20 +5,28 @@ CFILES=\
 	   extls_hls.c\
 	   extls_mpc.c\
 	   extls_dynamic.c\
+	   extls_dl.c\
        extls_segmt_hdler.c
 
-HFILES=\
-	   extls.h\
+
+PRIVATE_HFILES=\
 	   extls_locks.h\
 	   extls_topo.h\
 	   extls_atomics.h\
 	   extls_common.h\
 	   extls_optim_tls.h\
-	   extls_hls.h\
 	   extls_list.h\
 	   extls_mpc.h\
-	   extls_dynamic.h\
 	   extls_segmt_hdler.h
+nodist_include_HEADERS=$(PRIVATE_HFILES)
+
+PUBLIC_HFILES=\
+	   extls.h\
+	   extls_types.h\
+	   extls_dl.h\
+	   extls_hls.h\
+	   extls_dynamic.h
+include_HEADERS=$(PUBLIC_HFILES)
 
 lib_LTLIBRARIES= libextls.la
 libextls_la_SOURCES= $(CFILES)
@@ -28,4 +36,3 @@ else
 libextls_la_CFLAGS=-DNDEBUG
 endif
 libextls_la_LDFLAGS = -ldl $(OPA_LDFLAGS) -lpthread $(HWLOC_LDFLAGS) $(LIBELF_LDFLAGS)
-include_HEADERS=$(HFILES)

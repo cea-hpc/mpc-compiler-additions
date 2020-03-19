@@ -1,13 +1,14 @@
 #ifndef EXTLS_MPC_H
 #define EXTLS_MPC_H
 
-#include <config.h>
-#include <extls_optim_tls.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+#include "extls_types.h"
+#include "extls_optim_tls.h"
 
 /* really specific to TLS handling in Intel compiler, bound to MPC callbacks */
 

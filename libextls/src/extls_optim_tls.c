@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <config.h>
 #include "extls_segmt_hdler.h"
 #include "extls_optim_tls.h"

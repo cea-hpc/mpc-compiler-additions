@@ -1,12 +1,12 @@
 #ifndef HAVE_EXTLS_H
 #define HAVE_EXTLS_H
 
-#include "extls_common.h"
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+#include "extls_types.h"
 
 #define EXTLS_DEFAULT_CTX (NULL)
 

@@ -1,4 +1,3 @@
-#define _GNU_SOURCE 1
 #ifndef HAVE_EXTLS_SEGMT_HDLER_H
 #define HAVE_EXTLS_SEGMT_HDLER_H
 
@@ -10,6 +9,7 @@ extern "C"
 
 #include <elf.h>
 #include <link.h>
+#include "extls_types.h"
 #include "extls_common.h"
 #include "extls_locks.h"
 

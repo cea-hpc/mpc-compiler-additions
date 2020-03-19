@@ -1,12 +1,12 @@
 #ifndef HAVE_EXTLS_OPTIM_TLS_H
 #define HAVE_EXTLS_OPTIM_TLS_H
 
-#include "extls_common.h"
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+#include "extls_types.h"
 
 /* Used by GNU variant */
 struct tls_index_s

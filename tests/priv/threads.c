@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <pthread.h>
 extern void*(*lol)(void);
 #include <extls.h>
