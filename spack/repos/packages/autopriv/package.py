@@ -29,17 +29,17 @@ class Autopriv(AutotoolsPackage):
 
     homepage = "http://mpc.hpcframework.com"
     url = "https://france.paratools.com/autopriv/autopriv-0.5.0.tar.gz"
-    version('0.5.0', sha256='cad659592d45604b2f5c1cf2e6367ce526828862be84980c1952b30b9a1e35cf')
-
+    version('0.5.0', sha256='a96d1d6770ba3207cc59641dfbf595f2964c53501b7e8f1f91edf273fde24be3')
 
     depends_on("gmp", type="build") # need to keep it explicit for dynpriv build
-    depends_on("ap-gcc")
+    depends_on("ap-gcc", when="+ccpatch")
     depends_on("hwloc@1.11.11")
     depends_on("openpa")
     depends_on("libelf", when="+libelf")
 
     variant("debug", default=False, description="Enable debug mode")
     variant("libelf", default=True, description="Use libelf for symbol introspection")
+    variant("ccpatch", default=True, description="Install and deploy embedded GNU GCC privatizing compiler")
 
     def configure_args(self):
         spec = self.spec
@@ -51,26 +51,31 @@ class Autopriv(AutotoolsPackage):
         if spec.satisfies("+debug"):
             options.extend(['--enable-debug'])
 
+        if spec.satisfies("-ccpatch"):
+            options.extend(['--disable-dynpriv'])
+
         return options
 
     def setup_build_environment(self, env):
-        env.set('CC', self.spec['ap-gcc'].apcc)
-        env.set('CXX', self.spec['ap-gcc'].apcxx)
-        env.set('FC', self.spec['ap-gcc'].apfc)
+        
+        if self.spec.satisfies("+ccpatch"):
+            env.set('CC', self.spec['ap-gcc'].apcc)
+            env.set('CXX', self.spec['ap-gcc'].apcxx)
+            env.set('FC', self.spec['ap-gcc'].apfc)
 
-        updated_cppflags="-I"+self.spec['gmp'].prefix+'/include'
-        updated_cflags= \
-                " -I"+self.spec['hwloc'].prefix+"/include"+ \
-                " -I"+self.spec['openpa'].prefix+"/include"
+            updated_cppflags="-I"+self.spec['gmp'].prefix+'/include'
+            updated_cflags= \
+                    " -I"+self.spec['hwloc'].prefix+"/include"+ \
+                    " -I"+self.spec['openpa'].prefix+"/include"
 
-        updated_ldflags= \
-                " -L"+self.spec['hwloc'].prefix+"/lib -Wl,-rpath="+self.spec['hwloc'].prefix+"/lib -lhwloc"+ \
-                " -L"+self.spec['openpa'].prefix+"/lib -Wl,-rpath="+self.spec['openpa'].prefix+"/lib -lopenpa"
+            updated_ldflags= \
+                    " -L"+self.spec['hwloc'].prefix+"/lib -Wl,-rpath="+self.spec['hwloc'].prefix+"/lib -lhwloc"+ \
+                    " -L"+self.spec['openpa'].prefix+"/lib -Wl,-rpath="+self.spec['openpa'].prefix+"/lib -lopenpa"
 
-        if self.spec.satisfies("+libelf"):
-            updated_cflags=" -I"+self.spec['libelf'].prefix+"/include"
-            updated_ldflags=" -L"+self.spec['libelf'].prefix+'/lib -Wl,-rpath='+self.spec['libelf'].prefix+'/lib -lelf'
+            if self.spec.satisfies("+libelf"):
+                updated_cflags=" -I"+self.spec['libelf'].prefix+"/include"
+                updated_ldflags=" -L"+self.spec['libelf'].prefix+'/lib -Wl,-rpath='+self.spec['libelf'].prefix+'/lib -lelf'
 
-        env.set('CPPFLAGS', updated_cppflags)
-        env.set('CFLAGS', updated_cflags)
-        env.set('LDFLAGS', updated_ldflags)
+            env.set('CPPFLAGS', updated_cppflags)
+            env.set('CFLAGS', updated_cflags)
+            env.set('LDFLAGS', updated_ldflags)
