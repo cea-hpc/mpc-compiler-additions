@@ -13,9 +13,10 @@ exit_error()
 
 safe_exec()
 {
-	echo "$ $@"
+	command="$@"
+	echo "$ $command"
 	if [ "$RUN" = "yes" ]; then
-		eval "$@ $SILENT" || exit_error "$@ returned an non-zero exit code ! ABORT"
+		eval "$command $SILENT" || exit_error "$command returned an non-zero exit code ! ABORT"
 	fi
 }
 
@@ -43,9 +44,10 @@ DSTDIR="$SRCDIR/build/install"
 BLDIR="${SRCDIR}/build/"
 MAKE_J=""
 EXTRA_ARGS=""
+DISABLE_GCC=0
 gcc_deps="gmp-* mpfr-* mpc-* isl-*"
 
-while getopts "i:j:b:hdsSfo:" arg;
+while getopts "i:j:b:hdsSfo:d" arg;
 do
 	case $arg in
 		i)
@@ -56,6 +58,9 @@ do
 			;;
 		b)
 			BLDIR=${OPTARG}
+			;;
+		d)
+			DISABLE_GCC=1
 			;;
 		s)
 			SILENT=" > /dev/null"
@@ -97,49 +102,59 @@ test -n "$DSTDIR" || exit_error "DSTDIR should not be empty !"
 [ -d "$BLDIR" ] && safe_exec rm -rf $BLDIR
 safe_exec mkdir -p $BLDIR
 
-safe_exec tar -xf $SRCDIR/deps/gcc-*.tar.* -C $BLDIR/
-gcc_rootname=$(tar_rootdir $SRCDIR/deps/gcc-*.tar.*)
-safe_exec tar -xf $SRCDIR/deps/binutils-*.tar.* -C $BLDIR/
-binutils_rootname=$(tar_rootdir $SRCDIR/deps/binutils-*.tar.*)
+
+if [ "x$DISABLE_GCC" == "x0" ]; then
+	safe_exec tar -xf $SRCDIR/deps/gcc-*.tar.* -C $BLDIR/
+	gcc_rootname=$(tar_rootdir $SRCDIR/deps/gcc-*.tar.*)
+	safe_exec tar -xf $SRCDIR/deps/binutils-*.tar.* -C $BLDIR/
+	binutils_rootname=$(tar_rootdir $SRCDIR/deps/binutils-*.tar.*)
+	for dep in ${gcc_deps}; do
+		safe_exec tar -xf $SRCDIR/deps/$dep -C $BLDIR/
+		rootname=$(tar_rootdir $SRCDIR/deps/$dep)
+		safe_exec mv $BLDIR/$rootname $BLDIR/$gcc_rootname/${dep//-*/}
+	done
+
+	safe_exec mkdir -p $BLDIR/$binutils_rootname/build
+	safe_exec cd $BLDIR/$binutils_rootname
+	safe_exec patch -p1 < $SRCDIR/deps/patches/${binutils_rootname}.patch
+	safe_exec cd build
+	safe_exec ../configure --prefix=$DSTDIR
+	safe_exec make ${MAKE_J}
+	safe_exec make install ${MAKE_J}
+
+	safe_exec mkdir -p $BLDIR/$gcc_rootname/build
+	safe_exec cd $BLDIR/$gcc_rootname
+	safe_exec patch -p1 < $SRCDIR/deps/patches/${gcc_rootname}.patch
+	safe_exec cd build
+	safe_exec ../configure --prefix=$DSTDIR --enable-languages=c,c++,fortran --disable-multilib --disable-bootstrap --program-prefix=ap-
+	safe_exec make ${MAKE_J}
+	safe_exec make install ${MAKE_J}
+
+	EXTRA_ARGS="$EXTRA_ARGS CC=$DSTDIR/bin/ap-gcc CXX=$DSTDIR/bin/ap-g++ FC=$DSTDIR/bin/ap-gfortran CXXFLAGS='-I$BLDIR/$gcc_rootname/build/gmp'"
+else # DISABLE_GCC == 0
+	EXTRA_ARGS="$EXTRA_ARGS --disable-dynpriv"
+fi
+
+# Prepare libextls dependencies
 safe_exec tar -xf $SRCDIR/deps/hwloc-*.tar.* -C $BLDIR/
 hwloc_rootname=$(tar_rootdir $SRCDIR/deps/hwloc-*.tar.*)
 safe_exec tar -xf $SRCDIR/deps/openpa-*.tar.* -C $BLDIR/
 openpa_rootname=$(tar_rootdir $SRCDIR/deps/openpa-*.tar.*)
-for dep in ${gcc_deps}; do
-	safe_exec tar -xf $SRCDIR/deps/$dep -C $BLDIR/
-	rootname=$(tar_rootdir $SRCDIR/deps/$dep)
-	safe_exec mv $BLDIR/$rootname $BLDIR/$gcc_rootname/${dep//-*/}
-done
 
-safe_exec mkdir -p $BLDIR/$binutils_rootname/build
-safe_exec mkdir -p $BLDIR/$gcc_rootname/build
-safe_exec mkdir -p $BLDIR/autopriv
+safe_exec mkdir -p $BLDIR/$hwloc_rootname/build
+safe_exec cd $BLDIR/$hwloc_rootname/build
+safe_exec ../configure --prefix=$DSTDIR 
+safe_exec make ${MAKE_J}
+safe_exec make install ${MAKE_J}
 
-safe_exec cd $BLDIR/$binutils_rootname
-safe_exec patch -p1 < $SRCDIR/deps/patches/${binutils_rootname}.patch
-safe_exec cd build
+safe_exec mkdir -p $BLDIR/$openpa_rootname/build
+safe_exec cd $BLDIR/$openpa_rootname/build
 safe_exec ../configure --prefix=$DSTDIR
 safe_exec make ${MAKE_J}
 safe_exec make install ${MAKE_J}
 
-safe_exec cd $BLDIR/$gcc_rootname
-safe_exec patch -p1 < $SRCDIR/deps/patches/${gcc_rootname}.patch
-safe_exec cd build
-safe_exec ../configure --prefix=$DSTDIR --enable-languages=c,c++,fortran --disable-multilib --disable-bootstrap --program-prefix=ap-
-safe_exec make ${MAKE_J}
-safe_exec make install ${MAKE_J}
-
-safe_exec cd $BLDIR/$hwloc_rootname
-safe_exec ./configure --prefix=$DSTDIR 
-safe_exec make ${MAKE_J}
-safe_exec make install ${MAKE_J}
-
-safe_exec cd $BLDIR/$openpa_rootname
-safe_exec ./configure --prefix=$DSTDIR
-safe_exec make ${MAKE_J}
-safe_exec make install ${MAKE_J}
-
+safe_exec mkdir -p $BLDIR/autopriv
 safe_exec cd $BLDIR/autopriv
-safe_exec $SRCDIR/configure --prefix=$DSTDIR $EXTRA_ARGS CC=$DSTDIR/bin/ap-gcc CXX=$DSTDIR/bin/ap-g++ FC=$DSTDIR/bin/ap-gfortran CXXFLAGS="-I$BLDIR/$gcc_rootname/build/gmp" --with-hwloc=$DSTDIR/ --with-openpa=$DSTDIR/
+safe_exec $SRCDIR/configure --prefix=$DSTDIR --with-hwloc=$DSTDIR/ --with-openpa=$DSTDIR/ $EXTRA_ARGS
 safe_exec make ${MAKE_J}
 safe_exec make install ${MAKE_J}

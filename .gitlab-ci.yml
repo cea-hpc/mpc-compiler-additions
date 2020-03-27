@@ -73,6 +73,12 @@ Build:
   script:
   - srun -J GL-build_$CI_PIPELINE_ID -N 1 -c 8 ${CI_PROJECT_DIR}/autopriv_deploy.sh -i $HOME/GL_$CI_PIPELINE_ID/install -b $HOME/GL_$CI_PIPELINE_ID/build -j8 -s -o "--enable-debug --enable-color"
 
+Build-nogcc:
+  <<: *run_by_main
+  stage: Setup
+  script:
+  - srun -J GL-build_$CI_PIPELINE_ID -N 1 -c 8 ${CI_PROJECT_DIR}/autopriv_deploy.sh -i $HOME/GL_$CI_PIPELINE_ID/install -b $HOME/GL_$CI_PIPELINE_ID/build -j8 -s -o "--enable-debug --enable-color" -d
+
 No-privatization:
   <<: *run_by_main
   stage: Tests

@@ -21,7 +21,20 @@ AM_PROG_AR
 ##### LIBTOOL #####
 ###################
 LT_INIT                                              # Init libtool
-AC_CONFIG_SUBDIRS([libextls dynpriv-plugin])
+
+AC_ARG_ENABLE([extls], AS_HELP_STRING([--enable-extls], [Enable libextls library to be constructed (default)]), [enable_extls=$enableval], [enable_extls=yes])
+if test "x$enable_extls" = "xyes"; then
+	AC_CONFIG_SUBDIRS([libextls])
+	AC_SUBST(EXTLS, [libextls])
+fi
+
+AC_ARG_ENABLE([dynpriv], AS_HELP_STRING([--enable-dynpriv], [Enable dynpriv GCC plugin to be constructed (default)]), [enable_dynpriv=$enableval], [enable_dynpriv=yes])
+if test "x$enable_dynpriv" = "xyes"; then
+	AC_CONFIG_SUBDIRS([dynpriv-plugin])
+	AC_SUBST(DYNPRIV, [dynpriv-plugin])
+fi
+
+#AC_CONFIG_SUBDIRS([libextls dynpriv-plugin])
 AC_CONFIG_HEADERS([config.h])                        # header-generated config files
 AC_CONFIG_FILES([
 		 Makefile
