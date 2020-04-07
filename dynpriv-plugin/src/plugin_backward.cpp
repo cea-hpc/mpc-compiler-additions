@@ -549,7 +549,9 @@ void declare_per_var_wrapper_with_tu_init( tree var, tree tu_init )
 
 
 	/*=== CODE === */
-	//gimple_seq_add_stmt (&bind_seq, print_fname);
+	if( getenv("MPC_DYN_PRIV_DEBUG") )
+		gimple_seq_add_stmt (&bind_seq, print_fname);
+
 	gimple_seq_add_stmt (&bind_seq, assign_init_done_to_local_one);
 	gimple_seq_add_stmt (&bind_seq, cond_init_done);
 	gimple_seq_add_stmt (&bind_seq, gimple_build_label (try_load_dyn_label));
@@ -946,7 +948,7 @@ void rewrite_TLS_refs()
 	struct var_to_push * cur_var = NULL;
 	const char *fname = gimple_decl_printable_name( cfun->decl, 3 );
 	
-	if( !getenv("MPC_DYN_INSERT") )
+	if( !getenv("MPC_DYN_PRIV_INSERT") )
 	{
 		/* In the non-dyn insert mode, we only target
 		 * the per-TU inti function to propagate

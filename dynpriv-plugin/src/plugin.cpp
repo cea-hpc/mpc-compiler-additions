@@ -556,14 +556,14 @@ void declare_per_var_wrapper_with_tu_init( tree var, tree tu_init )
 
 
 	/*=== CODE === */
-	if( getenv("MPC_DYN_PRIV_DUMP") )
+	if( getenv("MPC_DYN_PRIV_DEBUG") )
 		gimple_seq_add_stmt (&bind_seq, print_fname_cond);
 
 	gimple_seq_add_stmt (&bind_seq, assign_init_done_to_local_one);
 	gimple_seq_add_stmt (&bind_seq, cond_init_done);
 	gimple_seq_add_stmt (&bind_seq, gimple_build_label (try_load_dyn_label));
 	
-	if( getenv("MPC_DYN_PRIV_DUMP") )
+	if( getenv("MPC_DYN_PRIV_DEBUG") )
 		gimple_seq_add_stmt (&bind_seq, print_fname);
 
 	gimple_seq_add_stmt (&bind_seq, assign_one_to_init_done);
@@ -761,7 +761,7 @@ void generate_per_tu_init()
 		gcall* print_fname = printf_call_gen( descrip );
 
 		/*=== CODE ===cond */
-		//if( getenv("MPC_DYN_PRIV_DUMP") )
+		//if( getenv("MPC_DYN_PRIV_DEBUG") )
 			//gimple_seq_add_stmt (&guards_seqs[i], print_fname_cond );
 		/* END DEBUG PRINT */
 
@@ -780,7 +780,7 @@ void generate_per_tu_init()
 		varpool_node::add (guard);
 
 		/* == DEBUG === */
-		if( getenv("MPC_DYN_PRIV_DUMP") )
+		if( getenv("MPC_DYN_PRIV_DEBUG") )
 			gimple_seq_add_stmt (&guards_seqs[i], print_fname );
 		/*============= */
 	}
@@ -1174,7 +1174,7 @@ void rewrite_TLS_refs()
 	struct var_to_push * cur_var = NULL;
 	const char *fname = gimple_decl_printable_name( cfun->decl, 3 );
 	
-	if( !getenv("MPC_DYN_INSERT") )
+	if( !getenv("MPC_DYN_PRIV_INSERT") )
 	{
 		/* In the non-dyn insert mode, we only target
 		 * the per-TU inti function to propagate

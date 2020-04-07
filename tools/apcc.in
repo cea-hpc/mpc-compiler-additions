@@ -8,6 +8,7 @@ usage()
 	printf "    -f[no]mpc-plugin         Enable/disable C dynamic initialization.\n"
 	printf "    -f[no]mpc-dyn-insert     Enable/disable the 'wrapped TLS' dyn model.\n"
 	printf "    -f[no]dump-dyn-tree      Enable/disable printing the dyn-related AST.\n"
+	printf "    -f[no]mpc-dyn-debug      Enable/disable debug printf in TLS wrappers.\n"
 	printf "    -show|--show             Print command line instead of running it.\n"
 	printf "    -ap-h | --ap-help        Print this help.\n"
 	printf "    <any GCC options>        Any GCC-compatible option will be forwarded.\n"
@@ -15,7 +16,8 @@ usage()
 	printf "Useful environment variables:\n"
 	printf "    - AP_CC                  Define the C compiler\n"
 	printf "    - MPC_DYN_PRIV_DUMP      Same as '-fdump-dyn-tree'\n"
-	printf "    - MPC_DYN_INSERT         Same as '-fdump-dyn-insert'\n"
+	printf "    - MPC_DYN_PRIV_INSERT    Same as '-fmpc-dyn-insert'\n"
+	printf "    - MPC_DYN_PRIV_DEBUG     Same as '-fmpc-dyn-debug'\n"
 }
 
 inst=@prefix@
@@ -61,11 +63,17 @@ do
 			usage
 			exit 0
 			;;
+		-fmpc-dyndebug|-fmpcdyndebug|-fmpc-dyn-debug)
+			export MPC_DYN_PRIV_DEBUG=1
+			;;
+		-fno-mpc-dyn-debug|-fno-mpc-dyndebug|-fno-mpcdyndebug|-fnompcdyndebug)
+			unset MPC_DYN_PRIV_DEBUG
+			;;
 		-fmpc-dyninsert|-fmpcdyninsert|-fmpc-dyn-insert)
-			export MPC_DYN_INSERT=1
+			export MPC_DYN_PRIV_INSERT=1
 			;;
 		-fno-mpc-dyn-insert|-fno-mpc-dyninsert|-fno-mpcdyninsert|-fnompcdyninsert)
-			unset MPC_DYN_INSERT
+			unset MPC_DYN_PRIV_INSERT
 			;;
 		-fdump-dyn-tree|-fdump-dyntree|-fdumpdyntree)
 			export MPC_DYN_PRIV_DUMP=1
