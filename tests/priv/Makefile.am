@@ -3,6 +3,7 @@ check_PROGRAMS= \
 	kwd_test \
 	dyn_test \
 	dyn_static_test \
+	dyn_static_coll_test \
 	hls_test \
 	threads_test \
 	$(NULL)
@@ -31,6 +32,10 @@ dyn_test_SOURCES=dyn.c
 dyn_static_test_CFLAGS=$(GLOB_COPT) -fplugin=$(top_builddir)/dynpriv-plugin/src/.libs/dynpriv.so
 dyn_static_test_LDFLAGS=$(GLOB_LOPT)
 dyn_static_test_SOURCES=dyn_static.c
+
+dyn_static_coll_test_CFLAGS=$(GLOB_COPT) -fplugin=$(top_builddir)/dynpriv-plugin/src/.libs/dynpriv.so
+dyn_static_coll_test_LDFLAGS=$(GLOB_LOPT)
+dyn_static_coll_test_SOURCES=dyn_static_colla.c dyn_static_collb.c
 
 hls_test_CFLAGS=$(GLOB_COPT) -fplugin=$(top_builddir)/dynpriv-plugin/src/.libs/dynpriv.so -fhls
 hls_test_LDFLAGS=$(GLOB_LOPT)
