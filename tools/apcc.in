@@ -6,9 +6,16 @@ usage()
 	printf "    -f[no-]mpc-privatize     Enable/disable automatic privatization.\n"
 	printf "    -f[no-]mpc-tlsopt        Enable/disable linker-optimized TLS.\n"
 	printf "    -f[no]mpc-plugin         Enable/disable C dynamic initialization.\n"
+	printf "    -f[no]mpc-dyn-insert     Enable/disable the 'wrapped TLS' dyn model.\n"
+	printf "    -f[no]dump-dyn-tree      Enable/disable printing the dyn-related AST.\n"
 	printf "    -show|--show             Print command line instead of running it.\n"
 	printf "    -ap-h | --ap-help        Print this help.\n"
 	printf "    <any GCC options>        Any GCC-compatible option will be forwarded.\n"
+	printf "\n"
+	printf "Useful environment variables:\n"
+	printf "    - AP_CC                  Define the C compiler\n"
+	printf "    - MPC_DYN_PRIV_DUMP      Same as '-fdump-dyn-tree'\n"
+	printf "    - MPC_DYN_INSERT         Same as '-fdump-dyn-insert'\n"
 }
 
 inst=@prefix@
@@ -53,6 +60,18 @@ do
 		-ap-h|--ap-help)
 			usage
 			exit 0
+			;;
+		-fmpc-dyninsert|-fmpcdyninsert|-fmpc-dyn-insert)
+			export MPC_DYN_INSERT=1
+			;;
+		-fno-mpc-dyn-insert|-fno-mpc-dyninsert|-fno-mpcdyninsert|-fnompcdyninsert)
+			unset MPC_DYN_INSERT
+			;;
+		-fdump-dyn-tree|-fdump-dyntree|-fdumpdyntree)
+			export MPC_DYN_PRIV_DUMP=1
+			;;
+		-fno-dump-dyn-tree|-fno-dump-dyntree|-fno-dump-dyntree|-fnodumpdyntree)
+			unset MPC_DYN_PRIV_DUMP
 			;;
 		-show|--show)
 			AP_PRE_CMD="echo"

@@ -8,6 +8,9 @@ usage()
 	printf "    -show|--show             Print command line instead of running it.\n"
 	printf "    -ap-h | --ap-help        Print this help.\n"
 	printf "    <any GCC options>        Any GCC-compatible option will be forwarded.\n"
+	printf "\n"
+	printf "Useful environment variables:\n"
+	printf "    - AP_FC                  Define the Fortran compiler\n"
 }
 
 inst=@prefix@
