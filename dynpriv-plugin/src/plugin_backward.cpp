@@ -333,7 +333,7 @@ char * get_wrapper_func_name( tree decl, int force_local )
 		/* Variable is local only then mangle */
 		snprintf(variable_context, 500,"%s-%s-%s-%s", decl_name,  current_fname , progname, source_file);
 		unsigned long hash = hash_dbj2( variable_context );
-		snprintf( long_name_wrapp, 500, "___local_mpc_TLS_w_%s_%lu", decl_name, hash );
+		snprintf( long_name_wrapp, 500, "___mpc_TLS_w_%s_local_%lu", decl_name, hash );
 	}
 	else
 	{
