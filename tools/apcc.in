@@ -3,21 +3,25 @@
 usage()
 {
 	printf "Usage: apcc [-fmpc-privatize] file\n"
-	printf "    -f[no-]mpc-privatize     Enable/disable automatic privatization.\n"
-	printf "    -f[no-]mpc-tlsopt        Enable/disable linker-optimized TLS.\n"
-	printf "    -f[no]mpc-plugin         Enable/disable C dynamic initialization.\n"
-	printf "    -f[no]mpc-dyn-insert     Enable/disable the 'wrapped TLS' dyn model.\n"
-	printf "    -f[no]dump-dyn-tree      Enable/disable printing the dyn-related AST.\n"
-	printf "    -f[no]mpc-dyn-debug      Enable/disable debug printf in TLS wrappers.\n"
-	printf "    -show|--show             Print command line instead of running it.\n"
-	printf "    -ap-h | --ap-help        Print this help.\n"
-	printf "    <any GCC options>        Any GCC-compatible option will be forwarded.\n"
+	printf "    -f[no-]mpc-privatize        Enable/disable automatic privatization.\n"
+	printf "    -f[no-]mpc-tlsopt           Enable/disable linker-optimized TLS.\n"
+	printf "    -f[no]mpc-plugin            Enable/disable C dynamic initialization.\n"
+	printf "    -fno-priv-file=*            Comma separated list of files not to privatize.\n"
+	printf "    -fno-priv-var=*             Comma separated list of variables not to privatize.\n"
+	printf "    -f[no]mpc-dyn-insert        Enable/disable the 'wrapped TLS' dyn model.\n"
+	printf "    -f[no]dump-dyn-tree         Enable/disable printing the dyn-related AST.\n"
+	printf "    -f[no]mpc-dyn-debug         Enable/disable debug printf in TLS wrappers.\n"
+	printf "    -show|--show                Print command line instead of running it.\n"
+	printf "    -ap-h | --ap-help           Print this help.\n"
+	printf "    <any GCC options>           Any GCC-compatible option will be forwarded.\n"
 	printf "\n"
 	printf "Useful environment variables:\n"
-	printf "    - AP_CC                  Define the C compiler\n"
-	printf "    - MPC_DYN_PRIV_DUMP      Same as '-fdump-dyn-tree'\n"
-	printf "    - MPC_DYN_PRIV_INSERT    Same as '-fmpc-dyn-insert'\n"
-	printf "    - MPC_DYN_PRIV_DEBUG     Same as '-fmpc-dyn-debug'\n"
+	printf "    - AP_CC                     Define the C compiler\n"
+	printf "    - MPC_DYN_PRIV_DUMP         Same as '-fdump-dyn-tree'\n"
+	printf "    - MPC_DYN_PRIV_INSERT       Same as '-fmpc-dyn-insert'\n"
+	printf "    - MPC_DYN_PRIV_DEBUG        Same as '-fmpc-dyn-debug'\n"
+	printf "    - AP_UNPRIVATIZED_FILES     Same as '-fno-priv-file'\n"
+	printf "    - AP_UNPRIVATIZED_VARS      Same as '-fno-priv-var'\n"
 }
 
 inst=@prefix@
@@ -35,6 +39,31 @@ AP_LINK="-lextls"
 AP_DOWNSTREAM_ARGS=""
 
 test -z "$AP_CC" && AP_CC=@CC@
+
+#
+# Retro Compatibility
+#
+
+# Variable comes from env
+# shellcheck disable=SC2153
+if test -n "$MPC_UNPRIVATIZED_FILES"; then
+	AP_UNPRIVATIZED_FILES="$AP_UNPRIVATIZED_FILES:$MPC_UNPRIVATIZED_FILES"
+fi
+
+# Variable comes from env
+# shellcheck disable=SC2153
+if test -n "$MPC_UNPRIVATIZED_VARS"; then
+	AP_UNPRIVATIZED_VARS="$AP_UNPRIVATIZED_VARS:$MPC_UNPRIVATIZED_VARS"
+fi
+
+#
+# Arg Parsing
+#
+
+extract_arg_value()
+{
+	arg_value="$(echo "$1" | cut -d '=' -f 2)"
+}
 
 for arg in "$@";
 do
@@ -63,6 +92,18 @@ do
 			usage
 			exit 0
 			;;
+		-fno-priv-file=*|-fnopriv-file=*|-fno-privfile=*|-fnoprivfile=*)
+			extract_arg_value "$arg"
+			# Change comma to colon
+			arg_value="$(echo "$arg_value" | sed "s/,/:/g")"
+			export AP_UNPRIVATIZED_FILES="${AP_UNPRIVATIZED_FILES}:$arg_value"
+			;;
+		-fno-priv-var=*|-fnopriv-var=*|-fno-privvar=*|-fnoprivvar=*)
+			extract_arg_value "$arg"
+			# Change comma to colon
+			arg_value="$(echo "$arg_value" | sed "s/,/:/g")"
+			export AP_UNPRIVATIZED_VARS="${AP_UNPRIVATIZED_VARS}:$arg_value"
+			;;
 		-fmpc-dyndebug|-fmpcdyndebug|-fmpc-dyn-debug)
 			export MPC_DYN_PRIV_DEBUG=1
 			;;
@@ -78,7 +119,7 @@ do
 		-fdump-dyn-tree|-fdump-dyntree|-fdumpdyntree)
 			export MPC_DYN_PRIV_DUMP=1
 			;;
-		-fno-dump-dyn-tree|-fno-dump-dyntree|-fno-dump-dyntree|-fnodumpdyntree)
+		-fno-dump-dyn-tree|-fno-dump-dyntree|-fno-dumpdyntree|-fnodumpdyntree)
 			unset MPC_DYN_PRIV_DUMP
 			;;
 		-show|--show)

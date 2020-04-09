@@ -5220,12 +5220,12 @@ diff -Naur gcc-4.8.5/gcc/tree.c mpc-gcc-4.8.5/gcc/tree.c
 +
 +	if(invalid_headers == NULL)
 +	{
-+		invalid_headers = mpc_decl_load_invalid_from_getenv("MPC_UNPRIVATIZED_FILES");
++		invalid_headers = mpc_decl_load_invalid_from_getenv("AP_UNPRIVATIZED_FILES");
 +	}
 +	
 +	if(invalid_vars == NULL)
 +	{
-+		invalid_vars = mpc_decl_load_invalid_from_getenv("MPC_UNPRIVATIZED_VARS");
++		invalid_vars = mpc_decl_load_invalid_from_getenv("AP_UNPRIVATIZED_VARS");
 +	}
 +
 +	int i = 0;

@@ -873,11 +873,14 @@ void generate_per_tu_init()
 				gassign * assign = gimple_build_assign (decl, init);
 				/* retrieve the TLS model */
 				enum tls_model model = DECL_TLS_MODEL(decl);
-				gcc_assert(model >= TLS_MODEL_MPC_OPENMP && model <= TLS_MODEL_HLS_CORE);
-				/* Save the init statement */
-				gimple_seq_add_stmt (&guards_seqs[model - mod_shift], assign);
-				/* tag this guard to be kept */
-				used_cond[model - mod_shift] = 1;
+				/* Some globals could be unprivatized for example */
+				if(model >= TLS_MODEL_MPC_OPENMP && model <= TLS_MODEL_HLS_CORE)
+				{
+					/* Save the init statement */
+					gimple_seq_add_stmt (&guards_seqs[model - mod_shift], assign);
+					/* tag this guard to be kept */
+					used_cond[model - mod_shift] = 1;
+				}
 			}
 		}
 	}
