@@ -34,7 +34,8 @@ class ApGcc(AutotoolsPackage, GNUMirrorPackage):
     #version('8.2.0', sha256='196c3c04ba2613f893283977e6011b2345d1cd1af9abeac58e916b1aab3e0080')
     #version('8.1.0', sha256='1d1866f992626e61349a1ccd0b8d5253816222cdc13390dcfaa74b093aa2b153')
 
-    #version('7.4.0', sha256='eddde28d04f334aec1604456e536416549e9b1aa137fc69204e65eb0c009fe51')
+    version('7.5.0', sha256='b81946e7f01f90528a1f7352ab08cc602b9ccc05d4e44da4bd501c5a189ee661')
+    version('7.4.0', sha256='eddde28d04f334aec1604456e536416549e9b1aa137fc69204e65eb0c009fe51')
     version('7.3.0', sha256='832ca6ae04636adbb430e865a1451adf6979ab44ca1c8374f61fba65645ce15c')
     version('7.2.0', sha256='1cf7adf8ff4b5aa49041c8734bbcf1ad18cc4c94d0029aae0f4e48841088479a')
     #version('7.1.0', sha256='8a8136c235f64c6fef69cac0d73a46a1a09bb250776a050aec8f9fc880bebc17')
@@ -231,6 +232,8 @@ class ApGcc(AutotoolsPackage, GNUMirrorPackage):
     patch("gcc-6.2.0.patch", when="@6.2.0")
     patch("gcc-7.2.0.patch", when="@7.2.0")
     patch("gcc-7.3.0.patch", when="@7.3.0")
+    patch("gcc-7.4.0.patch", when="@7.4.0")
+    patch("gcc-7.5.0.patch", when="@7.5.0")
     ####### END MPC-ONLY
 
     build_directory = 'spack-build'

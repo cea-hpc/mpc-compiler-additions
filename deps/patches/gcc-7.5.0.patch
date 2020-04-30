@@ -248,10 +248,10 @@ index 7dea1657409..a1d495cebf9 100644
 +		srand(rnd[2] + rnd[0]);
 +		rnd[3] = rand();;
 +		
-+		char fname[20];
++		char fname[64];
 +		char file_cont[500];
 +		
-+		snprintf(fname, 20, "/tmp/tmp-gcc-XXXXXX" );
++		snprintf(fname, 64, "/tmp/tmp-gcc-insert-mpc-XXXXXX" );
 +		snprintf(file_cont, 500, "void _%d%d%d%d(){}", rnd[0], rnd[1], rnd[2], rnd[3] );
 +		
 +		int fd = mkstemp(fname);
@@ -5975,6 +5975,26 @@ index 1b9030029ac..79a65fd52d9 100644
    return kind;
  }
  
+diff --git c/libcpp/mkdeps.c w/libcpp/mkdeps.c
+index df9f28748fc..b5b20eae37c 100644
+--- c/libcpp/mkdeps.c
++++ w/libcpp/mkdeps.c
+@@ -255,6 +255,15 @@ deps_add_default_target (struct deps *d, const char *tgt)
+ void
+ deps_add_dep (struct deps *d, const char *t)
+ {
++/* MPC_BEGIN */
++ //Avoid tracking temp files inside deps */
++ if(strstr(t, "/tmp/tmp-gcc-insert-mpc-"))
++ {
++	 return;
++ }
++/* MPC_END */
++
++
+   t = munge (apply_vpath (d, t));  /* Also makes permanent copy.  */
+ 
+   if (d->ndeps == d->deps_size)
 diff --git a/libgfortran/Makefile.am b/libgfortran/Makefile.am
 index 2857af5943f..886386b4644 100644
 --- a/libgfortran/Makefile.am

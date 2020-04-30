@@ -4,7 +4,7 @@ VERSION="`./.autopriv_version`"
 FILE="autopriv-${VERSION}.tar.gz"
 
 echo -n "Generating archive for autopriv-${VERSION}... "
-git archive --format=tar.gz --prefix=autopriv-${VERSION}/ origin/master > $FILE
+git archive --format=tar.gz --prefix=autopriv-${VERSION}/ HEAD > $FILE
 echo "OK"
 
 echo "./${FILE}"
