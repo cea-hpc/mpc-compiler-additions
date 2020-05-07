@@ -5500,7 +5500,7 @@ index fb843afce..6ba11557a 100644
      }
  
 diff --git a/gcc/tree.c b/gcc/tree.c
-index ef9b292d7..f2ab13c1b 100644
+index ef9b292d7..91f0d581f 100644
 --- a/gcc/tree.c
 +++ b/gcc/tree.c
 @@ -3129,23 +3129,38 @@ staticp (tree arg)
@@ -12086,14 +12086,14 @@ index 4914a6f32..d89af017e 100644
  	uninstall-nodist_fincludeHEADERS uninstall-toolexeclibDATA \
  	uninstall-toolexeclibLTLIBRARIES
 diff --git a/libgfortran/gfortran.map b/libgfortran/gfortran.map
-index 460bfe496..e2b1ece0f 100644
+index 460bfe496..a2ab2ed09 100644
 --- a/libgfortran/gfortran.map
 +++ b/libgfortran/gfortran.map
 @@ -122,6 +122,7 @@ GFORTRAN_7 {
      _gfortran_chmod_func;
      _gfortran_chmod_i4_sub;
      _gfortran_chmod_i8_sub;
-+    _gfortran_close_units;
++    _gfortran_ap_close_units;
      _gfortran_compare_string;
      _gfortran_compare_string_char4;
      _gfortran_concat_string;
@@ -12101,7 +12101,7 @@ index 460bfe496..e2b1ece0f 100644
      _gfortran_ieee_procedure_exit;
      _gfortran_ierrno_i4;
      _gfortran_ierrno_i8;
-+    _gfortran_init_units;
++    _gfortran_ap_init_units;
      _gfortran_internal_pack;
      _gfortran_internal_unpack;
      _gfortran_iparity_i16;
@@ -12114,7 +12114,7 @@ index 460bfe496..e2b1ece0f 100644
      *;
  };
 diff --git a/libgfortran/io/unit.c b/libgfortran/io/unit.c
-index ef9429452..646c85ba4 100644
+index ef9429452..bda1d85de 100644
 --- a/libgfortran/io/unit.c
 +++ b/libgfortran/io/unit.c
 @@ -27,6 +27,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
@@ -12125,23 +12125,31 @@ index ef9429452..646c85ba4 100644
  #include <string.h>
  #include <assert.h>
  
-@@ -757,6 +758,7 @@ init_units (void)
+@@ -757,6 +758,11 @@ init_units (void)
    memset (newunit_stack, 0, NEWUNIT_STACK_SIZE * sizeof(gfc_saved_unit));
    newunit_tos = 0;
  }
-+iexport(init_units);
++void ap_init_units(void)
++{
++  init_units();
++}
++iexport(ap_init_units);
  
  
  static int
-@@ -851,6 +853,7 @@ close_units (void)
+@@ -851,6 +857,11 @@ close_units (void)
    freelocale (c_locale);
  #endif
  }
-+iexport(close_units);
++void ap_close_units(void)
++{
++  close_units();
++}
++iexport(ap_close_units);
  
  
  /* High level interface to truncate a file, i.e. flush format buffers,
-@@ -981,6 +984,18 @@ newunit_alloc (void)
+@@ -981,6 +992,18 @@ newunit_alloc (void)
    return -old_size + NEWUNIT_START;
  }
  
@@ -12161,19 +12169,22 @@ index ef9429452..646c85ba4 100644
  /* Free a previously allocated newunit= unit number.  unit_lock must
     be held when calling.  */
 diff --git a/libgfortran/libgfortran.h b/libgfortran/libgfortran.h
-index 9d9d11728..fef52d705 100644
+index 9d9d11728..ee9508f10 100644
 --- a/libgfortran/libgfortran.h
 +++ b/libgfortran/libgfortran.h
-@@ -857,10 +857,10 @@ internal_proto(flush_all_units);
+@@ -856,11 +856,11 @@ internal_proto(flush_all_units);
+ 
  /* io.c */
  
- extern void init_units (void);
+-extern void init_units (void);
 -internal_proto(init_units);
-+iexport_proto(init_units);
++extern void ap_init_units (void);
++iexport_proto(ap_init_units);
  
- extern void close_units (void);
+-extern void close_units (void);
 -internal_proto(close_units);
-+iexport_proto(close_units);
++extern void ap_close_units (void);
++iexport_proto(ap_close_units);
  
  extern int unit_to_fd (int);
  internal_proto(unit_to_fd);

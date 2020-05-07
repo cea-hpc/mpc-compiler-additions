@@ -1,7 +1,71 @@
-diff -Naur gcc-4.8.5/gcc/builtins.def mpc-gcc-4.8.5/gcc/builtins.def
---- gcc-4.8.5/gcc/builtins.def	2014-04-04 16:27:06.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/builtins.def	2016-07-19 11:04:37.220484151 +0200
-@@ -834,6 +834,16 @@
+diff --git a/gcc/Makefile.in b/gcc/Makefile.in
+index 2a4475b75..639d69c60 100644
+--- a/gcc/Makefile.in
++++ b/gcc/Makefile.in
+@@ -862,7 +862,7 @@ RTL_ERROR_H = rtl-error.h $(RTL_H) $(DIAGNOSTIC_CORE_H)
+ READ_MD_H = $(OBSTACK_H) $(HASHTAB_H) read-md.h
+ PARAMS_H = params.h params.def
+ BUILTINS_DEF = builtins.def sync-builtins.def omp-builtins.def \
+-	gtm-builtins.def sanitizer.def
++	gtm-builtins.def sanitizer.def hls-builtins.def
+ INTERNAL_FN_DEF = internal-fn.def
+ INTERNAL_FN_H = internal-fn.h $(INTERNAL_FN_DEF)
+ TREE_H = coretypes.h tree.h all-tree.def tree.def c-family/c-common.def \
+@@ -1305,6 +1305,7 @@ OBJS = \
+ 	mcf.o \
+ 	mode-switching.o \
+ 	modulo-sched.o \
++	mpc-pass.o \
+ 	omega.o \
+ 	omp-low.o \
+ 	optabs.o \
+@@ -2537,6 +2538,11 @@ omp-low.o : omp-low.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(TREE_H) \
+    $(TREE_FLOW_H) $(FLAGS_H) $(EXPR_H) $(DIAGNOSTIC_CORE_H) \
+    $(TREE_PASS_H) $(GGC_H) $(EXCEPT_H) $(SPLAY_TREE_H) $(OPTABS_H) \
+    $(CFGLOOP_H) tree-iterator.h gt-omp-low.h
++mpc-pass.o : mpc-pass.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(TREE_H) \
++   $(RTL_H) $(GIMPLE_H) $(TREE_INLINE_H) langhooks.h $(DIAGNOSTIC_H) \
++   $(TREE_FLOW_H) $(TIMEVAR_H) $(FLAGS_H) $(EXPR_H) $(TOPLEV_H) tree-pass.h \
++   $(GGC_H) except.h $(SPLAY_TREE_H) $(OPTABS_H) $(CFGLOOP_H) \
++   tree-iterator.h
+ tree-browser.o : tree-browser.c tree-browser.def $(CONFIG_H) $(SYSTEM_H) \
+    coretypes.h $(TREE_H) $(TREE_PRETTY_PRINT_H)
+ omega.o : omega.c $(OMEGA_H) $(CONFIG_H) $(SYSTEM_H) coretypes.h dumpfile.h \
+@@ -3744,6 +3750,7 @@ GTFILES = $(CPP_ID_DATA_H) $(srcdir)/input.h $(srcdir)/coretypes.h \
+   $(srcdir)/tree-profile.c $(srcdir)/tree-nested.c \
+   $(srcdir)/tree-parloops.c \
+   $(srcdir)/omp-low.c \
++  $(srcdir)/mpc-pass.c \
+   $(srcdir)/targhooks.c $(out_file) $(srcdir)/passes.c $(srcdir)/cgraphunit.c \
+   $(srcdir)/cgraphclones.c \
+   $(srcdir)/tree-ssa-propagate.c \
+diff --git a/gcc/builtin-types.def b/gcc/builtin-types.def
+index 3ef2d1bbf..e1b0bf0c6 100644
+--- a/gcc/builtin-types.def
++++ b/gcc/builtin-types.def
+@@ -230,6 +230,9 @@ DEF_FUNCTION_TYPE_1 (BT_FN_ULONGLONG_ULONGLONG, BT_ULONGLONG, BT_ULONGLONG)
+ DEF_FUNCTION_TYPE_1 (BT_FN_UINT16_UINT16, BT_UINT16, BT_UINT16)
+ DEF_FUNCTION_TYPE_1 (BT_FN_UINT32_UINT32, BT_UINT32, BT_UINT32)
+ DEF_FUNCTION_TYPE_1 (BT_FN_UINT64_UINT64, BT_UINT64, BT_UINT64)
++/* MPC HLS BEGIN */
++DEF_FUNCTION_TYPE_1 (BT_FN_BOOL_INT, BT_BOOL, BT_INT)
++/* MPC HLS END */
+ 
+ DEF_POINTER_TYPE (BT_PTR_FN_VOID_PTR, BT_FN_VOID_PTR)
+ 
+@@ -446,7 +449,6 @@ DEF_FUNCTION_TYPE_4 (BT_FN_VOID_SIZE_VPTR_PTR_INT, BT_VOID, BT_SIZE,
+ 		     BT_VOLATILE_PTR, BT_PTR, BT_INT)
+ DEF_FUNCTION_TYPE_4 (BT_FN_VOID_SIZE_CONST_VPTR_PTR_INT, BT_VOID, BT_SIZE,
+ 		     BT_CONST_VOLATILE_PTR, BT_PTR, BT_INT)
+-
+ DEF_FUNCTION_TYPE_5 (BT_FN_INT_STRING_INT_SIZE_CONST_STRING_VALIST_ARG,
+ 		     BT_INT, BT_STRING, BT_INT, BT_SIZE, BT_CONST_STRING,
+ 		     BT_VALIST_ARG)
+diff --git a/gcc/builtins.def b/gcc/builtins.def
+index d5afe0d05..d886ccdb7 100644
+--- a/gcc/builtins.def
++++ b/gcc/builtins.def
+@@ -834,6 +834,16 @@ DEF_GCC_BUILTIN (BUILT_IN_LINE, "LINE", BT_FN_INT, ATTR_NOTHROW_LEAF_LIST)
  /* OpenMP builtins.  */
  #include "omp-builtins.def"
  
@@ -18,31 +82,285 @@ diff -Naur gcc-4.8.5/gcc/builtins.def mpc-gcc-4.8.5/gcc/builtins.def
  /* GTM builtins. */
  #include "gtm-builtins.def"
  
-diff -Naur gcc-4.8.5/gcc/builtin-types.def mpc-gcc-4.8.5/gcc/builtin-types.def
---- gcc-4.8.5/gcc/builtin-types.def	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/builtin-types.def	2016-07-19 11:04:37.220484151 +0200
-@@ -230,6 +230,9 @@
- DEF_FUNCTION_TYPE_1 (BT_FN_UINT16_UINT16, BT_UINT16, BT_UINT16)
- DEF_FUNCTION_TYPE_1 (BT_FN_UINT32_UINT32, BT_UINT32, BT_UINT32)
- DEF_FUNCTION_TYPE_1 (BT_FN_UINT64_UINT64, BT_UINT64, BT_UINT64)
-+/* MPC HLS BEGIN */
-+DEF_FUNCTION_TYPE_1 (BT_FN_BOOL_INT, BT_BOOL, BT_INT)
-+/* MPC HLS END */
+diff --git a/gcc/c-family/c-common.c b/gcc/c-family/c-common.c
+index f41ec9ca8..39ee4dbc2 100644
+--- a/gcc/c-family/c-common.c
++++ b/gcc/c-family/c-common.c
+@@ -469,6 +469,12 @@ const struct c_common_resword c_common_reswords[] =
+   { "__signed",		RID_SIGNED,	0 },
+   { "__signed__",	RID_SIGNED,	0 },
+   { "__thread",		RID_THREAD,	0 },
++  /* MPC begin */
++  { "__task",		RID_TASK,	0 },
++  { "__process",		RID_PROCESS,	0 },
++  { "__openmp",		RID_OPENMP,	0 },
++ 
++  /* MPC end */
+   { "__transaction_atomic", RID_TRANSACTION_ATOMIC, 0 },
+   { "__transaction_relaxed", RID_TRANSACTION_RELAXED, 0 },
+   { "__transaction_cancel", RID_TRANSACTION_CANCEL, 0 },
+@@ -536,7 +542,10 @@ const struct c_common_resword c_common_reswords[] =
+   { "switch",		RID_SWITCH,	0 },
+   { "template",		RID_TEMPLATE,	D_CXXONLY | D_CXXWARN },
+   { "this",		RID_THIS,	D_CXXONLY | D_CXXWARN },
++  { "process_local",	RID_PROCESS,	D_CXXONLY | D_CXX0X | D_CXXWARN },
++  { "task_local",	RID_TASK,	D_CXXONLY | D_CXX0X | D_CXXWARN },
+   { "thread_local",	RID_THREAD,	D_CXXONLY | D_CXX0X | D_CXXWARN },
++  { "openmp_local",	RID_OPENMP,	D_CXXONLY | D_CXX0X | D_CXXWARN },
+   { "throw",		RID_THROW,	D_CXX_OBJC | D_CXXWARN },
+   { "true",		RID_TRUE,	D_CXXONLY | D_CXXWARN },
+   { "try",		RID_TRY,	D_CXX_OBJC | D_CXXWARN },
+@@ -11383,6 +11392,11 @@ keyword_is_storage_class_specifier (enum rid keyword)
+     case RID_AUTO:
+     case RID_MUTABLE:
+     case RID_THREAD:
++		/* MPC TLS BEGIN */
++	case RID_PROCESS:
++	case RID_TASK:
++	case RID_OPENMP:
++		/* MPC TLS END */
+       return true;
+     default:
+       return false;
+diff --git a/gcc/c-family/c-common.h b/gcc/c-family/c-common.h
+index 4014651b8..5bf4feb35 100644
+--- a/gcc/c-family/c-common.h
++++ b/gcc/c-family/c-common.h
+@@ -68,6 +68,9 @@ enum rid
+   RID_VOLATILE, RID_SIGNED,  RID_AUTO,  RID_RESTRICT,
+   RID_NORETURN,
  
- DEF_POINTER_TYPE (BT_PTR_FN_VOID_PTR, BT_FN_VOID_PTR)
++  /* MPC Extension */
++  RID_PROCESS, RID_TASK,RID_OPENMP,
++
+   /* C extensions */
+   RID_COMPLEX, RID_THREAD, RID_SAT,
  
-@@ -446,7 +449,6 @@
- 		     BT_VOLATILE_PTR, BT_PTR, BT_INT)
- DEF_FUNCTION_TYPE_4 (BT_FN_VOID_SIZE_CONST_VPTR_PTR_INT, BT_VOID, BT_SIZE,
- 		     BT_CONST_VOLATILE_PTR, BT_PTR, BT_INT)
+diff --git a/gcc/c-family/c-omp.c b/gcc/c-family/c-omp.c
+index f05b60a40..2074b047f 100644
+--- a/gcc/c-family/c-omp.c
++++ b/gcc/c-family/c-omp.c
+@@ -76,7 +76,7 @@ c_finish_omp_barrier (location_t loc)
+ {
+   tree x;
+ 
+-  x = builtin_decl_explicit (BUILT_IN_GOMP_BARRIER);
++  x = builtin_decl_explicit(BUILT_IN_GOMP_BARRIER);
+   x = build_call_expr_loc (loc, x, 0);
+   add_stmt (x);
+ }
+@@ -89,7 +89,6 @@ void
+ c_finish_omp_taskwait (location_t loc)
+ {
+   tree x;
 -
- DEF_FUNCTION_TYPE_5 (BT_FN_INT_STRING_INT_SIZE_CONST_STRING_VALIST_ARG,
- 		     BT_INT, BT_STRING, BT_INT, BT_SIZE, BT_CONST_STRING,
- 		     BT_VALIST_ARG)
-diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
---- gcc-4.8.5/gcc/c/c-decl.c	2014-04-10 09:54:08.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/c/c-decl.c	2016-07-19 11:15:05.028841866 +0200
-@@ -231,6 +231,10 @@
+   x = builtin_decl_explicit (BUILT_IN_GOMP_TASKWAIT);
+   x = build_call_expr_loc (loc, x, 0);
+   add_stmt (x);
+@@ -103,8 +102,7 @@ void
+ c_finish_omp_taskyield (location_t loc)
+ {
+   tree x;
+-
+-  x = builtin_decl_explicit (BUILT_IN_GOMP_TASKYIELD);
++  x = builtin_decl_explicit (BUILT_IN_GOMP_TASKYIELD); 
+   x = build_call_expr_loc (loc, x, 0);
+   add_stmt (x);
+ }
+@@ -258,7 +256,6 @@ void
+ c_finish_omp_flush (location_t loc)
+ {
+   tree x;
+-
+   x = builtin_decl_explicit (BUILT_IN_SYNC_SYNCHRONIZE);
+   x = build_call_expr_loc (loc, x, 0);
+   add_stmt (x);
+diff --git a/gcc/c-family/c-opts.c b/gcc/c-family/c-opts.c
+index 30de1e113..a40771a6a 100644
+--- a/gcc/c-family/c-opts.c
++++ b/gcc/c-family/c-opts.c
+@@ -43,6 +43,8 @@ along with GCC; see the file COPYING3.  If not see
+ 				   TARGET_OPTF.  */
+ #include "tm_p.h"		/* For C_COMMON_OVERRIDE_OPTIONS.  */
+ 
++#include <sys/time.h>
++
+ #ifndef DOLLARS_IN_IDENTIFIERS
+ # define DOLLARS_IN_IDENTIFIERS true
+ #endif
+@@ -1341,6 +1343,66 @@ c_finish_options (void)
+ 
+   include_cursor = 0;
+   push_command_line_include ();
++
++
++	/* MPC_BEGIN */
++	if( !(cpp_get_options (parse_in)->lang == CLK_ASM) && getenv("MPC_DYN_PRIV_ENABLED") )
++	{
++		pch_cpp_save_state ();
++		
++		struct timeval tv;
++		gettimeofday( &tv, NULL);
++		
++		srand( getpid());
++		int rnd[4];
++		rnd[0] = rand();
++		rnd[1] = (int)tv.tv_sec;
++		rnd[2] = (int)tv.tv_usec;
++		srand(rnd[2] + rnd[0]);
++		rnd[3] = rand();;
++		
++		char fname[20];
++		char file_cont[500];
++		
++		snprintf(fname, 20, "/tmp/tmp-gcc-XXXXXX" );
++		snprintf(file_cont, 500, "void _%d%d%d%d(){}", rnd[0], rnd[1], rnd[2], rnd[3] );
++		
++		int fd = mkstemp(fname);
++		
++		if( fd < 0 )
++		{
++			perror("mkstemp");
++			abort();
++		}
++		
++		int to_w = strlen( file_cont );
++		int ret = 0;
++		
++		
++		while( (ret = write(fd, file_cont, to_w) ) )
++		{
++			if( ret < 0 )
++			{
++				if( errno == EAGAIN )
++					continue;
++				perror("write");
++				abort();
++			}
++			
++			to_w -= ret;
++			
++			if( to_w <= 0 )
++				break;
++		}
++		
++		
++		close( fd );
++		
++		cpp_push_include (parse_in, fname);
++		
++		unlink( fname );
++	}
++	/* MPC_END */
+ }
+ 
+ /* Give CPP the next file given by -include, if any.  */
+diff --git a/gcc/c-family/c-pragma.c b/gcc/c-family/c-pragma.c
+index cd9043378..5217d1540 100644
+--- a/gcc/c-family/c-pragma.c
++++ b/gcc/c-family/c-pragma.c
+@@ -1351,6 +1351,30 @@ init_pragma (void)
+ 				      omp_pragmas[i].id, true, true);
+     }
+ 
++  /* MPC HLS BEGIN */
++  if (flag_mpc_hls && !flag_preprocess_only)
++    {
++      struct mpc_hls_pragma_def { const char *name; unsigned int id; };
++      static const struct mpc_hls_pragma_def mpc_hls_pragmas[] = {
++	{ "node",    PRAGMA_HLS_NODE },
++	{ "numa",    PRAGMA_HLS_NUMA },
++	{ "socket",  PRAGMA_HLS_SOCKET },
++	{ "cache",   PRAGMA_HLS_CACHE },
++	{ "core",    PRAGMA_HLS_CORE },
++	{ "single",  PRAGMA_HLS_SINGLE },
++	{ "barrier", PRAGMA_HLS_BARRIER },
++      } ;
++
++      const int n_mpc_hls_pragmas = sizeof (mpc_hls_pragmas) / 
++	sizeof (*mpc_hls_pragmas);
++      int i;
++
++      for (i = 0; i < n_mpc_hls_pragmas; ++i)
++	cpp_register_deferred_pragma (parse_in, "hls", mpc_hls_pragmas[i].name,
++				      mpc_hls_pragmas[i].id, true, true);
++    }
++  /* MPC HLS END */
++  
+   if (!flag_preprocess_only)
+     cpp_register_deferred_pragma (parse_in, "GCC", "pch_preprocess",
+ 				  PRAGMA_GCC_PCH_PREPROCESS, false, false);
+diff --git a/gcc/c-family/c-pragma.h b/gcc/c-family/c-pragma.h
+index 41215db00..0cc5d102d 100644
+--- a/gcc/c-family/c-pragma.h
++++ b/gcc/c-family/c-pragma.h
+@@ -44,7 +44,15 @@ typedef enum pragma_kind {
+   PRAGMA_OMP_TASKWAIT,
+   PRAGMA_OMP_TASKYIELD,
+   PRAGMA_OMP_THREADPRIVATE,
+-
++  /* MPC HLS BEGIN */
++  PRAGMA_HLS_NODE,
++  PRAGMA_HLS_NUMA,
++  PRAGMA_HLS_SOCKET,
++  PRAGMA_HLS_CACHE,
++  PRAGMA_HLS_CORE,
++  PRAGMA_HLS_SINGLE,
++  PRAGMA_HLS_BARRIER,
++  /* MPC HLS END */
+   PRAGMA_GCC_PCH_PREPROCESS,
+ 
+   PRAGMA_FIRST_EXTERNAL
+diff --git a/gcc/c-family/c.opt b/gcc/c-family/c.opt
+index 4da80b0ed..c6b489eb5 100644
+--- a/gcc/c-family/c.opt
++++ b/gcc/c-family/c.opt
+@@ -490,6 +490,12 @@ Wmissing-declarations
+ C ObjC C++ ObjC++ Var(warn_missing_declarations) Warning
+ Warn about global functions without previous declarations
+ 
++; MPC HLS BEGIN 
++Wmpc
++C C++ Var(warn_mpc) Warning LangEnabledBy(C C++, Wall)
++Warn about MPC-related and thread-safety issues
++; MPC HLS END
++
+ Wmissing-field-initializers
+ C ObjC C++ ObjC++ Var(warn_missing_field_initializers) Warning EnabledBy(Wextra)
+ Warn about missing fields in struct initializers
+@@ -984,6 +990,27 @@ flax-vector-conversions
+ C ObjC C++ ObjC++ Var(flag_lax_vector_conversions)
+ Allow implicit conversions between vectors with differing numbers of subparts and/or differing element types.
+ 
++; MPC TLS BEGIN 
++fmpc-privatize
++C C++ Var(flag_mpc_privatize)
++Privatize every global variable to make MPI codes MPC compliant.
++
++fmpi-privatize
++C C++ Var(flag_mpi_privatize)
++Privatize every global variable to make MPI codes MPC compliant using standard TLS mechanism.
++; MPC TLS END 
++
++; MPC HLS BEGIN
++fhls
++C C++ Var(flag_mpc_hls)
++Enable Hierarchical Local Storage (HLS) directives
++
++fhls-verbose
++C C++ Var(flag_mpc_hls_verbose)
++Enable verbose output for Hierarchical Local Storage (HLS) directives
++; MPC HLS END
++
++
+ fms-extensions
+ C ObjC C++ ObjC++ Var(flag_ms_extensions)
+ Don't warn about uses of Microsoft extensions
+diff --git a/gcc/c/c-decl.c b/gcc/c/c-decl.c
+index a9108e790..02434e0cc 100644
+--- a/gcc/c/c-decl.c
++++ b/gcc/c/c-decl.c
+@@ -231,6 +231,10 @@ struct GTY(()) lang_identifier {
    struct c_binding *label_binding;  /* labels */
  };
  
@@ -53,7 +371,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
  /* Validate c-lang.c's assumptions.  */
  extern char C_SIZEOF_STRUCT_LANG_IDENTIFIER_isnt_accurate
  [(sizeof(struct lang_identifier) == C_SIZEOF_STRUCT_LANG_IDENTIFIER) ? 1 : -1];
-@@ -1962,13 +1966,24 @@
+@@ -1962,13 +1966,24 @@ diagnose_mismatched_decls (tree newdecl, tree olddecl,
      {
        /* Only variables can be thread-local, and all declarations must
  	 agree on this property.  */
@@ -79,7 +397,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
        else if (DECL_THREAD_LOCAL_P (newdecl) != DECL_THREAD_LOCAL_P (olddecl))
  	{
  	  if (DECL_THREAD_LOCAL_P (newdecl))
-@@ -2260,6 +2275,14 @@
+@@ -2260,6 +2275,14 @@ merge_decls (tree newdecl, tree olddecl, tree newtype, tree oldtype)
        C_DECL_THREADPRIVATE_P (newdecl) = 1;
      }
  
@@ -94,7 +412,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
    if (CODE_CONTAINS_STRUCT (TREE_CODE (olddecl), TS_DECL_WITH_VIS))
      {
        /* Merge the section attribute.
-@@ -3848,6 +3871,8 @@
+@@ -3848,6 +3871,8 @@ quals_from_declspecs (const struct c_declspecs *specs)
  	      && !specs->complex_p
  	      && !specs->inline_p
  	      && !specs->noreturn_p
@@ -103,7 +421,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
  	      && !specs->thread_p);
    return quals;
  }
-@@ -4162,6 +4187,46 @@
+@@ -4162,6 +4187,46 @@ start_decl (struct c_declarator *declarator, struct c_declspecs *declspecs,
      record_inline_static (input_location, current_function_decl,
  			  decl, csi_modifiable);
  
@@ -150,7 +468,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
    if (c_dialect_objc () 
        && (TREE_CODE (decl) == VAR_DECL
            || TREE_CODE (decl) == FUNCTION_DECL))
-@@ -4909,6 +4974,9 @@
+@@ -4909,6 +4974,9 @@ grokdeclarator (const struct c_declarator *declarator,
  {
    tree type = declspecs->type;
    bool threadp = declspecs->thread_p;
@@ -160,7 +478,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
    enum c_storage_class storage_class = declspecs->storage_class;
    int constp;
    int restrictp;
-@@ -6169,8 +6237,22 @@
+@@ -6169,8 +6237,22 @@ grokdeclarator (const struct c_declarator *declarator,
  
  	if (threadp)
  	  DECL_TLS_MODEL (decl) = decl_default_tls_model (decl);
@@ -183,7 +501,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
      if ((storage_class == csc_extern
  	 || (storage_class == csc_none
  	     && TREE_CODE (type) == FUNCTION_TYPE
-@@ -8818,6 +8900,11 @@
+@@ -8818,6 +8900,11 @@ build_null_declspecs (void)
    ret->inline_p = false;
    ret->noreturn_p = false;
    ret->thread_p = false;
@@ -195,7 +513,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
    ret->const_p = false;
    ret->volatile_p = false;
    ret->restrict_p = false;
-@@ -9617,6 +9704,50 @@
+@@ -9617,6 +9704,50 @@ declspecs_add_scspec (source_location loc,
  	  specs->locations[cdw_thread] = loc;
  	}
        break;
@@ -246,7 +564,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
      case RID_AUTO:
        n = csc_auto;
        break;
-@@ -9625,6 +9756,14 @@
+@@ -9625,6 +9756,14 @@ declspecs_add_scspec (source_location loc,
        /* Diagnose "__thread extern".  */
        if (specs->thread_p)
  	error ("%<__thread%> before %<extern%>");
@@ -261,7 +579,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
        break;
      case RID_REGISTER:
        n = csc_register;
-@@ -9634,6 +9773,14 @@
+@@ -9634,6 +9773,14 @@ declspecs_add_scspec (source_location loc,
        /* Diagnose "__thread static".  */
        if (specs->thread_p)
  	error ("%<__thread%> before %<static%>");
@@ -276,7 +594,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
        break;
      case RID_TYPEDEF:
        n = csc_typedef;
-@@ -9655,11 +9802,23 @@
+@@ -9655,11 +9802,23 @@ declspecs_add_scspec (source_location loc,
  	{
  	  specs->storage_class = n;
  	  specs->locations[cdw_storage_class] = loc;
@@ -301,7 +619,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
  	}
      }
    return specs;
-@@ -10040,8 +10199,7 @@
+@@ -10040,8 +10199,7 @@ collect_all_refs (const char *source_file)
  
  /* Iterate over all global declarations and call CALLBACK.  */
  
@@ -311,10 +629,11 @@ diff -Naur gcc-4.8.5/gcc/c/c-decl.c mpc-gcc-4.8.5/gcc/c/c-decl.c
  {
    tree t;
    tree decls;
-diff -Naur gcc-4.8.5/gcc/c/c-parser.c mpc-gcc-4.8.5/gcc/c/c-parser.c
---- gcc-4.8.5/gcc/c/c-parser.c	2014-04-10 09:54:08.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/c/c-parser.c	2016-07-19 11:04:37.224484255 +0200
-@@ -624,6 +624,11 @@
+diff --git a/gcc/c/c-parser.c b/gcc/c/c-parser.c
+index 215327356..0bfd254b4 100644
+--- a/gcc/c/c-parser.c
++++ b/gcc/c/c-parser.c
+@@ -624,6 +624,11 @@ c_token_starts_declspecs (c_token *token)
  	case RID_NORETURN:
  	case RID_AUTO:
  	case RID_THREAD:
@@ -326,7 +645,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-parser.c mpc-gcc-4.8.5/gcc/c/c-parser.c
  	case RID_UNSIGNED:
  	case RID_LONG:
  	case RID_INT128:
-@@ -1186,6 +1191,12 @@
+@@ -1186,6 +1191,12 @@ static void c_parser_omp_flush (c_parser *);
  static void c_parser_omp_taskwait (c_parser *);
  static void c_parser_omp_taskyield (c_parser *);
  
@@ -339,7 +658,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-parser.c mpc-gcc-4.8.5/gcc/c/c-parser.c
  enum pragma_context { pragma_external, pragma_stmt, pragma_compound };
  static bool c_parser_pragma (c_parser *, enum pragma_context);
  
-@@ -2097,6 +2108,11 @@
+@@ -2097,6 +2108,11 @@ c_parser_declspecs (c_parser *parser, struct c_declspecs *specs,
  	case RID_NORETURN:
  	case RID_AUTO:
  	case RID_THREAD:
@@ -351,7 +670,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-parser.c mpc-gcc-4.8.5/gcc/c/c-parser.c
  	  if (!scspec_ok)
  	    goto out;
  	  attrs_ok = true;
-@@ -2952,8 +2968,8 @@
+@@ -2952,8 +2968,8 @@ c_parser_direct_declarator (c_parser *parser, bool type_seen_p, c_dtr_syn kind,
  	       || c_parser_peek_token (parser)->id_kind == C_ID_CLASSNAME))
  	  || c_parser_peek_token (parser)->id_kind == C_ID_ID))
      {
@@ -362,7 +681,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-parser.c mpc-gcc-4.8.5/gcc/c/c-parser.c
        *seen_id = true;
        inner->id_loc = c_parser_peek_token (parser)->location;
        c_parser_consume_token (parser);
-@@ -3452,6 +3468,11 @@
+@@ -3452,6 +3468,11 @@ c_parser_attribute_any_word (c_parser *parser)
  	case RID_RESTRICT:
  	case RID_COMPLEX:
  	case RID_THREAD:
@@ -374,7 +693,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-parser.c mpc-gcc-4.8.5/gcc/c/c-parser.c
  	case RID_INT:
  	case RID_CHAR:
  	case RID_FLOAT:
-@@ -3721,7 +3742,7 @@
+@@ -3721,7 +3742,7 @@ c_parser_initializer (c_parser *parser)
        ret = c_parser_expr_no_commas (parser, NULL);
        if (TREE_CODE (ret.value) != STRING_CST
  	  && TREE_CODE (ret.value) != COMPOUND_LITERAL_EXPR)
@@ -383,7 +702,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-parser.c mpc-gcc-4.8.5/gcc/c/c-parser.c
        return ret;
      }
  }
-@@ -8608,7 +8629,33 @@
+@@ -8608,7 +8629,33 @@ c_parser_pragma (c_parser *parser, enum pragma_context context)
        c_parser_error (parser, "%<#pragma GCC pch_preprocess%> must be first");
        c_parser_skip_until_found (parser, CPP_PRAGMA_EOL, NULL);
        return false;
@@ -417,7 +736,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-parser.c mpc-gcc-4.8.5/gcc/c/c-parser.c
      default:
        if (id < PRAGMA_FIRST_EXTERNAL)
  	{
-@@ -10626,9 +10673,17 @@
+@@ -10626,9 +10673,17 @@ c_parser_omp_threadprivate (c_parser *parser)
  	error_at (loc, "%<threadprivate%> %qE has incomplete type", v);
        else
  	{
@@ -438,7 +757,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-parser.c mpc-gcc-4.8.5/gcc/c/c-parser.c
  	      /* If rtl has been already set for this var, call
  		 make_decl_rtl once again, so that encode_section_info
  		 has a chance to look at the new decl flags.  */
-@@ -10854,6 +10909,241 @@
+@@ -10854,6 +10909,241 @@ c_parser_transaction_cancel(c_parser *parser)
    return build1 (NOP_EXPR, void_type_node, error_mark_node);
  }
  
@@ -680,10 +999,11 @@ diff -Naur gcc-4.8.5/gcc/c/c-parser.c mpc-gcc-4.8.5/gcc/c/c-parser.c
  /* Parse a single source file.  */
  
  void
-diff -Naur gcc-4.8.5/gcc/c/c-tree.h mpc-gcc-4.8.5/gcc/c/c-tree.h
---- gcc-4.8.5/gcc/c/c-tree.h	2014-04-10 09:54:08.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/c/c-tree.h	2016-07-19 11:04:37.224484255 +0200
-@@ -241,6 +241,11 @@
+diff --git a/gcc/c/c-tree.h b/gcc/c/c-tree.h
+index 1e6e68acb..27e36bc59 100644
+--- a/gcc/c/c-tree.h
++++ b/gcc/c/c-tree.h
+@@ -241,6 +241,11 @@ enum c_declspec_word {
    cdw_inline,
    cdw_noreturn,
    cdw_thread,
@@ -695,7 +1015,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-tree.h mpc-gcc-4.8.5/gcc/c/c-tree.h
    cdw_const,
    cdw_volatile,
    cdw_restrict,
-@@ -322,6 +327,14 @@
+@@ -322,6 +327,14 @@ struct c_declspecs {
    BOOL_BITFIELD noreturn_p : 1;
    /* Whether "__thread" was specified.  */
    BOOL_BITFIELD thread_p : 1;
@@ -710,10 +1030,11 @@ diff -Naur gcc-4.8.5/gcc/c/c-tree.h mpc-gcc-4.8.5/gcc/c/c-tree.h
    /* Whether "const" was specified.  */
    BOOL_BITFIELD const_p : 1;
    /* Whether "volatile" was specified.  */
-diff -Naur gcc-4.8.5/gcc/c/c-typeck.c mpc-gcc-4.8.5/gcc/c/c-typeck.c
---- gcc-4.8.5/gcc/c/c-typeck.c	2015-02-01 22:54:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/c/c-typeck.c	2016-07-19 11:04:37.224484255 +0200
-@@ -3839,6 +3839,7 @@
+diff --git a/gcc/c/c-typeck.c b/gcc/c/c-typeck.c
+index a608fb6dd..3e0e0081c 100644
+--- a/gcc/c/c-typeck.c
++++ b/gcc/c/c-typeck.c
+@@ -3839,6 +3839,7 @@ build_unary_op (location_t location,
  	  goto return_build_unary_op;
  	}
  
@@ -721,7 +1042,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-typeck.c mpc-gcc-4.8.5/gcc/c/c-typeck.c
        val = build1 (ADDR_EXPR, argtype, arg);
  
        ret = val;
-@@ -5779,7 +5780,7 @@
+@@ -5779,7 +5780,7 @@ store_init_value (location_t init_loc, tree decl, tree init, tree origtype)
    if (init)
      npc = null_pointer_constant_p (init);
    value = digest_init (init_loc, type, init, origtype, npc,
@@ -730,7 +1051,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-typeck.c mpc-gcc-4.8.5/gcc/c/c-typeck.c
  
    /* Store the expression if valid; else report error.  */
  
-@@ -6262,8 +6263,11 @@
+@@ -6262,8 +6263,11 @@ digest_init (location_t init_loc, tree type, tree init, tree origtype,
  	       && !initializer_constant_valid_p (inside_init,
  						 TREE_TYPE (inside_init)))
  	{
@@ -744,7 +1065,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-typeck.c mpc-gcc-4.8.5/gcc/c/c-typeck.c
  	}
        else if (require_constant && !maybe_const)
  	pedwarn_init (init_loc, 0,
-@@ -6299,22 +6303,25 @@
+@@ -6299,22 +6303,25 @@ digest_init (location_t init_loc, tree type, tree init, tree origtype,
        /* Check to see if we have already given an error message.  */
        if (inside_init == error_mark_node)
  	;
@@ -785,7 +1106,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-typeck.c mpc-gcc-4.8.5/gcc/c/c-typeck.c
        return inside_init;
      }
  
-@@ -7785,8 +7792,11 @@
+@@ -7785,8 +7792,11 @@ output_init_element (tree value, tree origtype, bool strict_string, tree type,
      {
        if (require_constant_value)
  	{
@@ -799,7 +1120,7 @@ diff -Naur gcc-4.8.5/gcc/c/c-typeck.c mpc-gcc-4.8.5/gcc/c/c-typeck.c
  	}
        else if (require_constant_elements)
  	pedwarn (input_location, 0,
-@@ -10801,7 +10811,12 @@
+@@ -10801,7 +10811,12 @@ c_finish_omp_clauses (tree clauses)
  	    {
  	      const char *share_name = NULL;
  
@@ -812,277 +1133,11 @@ diff -Naur gcc-4.8.5/gcc/c/c-typeck.c mpc-gcc-4.8.5/gcc/c/c-typeck.c
  		share_name = "threadprivate";
  	      else switch (c_omp_predetermined_sharing (t))
  		{
-diff -Naur gcc-4.8.5/gcc/c-family/c-common.c mpc-gcc-4.8.5/gcc/c-family/c-common.c
---- gcc-4.8.5/gcc/c-family/c-common.c	2015-01-20 15:19:35.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/c-family/c-common.c	2016-07-19 11:04:37.228484360 +0200
-@@ -469,6 +469,12 @@
-   { "__signed",		RID_SIGNED,	0 },
-   { "__signed__",	RID_SIGNED,	0 },
-   { "__thread",		RID_THREAD,	0 },
-+  /* MPC begin */
-+  { "__task",		RID_TASK,	0 },
-+  { "__process",		RID_PROCESS,	0 },
-+  { "__openmp",		RID_OPENMP,	0 },
-+ 
-+  /* MPC end */
-   { "__transaction_atomic", RID_TRANSACTION_ATOMIC, 0 },
-   { "__transaction_relaxed", RID_TRANSACTION_RELAXED, 0 },
-   { "__transaction_cancel", RID_TRANSACTION_CANCEL, 0 },
-@@ -536,7 +542,10 @@
-   { "switch",		RID_SWITCH,	0 },
-   { "template",		RID_TEMPLATE,	D_CXXONLY | D_CXXWARN },
-   { "this",		RID_THIS,	D_CXXONLY | D_CXXWARN },
-+  { "process_local",	RID_PROCESS,	D_CXXONLY | D_CXX0X | D_CXXWARN },
-+  { "task_local",	RID_TASK,	D_CXXONLY | D_CXX0X | D_CXXWARN },
-   { "thread_local",	RID_THREAD,	D_CXXONLY | D_CXX0X | D_CXXWARN },
-+  { "openmp_local",	RID_OPENMP,	D_CXXONLY | D_CXX0X | D_CXXWARN },
-   { "throw",		RID_THROW,	D_CXX_OBJC | D_CXXWARN },
-   { "true",		RID_TRUE,	D_CXXONLY | D_CXXWARN },
-   { "try",		RID_TRY,	D_CXX_OBJC | D_CXXWARN },
-@@ -11383,6 +11392,11 @@
-     case RID_AUTO:
-     case RID_MUTABLE:
-     case RID_THREAD:
-+		/* MPC TLS BEGIN */
-+	case RID_PROCESS:
-+	case RID_TASK:
-+	case RID_OPENMP:
-+		/* MPC TLS END */
-       return true;
-     default:
-       return false;
-diff -Naur gcc-4.8.5/gcc/c-family/c-common.h mpc-gcc-4.8.5/gcc/c-family/c-common.h
---- gcc-4.8.5/gcc/c-family/c-common.h	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/c-family/c-common.h	2016-07-19 11:04:37.228484360 +0200
-@@ -68,6 +68,9 @@
-   RID_VOLATILE, RID_SIGNED,  RID_AUTO,  RID_RESTRICT,
-   RID_NORETURN,
- 
-+  /* MPC Extension */
-+  RID_PROCESS, RID_TASK,RID_OPENMP,
-+
-   /* C extensions */
-   RID_COMPLEX, RID_THREAD, RID_SAT,
- 
-diff -Naur gcc-4.8.5/gcc/c-family/c-omp.c mpc-gcc-4.8.5/gcc/c-family/c-omp.c
---- gcc-4.8.5/gcc/c-family/c-omp.c	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/c-family/c-omp.c	2016-07-19 11:04:37.228484360 +0200
-@@ -76,7 +76,7 @@
- {
-   tree x;
- 
--  x = builtin_decl_explicit (BUILT_IN_GOMP_BARRIER);
-+  x = builtin_decl_explicit(BUILT_IN_GOMP_BARRIER);
-   x = build_call_expr_loc (loc, x, 0);
-   add_stmt (x);
- }
-@@ -89,7 +89,6 @@
- c_finish_omp_taskwait (location_t loc)
- {
-   tree x;
--
-   x = builtin_decl_explicit (BUILT_IN_GOMP_TASKWAIT);
-   x = build_call_expr_loc (loc, x, 0);
-   add_stmt (x);
-@@ -103,8 +102,7 @@
- c_finish_omp_taskyield (location_t loc)
- {
-   tree x;
--
--  x = builtin_decl_explicit (BUILT_IN_GOMP_TASKYIELD);
-+  x = builtin_decl_explicit (BUILT_IN_GOMP_TASKYIELD); 
-   x = build_call_expr_loc (loc, x, 0);
-   add_stmt (x);
- }
-@@ -258,7 +256,6 @@
- c_finish_omp_flush (location_t loc)
- {
-   tree x;
--
-   x = builtin_decl_explicit (BUILT_IN_SYNC_SYNCHRONIZE);
-   x = build_call_expr_loc (loc, x, 0);
-   add_stmt (x);
-diff -Naur gcc-4.8.5/gcc/c-family/c.opt mpc-gcc-4.8.5/gcc/c-family/c.opt
---- gcc-4.8.5/gcc/c-family/c.opt	2014-04-07 08:40:18.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/c-family/c.opt	2016-07-19 11:04:37.228484360 +0200
-@@ -490,6 +490,12 @@
- C ObjC C++ ObjC++ Var(warn_missing_declarations) Warning
- Warn about global functions without previous declarations
- 
-+; MPC HLS BEGIN 
-+Wmpc
-+C C++ Var(warn_mpc) Warning LangEnabledBy(C C++, Wall)
-+Warn about MPC-related and thread-safety issues
-+; MPC HLS END
-+
- Wmissing-field-initializers
- C ObjC C++ ObjC++ Var(warn_missing_field_initializers) Warning EnabledBy(Wextra)
- Warn about missing fields in struct initializers
-@@ -984,6 +990,27 @@
- C ObjC C++ ObjC++ Var(flag_lax_vector_conversions)
- Allow implicit conversions between vectors with differing numbers of subparts and/or differing element types.
- 
-+; MPC TLS BEGIN 
-+fmpc-privatize
-+C C++ Var(flag_mpc_privatize)
-+Privatize every global variable to make MPI codes MPC compliant.
-+
-+fmpi-privatize
-+C C++ Var(flag_mpi_privatize)
-+Privatize every global variable to make MPI codes MPC compliant using standard TLS mechanism.
-+; MPC TLS END 
-+
-+; MPC HLS BEGIN
-+fhls
-+C C++ Var(flag_mpc_hls)
-+Enable Hierarchical Local Storage (HLS) directives
-+
-+fhls-verbose
-+C C++ Var(flag_mpc_hls_verbose)
-+Enable verbose output for Hierarchical Local Storage (HLS) directives
-+; MPC HLS END
-+
-+
- fms-extensions
- C ObjC C++ ObjC++ Var(flag_ms_extensions)
- Don't warn about uses of Microsoft extensions
-diff -Naur gcc-4.8.5/gcc/c-family/c-opts.c mpc-gcc-4.8.5/gcc/c-family/c-opts.c
---- gcc-4.8.5/gcc/c-family/c-opts.c	2015-02-11 13:14:54.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/c-family/c-opts.c	2016-07-19 11:04:37.228484360 +0200
-@@ -43,6 +43,8 @@
- 				   TARGET_OPTF.  */
- #include "tm_p.h"		/* For C_COMMON_OVERRIDE_OPTIONS.  */
- 
-+#include <sys/time.h>
-+
- #ifndef DOLLARS_IN_IDENTIFIERS
- # define DOLLARS_IN_IDENTIFIERS true
- #endif
-@@ -1341,6 +1343,66 @@
- 
-   include_cursor = 0;
-   push_command_line_include ();
-+
-+
-+	/* MPC_BEGIN */
-+	if( !(cpp_get_options (parse_in)->lang == CLK_ASM) && getenv("MPC_DYN_PRIV_ENABLED") )
-+	{
-+		pch_cpp_save_state ();
-+		
-+		struct timeval tv;
-+		gettimeofday( &tv, NULL);
-+		
-+		srand( getpid());
-+		int rnd[4];
-+		rnd[0] = rand();
-+		rnd[1] = (int)tv.tv_sec;
-+		rnd[2] = (int)tv.tv_usec;
-+		srand(rnd[2] + rnd[0]);
-+		rnd[3] = rand();;
-+		
-+		char fname[20];
-+		char file_cont[500];
-+		
-+		snprintf(fname, 20, "/tmp/tmp-gcc-XXXXXX" );
-+		snprintf(file_cont, 500, "void _%d%d%d%d(){}", rnd[0], rnd[1], rnd[2], rnd[3] );
-+		
-+		int fd = mkstemp(fname);
-+		
-+		if( fd < 0 )
-+		{
-+			perror("mkstemp");
-+			abort();
-+		}
-+		
-+		int to_w = strlen( file_cont );
-+		int ret = 0;
-+		
-+		
-+		while( (ret = write(fd, file_cont, to_w) ) )
-+		{
-+			if( ret < 0 )
-+			{
-+				if( errno == EAGAIN )
-+					continue;
-+				perror("write");
-+				abort();
-+			}
-+			
-+			to_w -= ret;
-+			
-+			if( to_w <= 0 )
-+				break;
-+		}
-+		
-+		
-+		close( fd );
-+		
-+		cpp_push_include (parse_in, fname);
-+		
-+		unlink( fname );
-+	}
-+	/* MPC_END */
- }
- 
- /* Give CPP the next file given by -include, if any.  */
-diff -Naur gcc-4.8.5/gcc/c-family/c-pragma.c mpc-gcc-4.8.5/gcc/c-family/c-pragma.c
---- gcc-4.8.5/gcc/c-family/c-pragma.c	2014-04-10 09:47:55.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/c-family/c-pragma.c	2016-07-19 11:04:37.228484360 +0200
-@@ -1351,6 +1351,30 @@
- 				      omp_pragmas[i].id, true, true);
-     }
- 
-+  /* MPC HLS BEGIN */
-+  if (flag_mpc_hls && !flag_preprocess_only)
-+    {
-+      struct mpc_hls_pragma_def { const char *name; unsigned int id; };
-+      static const struct mpc_hls_pragma_def mpc_hls_pragmas[] = {
-+	{ "node",    PRAGMA_HLS_NODE },
-+	{ "numa",    PRAGMA_HLS_NUMA },
-+	{ "socket",  PRAGMA_HLS_SOCKET },
-+	{ "cache",   PRAGMA_HLS_CACHE },
-+	{ "core",    PRAGMA_HLS_CORE },
-+	{ "single",  PRAGMA_HLS_SINGLE },
-+	{ "barrier", PRAGMA_HLS_BARRIER },
-+      } ;
-+
-+      const int n_mpc_hls_pragmas = sizeof (mpc_hls_pragmas) / 
-+	sizeof (*mpc_hls_pragmas);
-+      int i;
-+
-+      for (i = 0; i < n_mpc_hls_pragmas; ++i)
-+	cpp_register_deferred_pragma (parse_in, "hls", mpc_hls_pragmas[i].name,
-+				      mpc_hls_pragmas[i].id, true, true);
-+    }
-+  /* MPC HLS END */
-+  
-   if (!flag_preprocess_only)
-     cpp_register_deferred_pragma (parse_in, "GCC", "pch_preprocess",
- 				  PRAGMA_GCC_PCH_PREPROCESS, false, false);
-diff -Naur gcc-4.8.5/gcc/c-family/c-pragma.h mpc-gcc-4.8.5/gcc/c-family/c-pragma.h
---- gcc-4.8.5/gcc/c-family/c-pragma.h	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/c-family/c-pragma.h	2016-07-19 11:04:37.228484360 +0200
-@@ -44,7 +44,15 @@
-   PRAGMA_OMP_TASKWAIT,
-   PRAGMA_OMP_TASKYIELD,
-   PRAGMA_OMP_THREADPRIVATE,
--
-+  /* MPC HLS BEGIN */
-+  PRAGMA_HLS_NODE,
-+  PRAGMA_HLS_NUMA,
-+  PRAGMA_HLS_SOCKET,
-+  PRAGMA_HLS_CACHE,
-+  PRAGMA_HLS_CORE,
-+  PRAGMA_HLS_SINGLE,
-+  PRAGMA_HLS_BARRIER,
-+  /* MPC HLS END */
-   PRAGMA_GCC_PCH_PREPROCESS,
- 
-   PRAGMA_FIRST_EXTERNAL
-diff -Naur gcc-4.8.5/gcc/cgraphbuild.c mpc-gcc-4.8.5/gcc/cgraphbuild.c
---- gcc-4.8.5/gcc/cgraphbuild.c	2014-01-07 17:49:22.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/cgraphbuild.c	2016-07-19 11:04:37.228484360 +0200
-@@ -62,6 +62,8 @@
+diff --git a/gcc/cgraphbuild.c b/gcc/cgraphbuild.c
+index 8869f524d..ff6d4514c 100644
+--- a/gcc/cgraphbuild.c
++++ b/gcc/cgraphbuild.c
+@@ -62,6 +62,8 @@ record_reference (tree *tp, int *walk_subtrees, void *data)
    switch (TREE_CODE (t))
      {
      case VAR_DECL:
@@ -1091,10 +1146,11 @@ diff -Naur gcc-4.8.5/gcc/cgraphbuild.c mpc-gcc-4.8.5/gcc/cgraphbuild.c
      case FUNCTION_DECL:
        gcc_unreachable ();
        break;
-diff -Naur gcc-4.8.5/gcc/common.opt mpc-gcc-4.8.5/gcc/common.opt
---- gcc-4.8.5/gcc/common.opt	2014-06-13 18:39:37.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/common.opt	2016-07-19 11:04:37.232484465 +0200
-@@ -2259,6 +2259,12 @@
+diff --git a/gcc/common.opt b/gcc/common.opt
+index ec4cafc44..a3749a366 100644
+--- a/gcc/common.opt
++++ b/gcc/common.opt
+@@ -2259,6 +2259,12 @@ fverbose-asm
  Common Report Var(flag_verbose_asm)
  Add extra commentary to assembler output
  
@@ -1107,10 +1163,40 @@ diff -Naur gcc-4.8.5/gcc/common.opt mpc-gcc-4.8.5/gcc/common.opt
  fvisibility=
  Common Joined RejectNegative Enum(symbol_visibility) Var(default_visibility) Init(VISIBILITY_DEFAULT)
  -fvisibility=[default|internal|hidden|protected]	Set the default symbol visibility
-diff -Naur gcc-4.8.5/gcc/config/i386/i386.c mpc-gcc-4.8.5/gcc/config/i386/i386.c
---- gcc-4.8.5/gcc/config/i386/i386.c	2015-06-10 11:34:21.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/config/i386/i386.c	2016-07-19 11:04:37.232484465 +0200
-@@ -12748,7 +12748,11 @@
+diff --git a/gcc/config/i386/i386-protos.h b/gcc/config/i386/i386-protos.h
+index 602e6fce4..35b18e676 100644
+--- a/gcc/config/i386/i386-protos.h
++++ b/gcc/config/i386/i386-protos.h
+@@ -223,6 +223,24 @@ extern unsigned int ix86_get_callcvt (const_tree);
+ 
+ extern rtx ix86_tls_module_base (void);
+ 
++/* MPC TLS BEGIN */
++extern rtx ix86_tls_get_addr__openmp_scope (void);
++extern rtx ix86_tls_get_addr__task_scope (void);
++extern rtx ix86_tls_get_addr__process_scope (void);
++extern rtx ix86_tls_get_addr__thread_scope (void);
++/* MPC TLS END */
++
++/* MPC HLS BEGIN */
++extern rtx ix86_tls_get_addr__node_scope (void);
++extern rtx ix86_tls_get_addr__numa_level_2_scope (void);
++extern rtx ix86_tls_get_addr__numa_level_1_scope (void);
++extern rtx ix86_tls_get_addr__socket_scope (void);
++extern rtx ix86_tls_get_addr__cache_level_3_scope (void);
++extern rtx ix86_tls_get_addr__cache_level_2_scope (void);
++extern rtx ix86_tls_get_addr__cache_level_1_scope (void);
++extern rtx ix86_tls_get_addr__core_scope (void);
++/* MPC HLS END */
++
+ extern void ix86_expand_vector_init (bool, rtx, rtx);
+ extern void ix86_expand_vector_set (bool, rtx, rtx, int);
+ extern void ix86_expand_vector_extract (bool, rtx, rtx, int);
+diff --git a/gcc/config/i386/i386.c b/gcc/config/i386/i386.c
+index 40dec967c..54008091a 100644
+--- a/gcc/config/i386/i386.c
++++ b/gcc/config/i386/i386.c
+@@ -12748,7 +12748,11 @@ static GTY(()) rtx ix86_tls_symbol;
  static rtx
  ix86_tls_get_addr (void)
  {
@@ -1123,7 +1209,7 @@ diff -Naur gcc-4.8.5/gcc/config/i386/i386.c mpc-gcc-4.8.5/gcc/config/i386/i386.c
      {
        const char *sym
  	= ((TARGET_ANY_GNU_TLS && !TARGET_64BIT)
-@@ -12760,6 +12764,188 @@
+@@ -12760,6 +12764,188 @@ ix86_tls_get_addr (void)
    return ix86_tls_symbol;
  }
  
@@ -1312,7 +1398,7 @@ diff -Naur gcc-4.8.5/gcc/config/i386/i386.c mpc-gcc-4.8.5/gcc/config/i386/i386.c
  /* Construct the SYMBOL_REF for the _TLS_MODULE_BASE_ symbol.  */
  
  static GTY(()) rtx ix86_tls_module_base_symbol;
-@@ -12790,9 +12976,106 @@
+@@ -12790,9 +12976,106 @@ legitimize_tls_address (rtx x, enum tls_model model, bool for_mov)
    rtx pic = NULL_RTX, tp = NULL_RTX;
    enum machine_mode tp_mode = Pmode;
    int type;
@@ -1320,8 +1406,8 @@ diff -Naur gcc-4.8.5/gcc/config/i386/i386.c mpc-gcc-4.8.5/gcc/config/i386/i386.c
 +/* MPC HLS BEGIN */
 +  rtx (*gen_tls_mpc_routine_32)(rtx,rtx) = NULL;
 +  rtx (*gen_tls_mpc_routine_64)(rtx,rtx) = NULL;
-+  switch (model)
-+    {
+   switch (model)
+     {
 +	case TLS_MODEL_MPC_PROCESS:
 +		gen_tls_mpc_routine_64 = &gen_tls_mpc_process_64 ;
 +		gen_tls_mpc_routine_32 = &gen_tls_mpc_process_32 ;
@@ -1374,8 +1460,8 @@ diff -Naur gcc-4.8.5/gcc/config/i386/i386.c mpc-gcc-4.8.5/gcc/config/i386/i386.c
 +	  ;
 +	}
 +/* MPC HLS END */
-   switch (model)
-     {
++  switch (model)
++    {
 +	/* MPC TLS BEGIN */
 +	case TLS_MODEL_MPC_PROCESS:
 +	case TLS_MODEL_MPC_TASK:
@@ -1420,9 +1506,10 @@ diff -Naur gcc-4.8.5/gcc/config/i386/i386.c mpc-gcc-4.8.5/gcc/config/i386/i386.c
      case TLS_MODEL_GLOBAL_DYNAMIC:
        dest = gen_reg_rtx (Pmode);
  
-diff -Naur gcc-4.8.5/gcc/config/i386/i386.md mpc-gcc-4.8.5/gcc/config/i386/i386.md
---- gcc-4.8.5/gcc/config/i386/i386.md	2015-06-03 23:34:36.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/config/i386/i386.md	2016-07-19 11:04:37.236484568 +0200
+diff --git a/gcc/config/i386/i386.md b/gcc/config/i386/i386.md
+index c08a2245d..53955678e 100644
+--- a/gcc/config/i386/i386.md
++++ b/gcc/config/i386/i386.md
 @@ -12695,6 +12695,344 @@
       (clobber (match_scratch:SI 5))
       (clobber (reg:CC FLAGS_REG))])])
@@ -1963,38 +2050,11 @@ diff -Naur gcc-4.8.5/gcc/config/i386/i386.md mpc-gcc-4.8.5/gcc/config/i386/i386.
  (define_insn "*tls_local_dynamic_base_32_gnu"
    [(set (match_operand:SI 0 "register_operand" "=a")
  	(unspec:SI
-diff -Naur gcc-4.8.5/gcc/config/i386/i386-protos.h mpc-gcc-4.8.5/gcc/config/i386/i386-protos.h
---- gcc-4.8.5/gcc/config/i386/i386-protos.h	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/config/i386/i386-protos.h	2016-07-19 11:04:37.232484465 +0200
-@@ -223,6 +223,24 @@
- 
- extern rtx ix86_tls_module_base (void);
- 
-+/* MPC TLS BEGIN */
-+extern rtx ix86_tls_get_addr__openmp_scope (void);
-+extern rtx ix86_tls_get_addr__task_scope (void);
-+extern rtx ix86_tls_get_addr__process_scope (void);
-+extern rtx ix86_tls_get_addr__thread_scope (void);
-+/* MPC TLS END */
-+
-+/* MPC HLS BEGIN */
-+extern rtx ix86_tls_get_addr__node_scope (void);
-+extern rtx ix86_tls_get_addr__numa_level_2_scope (void);
-+extern rtx ix86_tls_get_addr__numa_level_1_scope (void);
-+extern rtx ix86_tls_get_addr__socket_scope (void);
-+extern rtx ix86_tls_get_addr__cache_level_3_scope (void);
-+extern rtx ix86_tls_get_addr__cache_level_2_scope (void);
-+extern rtx ix86_tls_get_addr__cache_level_1_scope (void);
-+extern rtx ix86_tls_get_addr__core_scope (void);
-+/* MPC HLS END */
-+
- extern void ix86_expand_vector_init (bool, rtx, rtx);
- extern void ix86_expand_vector_set (bool, rtx, rtx, int);
- extern void ix86_expand_vector_extract (bool, rtx, rtx, int);
-diff -Naur gcc-4.8.5/gcc/coretypes.h mpc-gcc-4.8.5/gcc/coretypes.h
---- gcc-4.8.5/gcc/coretypes.h	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/coretypes.h	2016-07-19 11:04:37.236484568 +0200
-@@ -107,7 +107,23 @@
+diff --git a/gcc/coretypes.h b/gcc/coretypes.h
+index 320b4dd5d..35fabce27 100644
+--- a/gcc/coretypes.h
++++ b/gcc/coretypes.h
+@@ -107,7 +107,23 @@ enum tls_model {
    TLS_MODEL_GLOBAL_DYNAMIC = TLS_MODEL_REAL,
    TLS_MODEL_LOCAL_DYNAMIC,
    TLS_MODEL_INITIAL_EXEC,
@@ -2019,10 +2079,11 @@ diff -Naur gcc-4.8.5/gcc/coretypes.h mpc-gcc-4.8.5/gcc/coretypes.h
  };
  
  /* Types of unwind/exception handling info that can be generated.  */
-diff -Naur gcc-4.8.5/gcc/cp/cp-tree.h mpc-gcc-4.8.5/gcc/cp/cp-tree.h
---- gcc-4.8.5/gcc/cp/cp-tree.h	2013-11-24 03:44:09.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/cp/cp-tree.h	2016-07-19 11:04:37.236484568 +0200
-@@ -4733,6 +4733,11 @@
+diff --git a/gcc/cp/cp-tree.h b/gcc/cp/cp-tree.h
+index b0b79f858..d732057c6 100644
+--- a/gcc/cp/cp-tree.h
++++ b/gcc/cp/cp-tree.h
+@@ -4733,6 +4733,11 @@ typedef enum cp_decl_spec {
    ds_constexpr,
    ds_complex,
    ds_thread,
@@ -2034,7 +2095,7 @@ diff -Naur gcc-4.8.5/gcc/cp/cp-tree.h mpc-gcc-4.8.5/gcc/cp/cp-tree.h
    ds_type_spec,
    ds_redefined_builtin_type_spec,
    ds_attribute,
-@@ -5771,6 +5776,10 @@
+@@ -5771,6 +5776,10 @@ extern tree nonlambda_method_basetype		(void);
  extern void maybe_add_lambda_conv_op            (tree);
  extern bool is_lambda_ignored_entity            (tree);
  
@@ -2045,111 +2106,11 @@ diff -Naur gcc-4.8.5/gcc/cp/cp-tree.h mpc-gcc-4.8.5/gcc/cp/cp-tree.h
  /* in tree.c */
  extern int cp_tree_operand_length		(const_tree);
  void cp_free_lang_data 				(tree t);
-diff -Naur gcc-4.8.5/gcc/cp/decl2.c mpc-gcc-4.8.5/gcc/cp/decl2.c
---- gcc-4.8.5/gcc/cp/decl2.c	2015-01-13 15:49:10.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/cp/decl2.c	2016-07-19 11:15:05.032841971 +0200
-@@ -53,6 +53,8 @@
- 
- extern cpp_reader *parse_in;
- 
-+/* MPC BEGIN */
-+extern bool mpc_decl_match_invalid_header(tree decl);
- /* This structure contains information about the initializations
-    and/or destructions required for a particular priority level.  */
- typedef struct priority_info_s {
-@@ -970,7 +972,42 @@
- 	    }
- 	}
-     }
--
-+    
-+/* MPC TLS BEGIN */
-+  if ( flag_mpi_privatize &&
-+	TREE_CODE(value) == VAR_DECL &&
-+	( TREE_STATIC( value ) || DECL_EXTERNAL(value) ) &&
-+	!mpc_decl_match_invalid_header(value) &&
-+	!TREE_READONLY( value ) &&
-+	!TREE_CONSTANT( value ) &&
-+	!DECL_THREAD_LOCAL_P(value)
-+  ) {
-+    fprintf( stderr,
-+      "(Front-end C++) Automatic privatization to TLS "
-+      "(variable %s in file %s line %d)\n",
-+      lang_decl_name( value, 2 , 0),
-+      DECL_SOURCE_FILE(value),
-+      DECL_SOURCE_LINE(value) ) ;
-+      DECL_TLS_MODEL (value) = decl_default_tls_model (value);
-+  }
-+  if ( flag_mpc_privatize &&
-+	TREE_CODE(value) == VAR_DECL &&
-+	( TREE_STATIC( value ) || DECL_EXTERNAL(value) ) &&
-+	!mpc_decl_match_invalid_header(value) &&
-+	!TREE_READONLY( value ) &&
-+	!TREE_CONSTANT( value ) &&
-+	!DECL_THREAD_LOCAL_P(value)
-+  ) {
-+		fprintf( stderr,
-+		  "(Front-end C++) Automatic privatization to MPC task "
-+		  "(variable %s in file %s line %d)\n",
-+		  lang_decl_name( value, 2 , 0),
-+		  DECL_SOURCE_FILE(value),
-+		  DECL_SOURCE_LINE(value) ) ;
-+		DECL_TLS_MODEL(value) = TLS_MODEL_MPC_TASK ;
-+  }
-+  /* MPC TLS END */
-+  
-   if (processing_template_decl
-       && (TREE_CODE (value) == VAR_DECL || TREE_CODE (value) == FUNCTION_DECL))
-     {
-@@ -992,8 +1029,22 @@
-     {
-     case VAR_DECL:
-       finish_static_data_member_decl (value, init, init_const_expr_p,
--				      asmspec_tree, flags);
--      return value;
-+			  asmspec_tree, flags);
-+	  /* MPC TLS BEGIN */
-+	  if ( flag_mpc_privatize && 
-+			  (DECL_TLS_MODEL(value) == TLS_MODEL_MPC_TASK) && 
-+			  (TREE_READONLY( value ) || TREE_CONSTANT( value ) ) ) 
-+	  {
-+		  fprintf( stderr,
-+				  "(Front-end C++) Automatic un-privatization from MPC task "
-+				  "(variable %s in file %s line %d)\n",
-+				  lang_decl_name( value, 2 , 0),
-+				  DECL_SOURCE_FILE(value),
-+				  DECL_SOURCE_LINE(value) ) ;
-+		  DECL_TLS_MODEL(value) = TLS_MODEL_NONE ;
-+	  }
-+	  /* MPC TLS END */
-+	  return value;
- 
-     case FIELD_DECL:
-       if (asmspec)
-@@ -3923,7 +3974,19 @@
-   DECL_ARTIFICIAL (guard) = true;
-   DECL_IGNORED_P (guard) = true;
-   TREE_USED (guard) = true;
-+  /* MPC BEGIN */
-+  #if 0
-   DECL_TLS_MODEL (guard) = decl_default_tls_model (guard);
-+  #endif
-+  if(flag_mpc_privatize)
-+  {
-+    DECL_TLS_MODEL (guard) = TLS_MODEL_MPC_TASK;
-+  }
-+  else
-+  {
-+    DECL_TLS_MODEL (guard) = decl_default_tls_model (guard);
-+  }
-+  /* MPC END */
-   pushdecl_top_level_and_finish (guard, NULL_TREE);
- 
-   tree fn = get_local_tls_init_fn ();
-diff -Naur gcc-4.8.5/gcc/cp/decl.c mpc-gcc-4.8.5/gcc/cp/decl.c
---- gcc-4.8.5/gcc/cp/decl.c	2014-05-13 18:05:07.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/cp/decl.c	2016-07-19 11:15:05.032841971 +0200
-@@ -256,6 +256,9 @@
+diff --git a/gcc/cp/decl.c b/gcc/cp/decl.c
+index 6faf3fd7f..39aeed392 100644
+--- a/gcc/cp/decl.c
++++ b/gcc/cp/decl.c
+@@ -256,6 +256,9 @@ typedef struct GTY(()) incomplete_var_d {
    tree incomplete_type;
  } incomplete_var;
  
@@ -2159,7 +2120,7 @@ diff -Naur gcc-4.8.5/gcc/cp/decl.c mpc-gcc-4.8.5/gcc/cp/decl.c
  
  static GTY(()) vec<incomplete_var, va_gc> *incomplete_vars;
  
-@@ -1892,6 +1895,17 @@
+@@ -1892,6 +1895,17 @@ duplicate_decls (tree newdecl, tree olddecl, bool newdecl_is_friend)
  	      DECL_TLS_MODEL (newdecl) = DECL_TLS_MODEL (olddecl);
  	      CP_DECL_THREADPRIVATE_P (newdecl) = 1;
  	    }
@@ -2177,7 +2138,7 @@ diff -Naur gcc-4.8.5/gcc/cp/decl.c mpc-gcc-4.8.5/gcc/cp/decl.c
  	}
  
        /* Do this after calling `merge_types' so that default
-@@ -2549,7 +2563,12 @@
+@@ -2549,7 +2563,12 @@ redeclaration_error_message (tree newdecl, tree olddecl)
  	   && DECL_THREAD_LOCAL_P (newdecl) != DECL_THREAD_LOCAL_P (olddecl)
  	   && (! DECL_LANG_SPECIFIC (olddecl)
  	       || ! CP_DECL_THREADPRIVATE_P (olddecl)
@@ -2190,7 +2151,7 @@ diff -Naur gcc-4.8.5/gcc/cp/decl.c mpc-gcc-4.8.5/gcc/cp/decl.c
      {
        /* Only variables can be thread-local, and all declarations must
  	 agree on this property.  */
-@@ -4295,7 +4314,10 @@
+@@ -4295,7 +4314,10 @@ check_tag_decl (cp_decl_specifier_seq *declspecs,
        else if (decl_spec_seq_has_spec_p (declspecs, ds_const)
  	       || decl_spec_seq_has_spec_p (declspecs, ds_volatile)
  	       || decl_spec_seq_has_spec_p (declspecs, ds_restrict)
@@ -2202,7 +2163,7 @@ diff -Naur gcc-4.8.5/gcc/cp/decl.c mpc-gcc-4.8.5/gcc/cp/decl.c
  	error ("qualifiers can only be specified for objects "
  	       "and functions");
        else if (saw_typedef)
-@@ -4533,6 +4555,46 @@
+@@ -4533,6 +4555,46 @@ start_decl (const cp_declarator *declarator,
        && lookup_attribute ("noinline", DECL_ATTRIBUTES (decl)))
      warning (0, "inline function %q+D given attribute noinline", decl);
  
@@ -2249,7 +2210,7 @@ diff -Naur gcc-4.8.5/gcc/cp/decl.c mpc-gcc-4.8.5/gcc/cp/decl.c
    if (TYPE_P (context) && COMPLETE_TYPE_P (complete_type (context)))
      {
        if (TREE_CODE (decl) == VAR_DECL)
-@@ -6122,6 +6184,20 @@
+@@ -6122,6 +6184,20 @@ cp_finish_decl (tree decl, tree init, bool init_const_expr_p,
        && (DECL_INITIAL (decl) || init))
      DECL_INITIALIZED_IN_CLASS_P (decl) = 1;
  
@@ -2270,7 +2231,7 @@ diff -Naur gcc-4.8.5/gcc/cp/decl.c mpc-gcc-4.8.5/gcc/cp/decl.c
    if (TREE_CODE (decl) != FUNCTION_DECL
        && (auto_node = type_uses_auto (type)))
      {
-@@ -6518,6 +6594,20 @@
+@@ -6518,6 +6594,20 @@ cp_finish_decl (tree decl, tree init, bool init_const_expr_p,
      TREE_READONLY (decl) = 1;
  
    invoke_plugin_callbacks (PLUGIN_FINISH_DECL, decl);
@@ -2291,7 +2252,7 @@ diff -Naur gcc-4.8.5/gcc/cp/decl.c mpc-gcc-4.8.5/gcc/cp/decl.c
  }
  
  /* Returns a declaration for a VAR_DECL as if:
-@@ -6670,6 +6760,24 @@
+@@ -6670,6 +6760,24 @@ get_thread_atexit_node (void)
    return decay_conversion (atexit_fndecl, tf_warning_or_error);
  }
  
@@ -2316,7 +2277,7 @@ diff -Naur gcc-4.8.5/gcc/cp/decl.c mpc-gcc-4.8.5/gcc/cp/decl.c
  /* Returns the __dso_handle VAR_DECL.  */
  
  static tree
-@@ -6821,11 +6929,21 @@
+@@ -6821,11 +6929,21 @@ register_dtor_fn (tree decl)
    /* Call atexit with the cleanup function.  */
    mark_used (cleanup);
    cleanup = build_address (cleanup);
@@ -2339,7 +2300,7 @@ diff -Naur gcc-4.8.5/gcc/cp/decl.c mpc-gcc-4.8.5/gcc/cp/decl.c
  
    if (use_dtor)
      {
-@@ -7872,9 +7990,20 @@
+@@ -7872,9 +7990,20 @@ grokvardecl (tree type,
        TREE_PUBLIC (decl) = DECL_EXTERNAL (decl);
      }
  
@@ -2362,10 +2323,113 @@ diff -Naur gcc-4.8.5/gcc/cp/decl.c mpc-gcc-4.8.5/gcc/cp/decl.c
        if (declspecs->gnu_thread_keyword_p)
  	DECL_GNU_TLS_P (decl) = true;
      }
-diff -Naur gcc-4.8.5/gcc/cp/parser.c mpc-gcc-4.8.5/gcc/cp/parser.c
---- gcc-4.8.5/gcc/cp/parser.c	2015-01-13 15:49:17.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/cp/parser.c	2016-07-19 11:04:37.240484673 +0200
-@@ -864,6 +864,11 @@
+diff --git a/gcc/cp/decl2.c b/gcc/cp/decl2.c
+index 1a604a459..67a5d8174 100644
+--- a/gcc/cp/decl2.c
++++ b/gcc/cp/decl2.c
+@@ -53,6 +53,8 @@ along with GCC; see the file COPYING3.  If not see
+ 
+ extern cpp_reader *parse_in;
+ 
++/* MPC BEGIN */
++extern bool mpc_decl_match_invalid_header(tree decl);
+ /* This structure contains information about the initializations
+    and/or destructions required for a particular priority level.  */
+ typedef struct priority_info_s {
+@@ -970,7 +972,42 @@ grokfield (const cp_declarator *declarator,
+ 	    }
+ 	}
+     }
+-
++    
++/* MPC TLS BEGIN */
++  if ( flag_mpi_privatize &&
++	TREE_CODE(value) == VAR_DECL &&
++	( TREE_STATIC( value ) || DECL_EXTERNAL(value) ) &&
++	!mpc_decl_match_invalid_header(value) &&
++	!TREE_READONLY( value ) &&
++	!TREE_CONSTANT( value ) &&
++	!DECL_THREAD_LOCAL_P(value)
++  ) {
++    fprintf( stderr,
++      "(Front-end C++) Automatic privatization to TLS "
++      "(variable %s in file %s line %d)\n",
++      lang_decl_name( value, 2 , 0),
++      DECL_SOURCE_FILE(value),
++      DECL_SOURCE_LINE(value) ) ;
++      DECL_TLS_MODEL (value) = decl_default_tls_model (value);
++  }
++  if ( flag_mpc_privatize &&
++	TREE_CODE(value) == VAR_DECL &&
++	( TREE_STATIC( value ) || DECL_EXTERNAL(value) ) &&
++	!mpc_decl_match_invalid_header(value) &&
++	!TREE_READONLY( value ) &&
++	!TREE_CONSTANT( value ) &&
++	!DECL_THREAD_LOCAL_P(value)
++  ) {
++		fprintf( stderr,
++		  "(Front-end C++) Automatic privatization to MPC task "
++		  "(variable %s in file %s line %d)\n",
++		  lang_decl_name( value, 2 , 0),
++		  DECL_SOURCE_FILE(value),
++		  DECL_SOURCE_LINE(value) ) ;
++		DECL_TLS_MODEL(value) = TLS_MODEL_MPC_TASK ;
++  }
++  /* MPC TLS END */
++  
+   if (processing_template_decl
+       && (TREE_CODE (value) == VAR_DECL || TREE_CODE (value) == FUNCTION_DECL))
+     {
+@@ -992,8 +1029,22 @@ grokfield (const cp_declarator *declarator,
+     {
+     case VAR_DECL:
+       finish_static_data_member_decl (value, init, init_const_expr_p,
+-				      asmspec_tree, flags);
+-      return value;
++			  asmspec_tree, flags);
++	  /* MPC TLS BEGIN */
++	  if ( flag_mpc_privatize && 
++			  (DECL_TLS_MODEL(value) == TLS_MODEL_MPC_TASK) && 
++			  (TREE_READONLY( value ) || TREE_CONSTANT( value ) ) ) 
++	  {
++		  fprintf( stderr,
++				  "(Front-end C++) Automatic un-privatization from MPC task "
++				  "(variable %s in file %s line %d)\n",
++				  lang_decl_name( value, 2 , 0),
++				  DECL_SOURCE_FILE(value),
++				  DECL_SOURCE_LINE(value) ) ;
++		  DECL_TLS_MODEL(value) = TLS_MODEL_NONE ;
++	  }
++	  /* MPC TLS END */
++	  return value;
+ 
+     case FIELD_DECL:
+       if (asmspec)
+@@ -3923,7 +3974,19 @@ handle_tls_init (void)
+   DECL_ARTIFICIAL (guard) = true;
+   DECL_IGNORED_P (guard) = true;
+   TREE_USED (guard) = true;
++  /* MPC BEGIN */
++  #if 0
+   DECL_TLS_MODEL (guard) = decl_default_tls_model (guard);
++  #endif
++  if(flag_mpc_privatize)
++  {
++    DECL_TLS_MODEL (guard) = TLS_MODEL_MPC_TASK;
++  }
++  else
++  {
++    DECL_TLS_MODEL (guard) = decl_default_tls_model (guard);
++  }
++  /* MPC END */
+   pushdecl_top_level_and_finish (guard, NULL_TREE);
+ 
+   tree fn = get_local_tls_init_fn ();
+diff --git a/gcc/cp/parser.c b/gcc/cp/parser.c
+index 6d8bef430..2e7a1132c 100644
+--- a/gcc/cp/parser.c
++++ b/gcc/cp/parser.c
+@@ -864,6 +864,11 @@ cp_lexer_next_token_is_decl_specifier_keyword (cp_lexer *lexer)
      case RID_EXTERN:
      case RID_MUTABLE:
      case RID_THREAD:
@@ -2377,7 +2441,7 @@ diff -Naur gcc-4.8.5/gcc/cp/parser.c mpc-gcc-4.8.5/gcc/cp/parser.c
        /* Elaborated type specifiers.  */
      case RID_ENUM:
      case RID_CLASS:
-@@ -10959,6 +10964,23 @@
+@@ -10959,6 +10964,23 @@ cp_parser_decl_specifier_seq (cp_parser* parser,
  	  ds = ds_thread;
  	  cp_lexer_consume_token (parser->lexer);
  	  break;
@@ -2401,7 +2465,7 @@ diff -Naur gcc-4.8.5/gcc/cp/parser.c mpc-gcc-4.8.5/gcc/cp/parser.c
  
  	default:
  	  /* We did not yet find a decl-specifier yet.  */
-@@ -22934,7 +22956,6 @@
+@@ -22934,7 +22956,6 @@ set_and_check_decl_spec_loc (cp_decl_specifier_seq *decl_specs,
  			     cp_decl_spec ds, cp_token *token)
  {
    gcc_assert (ds < ds_last);
@@ -2409,7 +2473,7 @@ diff -Naur gcc-4.8.5/gcc/cp/parser.c mpc-gcc-4.8.5/gcc/cp/parser.c
    if (decl_specs == NULL)
      return;
  
-@@ -22944,7 +22965,7 @@
+@@ -22944,7 +22965,7 @@ set_and_check_decl_spec_loc (cp_decl_specifier_seq *decl_specs,
      {
        decl_specs->locations[ds] = location;
        if (ds == ds_thread)
@@ -2418,7 +2482,7 @@ diff -Naur gcc-4.8.5/gcc/cp/parser.c mpc-gcc-4.8.5/gcc/cp/parser.c
      }
    else
      {
-@@ -27826,6 +27847,267 @@
+@@ -27826,6 +27847,267 @@ cp_parser_omp_construct (cp_parser *parser, cp_token *pragma_tok)
      SET_EXPR_LOCATION (stmt, pragma_tok->location);
  }
  
@@ -2686,7 +2750,7 @@ diff -Naur gcc-4.8.5/gcc/cp/parser.c mpc-gcc-4.8.5/gcc/cp/parser.c
  /* Transactional Memory parsing routines.  */
  
  /* Parse a transaction attribute.
-@@ -28267,7 +28549,25 @@
+@@ -28267,7 +28549,25 @@ cp_parser_pragma (cp_parser *parser, enum pragma_context context)
  		"%<#pragma omp section%> may only be used in "
  		"%<#pragma omp sections%> construct");
        break;
@@ -2712,10 +2776,11 @@ diff -Naur gcc-4.8.5/gcc/cp/parser.c mpc-gcc-4.8.5/gcc/cp/parser.c
      default:
        gcc_assert (id >= PRAGMA_FIRST_EXTERNAL);
        c_invoke_pragma_handler (id);
-diff -Naur gcc-4.8.5/gcc/cp/semantics.c mpc-gcc-4.8.5/gcc/cp/semantics.c
---- gcc-4.8.5/gcc/cp/semantics.c	2015-04-23 15:20:14.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/cp/semantics.c	2016-07-19 11:04:37.240484673 +0200
-@@ -4367,7 +4367,11 @@
+diff --git a/gcc/cp/semantics.c b/gcc/cp/semantics.c
+index b833b079a..0e4a46160 100644
+--- a/gcc/cp/semantics.c
++++ b/gcc/cp/semantics.c
+@@ -4367,7 +4367,11 @@ finish_omp_clauses (tree clauses)
  	{
  	  const char *share_name = NULL;
  
@@ -2727,7 +2792,7 @@ diff -Naur gcc-4.8.5/gcc/cp/semantics.c mpc-gcc-4.8.5/gcc/cp/semantics.c
  	    share_name = "threadprivate";
  	  else switch (cxx_omp_predetermined_sharing (t))
  	    {
-@@ -4464,9 +4468,17 @@
+@@ -4464,9 +4468,17 @@ finish_omp_threadprivate (tree vars)
  		DECL_LANG_SPECIFIC (v)->u.base.u2sel = 1;
  	    }
  
@@ -2745,10 +2810,24 @@ diff -Naur gcc-4.8.5/gcc/cp/semantics.c mpc-gcc-4.8.5/gcc/cp/semantics.c
  	      /* If rtl has been already set for this var, call
  		 make_decl_rtl once again, so that encode_section_info
  		 has a chance to look at the new decl flags.  */
-diff -Naur gcc-4.8.5/gcc/fortran/f95-lang.c mpc-gcc-4.8.5/gcc/fortran/f95-lang.c
---- gcc-4.8.5/gcc/fortran/f95-lang.c	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/f95-lang.c	2016-07-19 11:04:37.240484673 +0200
-@@ -1019,12 +1019,25 @@
+diff --git a/gcc/fortran/Make-lang.in b/gcc/fortran/Make-lang.in
+index 8c9e7eaba..ecc57a92b 100644
+--- a/gcc/fortran/Make-lang.in
++++ b/gcc/fortran/Make-lang.in
+@@ -58,7 +58,7 @@ F95_PARSER_OBJS = fortran/arith.o fortran/array.o fortran/bbt.o \
+     fortran/iresolve.o fortran/match.o fortran/matchexp.o fortran/misc.o \
+     fortran/module.o fortran/openmp.o fortran/options.o fortran/parse.o \
+     fortran/primary.o fortran/resolve.o fortran/scanner.o fortran/simplify.o \
+-    fortran/st.o fortran/symbol.o fortran/target-memory.o
++    fortran/st.o fortran/symbol.o fortran/target-memory.o fortran/hls.o
+ 
+ F95_OBJS = $(F95_PARSER_OBJS) $(FORTRAN_TARGET_OBJS) \
+     fortran/convert.o fortran/dependency.o fortran/f95-lang.o \
+diff --git a/gcc/fortran/f95-lang.c b/gcc/fortran/f95-lang.c
+index 60d790b08..2f0a99f5f 100644
+--- a/gcc/fortran/f95-lang.c
++++ b/gcc/fortran/f95-lang.c
+@@ -1019,12 +1019,25 @@ gfc_init_builtin_functions (void)
  #include "../sync-builtins.def"
  #undef DEF_SYNC_BUILTIN
  
@@ -2774,10 +2853,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/f95-lang.c mpc-gcc-4.8.5/gcc/fortran/f95-lang.c
  #include "../omp-builtins.def"
  #undef DEF_GOMP_BUILTIN
      }
-diff -Naur gcc-4.8.5/gcc/fortran/gfortran.h mpc-gcc-4.8.5/gcc/fortran/gfortran.h
---- gcc-4.8.5/gcc/fortran/gfortran.h	2015-04-14 14:23:30.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/fortran/gfortran.h	2016-07-19 11:04:37.244484776 +0200
-@@ -219,6 +219,12 @@
+diff --git a/gcc/fortran/gfortran.h b/gcc/fortran/gfortran.h
+index 2428b519b..3d56439d1 100644
+--- a/gcc/fortran/gfortran.h
++++ b/gcc/fortran/gfortran.h
+@@ -219,6 +219,12 @@ typedef enum
    ST_OMP_PARALLEL, ST_OMP_PARALLEL_DO, ST_OMP_PARALLEL_SECTIONS,
    ST_OMP_PARALLEL_WORKSHARE, ST_OMP_SECTIONS, ST_OMP_SECTION, ST_OMP_SINGLE,
    ST_OMP_THREADPRIVATE, ST_OMP_WORKSHARE, ST_OMP_TASK, ST_OMP_END_TASK,
@@ -2790,7 +2870,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/gfortran.h mpc-gcc-4.8.5/gcc/fortran/gfortran.h
    ST_OMP_TASKWAIT, ST_OMP_TASKYIELD, ST_PROCEDURE, ST_GENERIC, ST_CRITICAL,
    ST_END_CRITICAL, ST_GET_FCN_CHARACTERISTICS, ST_LOCK, ST_UNLOCK, ST_NONE
  }
-@@ -585,6 +591,14 @@
+@@ -585,6 +591,14 @@ typedef enum
  }
  init_local_integer;
  
@@ -2805,7 +2885,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/gfortran.h mpc-gcc-4.8.5/gcc/fortran/gfortran.h
  typedef enum
  {
    GFC_FCOARRAY_NONE = 0,
-@@ -704,6 +718,11 @@
+@@ -704,6 +718,11 @@ typedef struct
      implied_index:1, subref_array_pointer:1, proc_pointer:1, asynchronous:1,
      contiguous:1;
  
@@ -2817,7 +2897,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/gfortran.h mpc-gcc-4.8.5/gcc/fortran/gfortran.h
    /* For CLASS containers, the pointer attribute is sometimes set internally
       even though it was not directly specified.  In this case, keep the
       "real" (original) value here.  */
-@@ -1290,6 +1309,10 @@
+@@ -1290,6 +1309,10 @@ typedef struct gfc_common_head
  {
    locus where;
    char use_assoc, saved, threadprivate;
@@ -2828,7 +2908,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/gfortran.h mpc-gcc-4.8.5/gcc/fortran/gfortran.h
    char name[GFC_MAX_SYMBOL_LEN + 1];
    struct gfc_symbol *head;
    const char* binding_label;
-@@ -2108,7 +2131,11 @@
+@@ -2108,7 +2131,11 @@ typedef enum
    EXEC_OMP_SECTIONS, EXEC_OMP_SINGLE, EXEC_OMP_WORKSHARE,
    EXEC_OMP_ATOMIC, EXEC_OMP_BARRIER, EXEC_OMP_END_NOWAIT,
    EXEC_OMP_END_SINGLE, EXEC_OMP_TASK, EXEC_OMP_TASKWAIT,
@@ -2841,7 +2921,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/gfortran.h mpc-gcc-4.8.5/gcc/fortran/gfortran.h
  }
  gfc_exec_op;
  
-@@ -2172,6 +2199,13 @@
+@@ -2172,6 +2199,13 @@ typedef struct gfc_code
      gfc_namelist *omp_namelist;
      bool omp_bool;
      gfc_omp_atomic_op omp_atomic;
@@ -2855,7 +2935,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/gfortran.h mpc-gcc-4.8.5/gcc/fortran/gfortran.h
    }
    ext;		/* Points to additional structures required by statement */
  
-@@ -2306,7 +2340,14 @@
+@@ -2306,7 +2340,14 @@ typedef struct
    int fpe;
    int rtcheck;
    gfc_fcoarray coarray;
@@ -2871,7 +2951,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/gfortran.h mpc-gcc-4.8.5/gcc/fortran/gfortran.h
    int warn_std;
    int allow_std;
    int convert;
-@@ -2570,6 +2611,11 @@
+@@ -2570,6 +2611,11 @@ gfc_try gfc_add_protected (symbol_attribute *, const char *, locus *);
  gfc_try gfc_add_result (symbol_attribute *, const char *, locus *);
  gfc_try gfc_add_save (symbol_attribute *, save_state, const char *, locus *);
  gfc_try gfc_add_threadprivate (symbol_attribute *, const char *, locus *);
@@ -2883,9 +2963,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/gfortran.h mpc-gcc-4.8.5/gcc/fortran/gfortran.h
  gfc_try gfc_add_saved_common (symbol_attribute *, locus *);
  gfc_try gfc_add_target (symbol_attribute *, locus *);
  gfc_try gfc_add_dummy (symbol_attribute *, const char *, locus *);
-diff -Naur gcc-4.8.5/gcc/fortran/hls.c mpc-gcc-4.8.5/gcc/fortran/hls.c
---- gcc-4.8.5/gcc/fortran/hls.c	1970-01-01 01:00:00.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/hls.c	2016-07-19 11:04:37.244484776 +0200
+diff --git a/gcc/fortran/hls.c b/gcc/fortran/hls.c
+new file mode 100644
+index 000000000..e5cc93e2d
+--- /dev/null
++++ b/gcc/fortran/hls.c
 @@ -0,0 +1,440 @@
 +#include "config.h"
 +#include "system.h"
@@ -3327,10 +3409,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/hls.c mpc-gcc-4.8.5/gcc/fortran/hls.c
 +      gcc_unreachable ();
 +    }
 +}
-diff -Naur gcc-4.8.5/gcc/fortran/lang.opt mpc-gcc-4.8.5/gcc/fortran/lang.opt
---- gcc-4.8.5/gcc/fortran/lang.opt	2013-01-16 17:19:32.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/lang.opt	2016-07-19 11:04:37.244484776 +0200
-@@ -237,6 +237,12 @@
+diff --git a/gcc/fortran/lang.opt b/gcc/fortran/lang.opt
+index fbe8a1b2f..4bfd55815 100644
+--- a/gcc/fortran/lang.opt
++++ b/gcc/fortran/lang.opt
+@@ -237,6 +237,12 @@ Wfunction-elimination
  Fortran Warning
  Warn about function call elimination
  
@@ -3343,7 +3426,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/lang.opt mpc-gcc-4.8.5/gcc/fortran/lang.opt
  Wimplicit-interface
  Fortran Warning
  Warn about calls with implicit interface
-@@ -341,6 +347,16 @@
+@@ -341,6 +347,16 @@ fblas-matmul-limit=
  Fortran RejectNegative Joined UInteger
  -fblas-matmul-limit=<n>	Size of the smallest matrix for which matmul will use BLAS
  
@@ -3360,7 +3443,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/lang.opt mpc-gcc-4.8.5/gcc/fortran/lang.opt
  fcheck-array-temporaries
  Fortran
  Produce a warning at runtime if a array temporary has been created for a procedure argument
-@@ -505,6 +521,12 @@
+@@ -505,6 +521,12 @@ fmodule-private
  Fortran
  Set default accessibility of module entities to PRIVATE.
  
@@ -3373,22 +3456,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/lang.opt mpc-gcc-4.8.5/gcc/fortran/lang.opt
  fopenmp
  Fortran
  ; Documented in C
-diff -Naur gcc-4.8.5/gcc/fortran/Make-lang.in mpc-gcc-4.8.5/gcc/fortran/Make-lang.in
---- gcc-4.8.5/gcc/fortran/Make-lang.in	2013-03-03 18:16:42.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/Make-lang.in	2016-07-19 11:04:37.240484673 +0200
-@@ -58,7 +58,7 @@
-     fortran/iresolve.o fortran/match.o fortran/matchexp.o fortran/misc.o \
-     fortran/module.o fortran/openmp.o fortran/options.o fortran/parse.o \
-     fortran/primary.o fortran/resolve.o fortran/scanner.o fortran/simplify.o \
--    fortran/st.o fortran/symbol.o fortran/target-memory.o
-+    fortran/st.o fortran/symbol.o fortran/target-memory.o fortran/hls.o
- 
- F95_OBJS = $(F95_PARSER_OBJS) $(FORTRAN_TARGET_OBJS) \
-     fortran/convert.o fortran/dependency.o fortran/f95-lang.o \
-diff -Naur gcc-4.8.5/gcc/fortran/match.h mpc-gcc-4.8.5/gcc/fortran/match.h
---- gcc-4.8.5/gcc/fortran/match.h	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/match.h	2016-07-19 11:04:37.244484776 +0200
-@@ -190,6 +190,17 @@
+diff --git a/gcc/fortran/match.h b/gcc/fortran/match.h
+index 48aa4056e..469241f18 100644
+--- a/gcc/fortran/match.h
++++ b/gcc/fortran/match.h
+@@ -190,6 +190,17 @@ match gfc_match_target (void);
  match gfc_match_value (void);
  match gfc_match_volatile (void);
  
@@ -3406,10 +3478,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/match.h mpc-gcc-4.8.5/gcc/fortran/match.h
  /* decl.c.  */
  
  /* Fortran 2003 c interop.
-diff -Naur gcc-4.8.5/gcc/fortran/options.c mpc-gcc-4.8.5/gcc/fortran/options.c
---- gcc-4.8.5/gcc/fortran/options.c	2013-02-14 23:13:26.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/options.c	2016-07-19 11:04:37.244484776 +0200
-@@ -162,6 +162,17 @@
+diff --git a/gcc/fortran/options.c b/gcc/fortran/options.c
+index fba1a3f3a..e500dbacb 100644
+--- a/gcc/fortran/options.c
++++ b/gcc/fortran/options.c
+@@ -162,6 +162,17 @@ gfc_init_options (unsigned int decoded_options_count,
    gfc_option.flag_frontend_optimize = -1;
    
    gfc_option.fpe = 0;
@@ -3427,7 +3500,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/options.c mpc-gcc-4.8.5/gcc/fortran/options.c
    gfc_option.rtcheck = 0;
    gfc_option.coarray = GFC_FCOARRAY_NONE;
  
-@@ -475,6 +486,13 @@
+@@ -475,6 +486,13 @@ set_Wall (int setting)
    gfc_option.warn_unused_dummy_argument = setting;
    gfc_option.warn_target_lifetime = setting;
  
@@ -3441,7 +3514,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/options.c mpc-gcc-4.8.5/gcc/fortran/options.c
    warn_return_type = setting;
    warn_uninitialized = setting;
    warn_maybe_uninitialized = setting;
-@@ -701,7 +719,13 @@
+@@ -701,7 +719,13 @@ gfc_handle_option (size_t scode, const char *arg, int value,
      case OPT_Wtabs:
        gfc_option.warn_tabs = value;
        break;
@@ -3456,18 +3529,17 @@ diff -Naur gcc-4.8.5/gcc/fortran/options.c mpc-gcc-4.8.5/gcc/fortran/options.c
      case OPT_Wtarget_lifetime:
        gfc_option.warn_target_lifetime = value;
        break;
-@@ -804,7 +828,22 @@
+@@ -804,7 +828,22 @@ gfc_handle_option (size_t scode, const char *arg, int value,
      case OPT_ffree_form:
        gfc_option.source_form = FORM_FREE;
        break;
--
 +	
 +	/* MPC TLS BEGIN */
 +    case OPT_fmpc_privatize:
 +      //~ gfc_option.flag_mpc_privatize = value ;
 +      break ;
 +      /* MPC TLS END */
-+
+ 
 +    /* MPC HLS BEGIN */
 +    case OPT_fhls:
 +      gfc_option.flag_hls = value;
@@ -3480,10 +3552,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/options.c mpc-gcc-4.8.5/gcc/fortran/options.c
      case OPT_fopenmp:
        gfc_option.gfc_flag_openmp = value;
        break;
-diff -Naur gcc-4.8.5/gcc/fortran/parse.c mpc-gcc-4.8.5/gcc/fortran/parse.c
---- gcc-4.8.5/gcc/fortran/parse.c	2014-03-20 20:42:00.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/parse.c	2016-07-19 11:04:37.244484776 +0200
-@@ -638,6 +638,69 @@
+diff --git a/gcc/fortran/parse.c b/gcc/fortran/parse.c
+index f748fe326..bdb03d4e3 100644
+--- a/gcc/fortran/parse.c
++++ b/gcc/fortran/parse.c
+@@ -638,6 +638,69 @@ decode_omp_directive (void)
    return ST_NONE;
  }
  
@@ -3553,7 +3626,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/parse.c mpc-gcc-4.8.5/gcc/fortran/parse.c
  static gfc_statement
  decode_gcc_attribute (void)
  {
-@@ -674,7 +737,7 @@
+@@ -674,7 +737,7 @@ next_free (void)
  {
    match m;
    int i, cnt, at_bol;
@@ -3562,7 +3635,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/parse.c mpc-gcc-4.8.5/gcc/fortran/parse.c
  
    at_bol = gfc_at_bol ();
    gfc_gobble_whitespace ();
-@@ -752,19 +815,40 @@
+@@ -752,19 +815,40 @@ next_free (void)
  	  return decode_gcc_attribute ();
  
  	}
@@ -3605,7 +3678,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/parse.c mpc-gcc-4.8.5/gcc/fortran/parse.c
  	}
  
        gcc_unreachable (); 
-@@ -841,11 +925,18 @@
+@@ -841,11 +925,18 @@ next_fixed (void)
  
  	      return decode_gcc_attribute ();
  	    }
@@ -3627,7 +3700,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/parse.c mpc-gcc-4.8.5/gcc/fortran/parse.c
  	      if (c != ' ' && c != '0')
  		{
  		  gfc_buffer_error (0);
-@@ -854,7 +945,13 @@
+@@ -854,7 +945,13 @@ next_fixed (void)
  		}
  	      if (last_was_use_stmt)
  		use_modules ();
@@ -3642,7 +3715,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/parse.c mpc-gcc-4.8.5/gcc/fortran/parse.c
  	    }
  	  /* FALLTHROUGH */
  
-@@ -1013,7 +1110,7 @@
+@@ -1013,7 +1110,7 @@ next_statement (void)
    case ST_LABEL_ASSIGNMENT: case ST_FLUSH: case ST_OMP_FLUSH: \
    case ST_OMP_BARRIER: case ST_OMP_TASKWAIT: case ST_OMP_TASKYIELD: \
    case ST_ERROR_STOP: case ST_SYNC_ALL: case ST_SYNC_IMAGES: \
@@ -3651,7 +3724,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/parse.c mpc-gcc-4.8.5/gcc/fortran/parse.c
  
  /* Statements that mark other executable statements.  */
  
-@@ -1025,14 +1122,14 @@
+@@ -1025,14 +1122,14 @@ next_statement (void)
    case ST_OMP_CRITICAL: case ST_OMP_MASTER: case ST_OMP_SINGLE: \
    case ST_OMP_DO: case ST_OMP_PARALLEL_DO: case ST_OMP_ATOMIC: \
    case ST_OMP_WORKSHARE: case ST_OMP_PARALLEL_WORKSHARE: \
@@ -3668,7 +3741,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/parse.c mpc-gcc-4.8.5/gcc/fortran/parse.c
  
  /* Block end statements.  Errors associated with interchanging these
     are detected in gfc_match_end().  */
-@@ -1613,6 +1710,22 @@
+@@ -1613,6 +1710,22 @@ gfc_ascii_statement (gfc_statement st)
      case ST_OMP_WORKSHARE:
        p = "!$OMP WORKSHARE";
        break;
@@ -3691,7 +3764,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/parse.c mpc-gcc-4.8.5/gcc/fortran/parse.c
      default:
        gfc_internal_error ("gfc_ascii_statement(): Bad statement code");
      }
-@@ -3786,6 +3899,34 @@
+@@ -3786,6 +3899,34 @@ parse_omp_structured_block (gfc_statement omp_st, bool workshare_stmts_only)
    pop_state ();
  }
  
@@ -3726,7 +3799,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/parse.c mpc-gcc-4.8.5/gcc/fortran/parse.c
  
  /* Accept a series of executable statements.  We return the first
     statement that doesn't fit to the caller.  Any block statements are
-@@ -3911,7 +4052,13 @@
+@@ -3911,7 +4052,13 @@ parse_executable (gfc_statement st)
  	case ST_OMP_ATOMIC:
  	  st = parse_omp_atomic ();
  	  continue;
@@ -3741,10 +3814,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/parse.c mpc-gcc-4.8.5/gcc/fortran/parse.c
  	default:
  	  return st;
  	}
-diff -Naur gcc-4.8.5/gcc/fortran/parse.h mpc-gcc-4.8.5/gcc/fortran/parse.h
---- gcc-4.8.5/gcc/fortran/parse.h	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/parse.h	2016-07-19 11:04:37.244484776 +0200
-@@ -29,7 +29,8 @@
+diff --git a/gcc/fortran/parse.h b/gcc/fortran/parse.h
+index dbe3c49ad..53dc0b255 100644
+--- a/gcc/fortran/parse.h
++++ b/gcc/fortran/parse.h
+@@ -29,7 +29,8 @@ typedef enum
    COMP_BLOCK_DATA, COMP_INTERFACE, COMP_DERIVED, COMP_DERIVED_CONTAINS,
    COMP_BLOCK, COMP_ASSOCIATE, COMP_IF,
    COMP_DO, COMP_SELECT, COMP_FORALL, COMP_WHERE, COMP_CONTAINS, COMP_ENUM,
@@ -3754,10 +3828,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/parse.h mpc-gcc-4.8.5/gcc/fortran/parse.h
  }
  gfc_compile_state;
  
-diff -Naur gcc-4.8.5/gcc/fortran/resolve.c mpc-gcc-4.8.5/gcc/fortran/resolve.c
---- gcc-4.8.5/gcc/fortran/resolve.c	2015-03-12 18:26:17.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/resolve.c	2016-07-19 11:04:37.244484776 +0200
-@@ -9441,7 +9441,13 @@
+diff --git a/gcc/fortran/resolve.c b/gcc/fortran/resolve.c
+index 2ba1cb29a..d7f1a5b82 100644
+--- a/gcc/fortran/resolve.c
++++ b/gcc/fortran/resolve.c
+@@ -9441,7 +9441,13 @@ gfc_resolve_blocks (gfc_code *b, gfc_namespace *ns)
  	case EXEC_OMP_TASKYIELD:
  	case EXEC_OMP_WORKSHARE:
  	  break;
@@ -3772,7 +3847,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/resolve.c mpc-gcc-4.8.5/gcc/fortran/resolve.c
  	default:
  	  gfc_internal_error ("gfc_resolve_blocks(): Bad block type");
  	}
-@@ -10511,7 +10517,14 @@
+@@ -10511,7 +10517,14 @@ resolve_code (gfc_code *code, gfc_namespace *ns)
  	  gfc_resolve_omp_directive (code, ns);
  	  omp_workshare_flag = omp_workshare_save;
  	  break;
@@ -3788,7 +3863,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/resolve.c mpc-gcc-4.8.5/gcc/fortran/resolve.c
  	default:
  	  gfc_internal_error ("resolve_code(): Bad statement code");
  	}
-@@ -13868,6 +13881,15 @@
+@@ -13868,6 +13881,15 @@ resolve_symbol (gfc_symbol *sym)
  	      || sym->ns->proc_name->attr.flavor != FL_MODULE)))
      gfc_error ("Threadprivate at %L isn't SAVEd", &sym->declared_at);
  
@@ -3804,10 +3879,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/resolve.c mpc-gcc-4.8.5/gcc/fortran/resolve.c
    /* If we have come this far we can apply default-initializers, as
       described in 14.7.5, to those variables that have not already
       been assigned one.  */
-diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
---- gcc-4.8.5/gcc/fortran/scanner.c	2013-02-14 23:13:26.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/scanner.c	2016-07-19 11:04:37.244484776 +0200
-@@ -62,7 +62,10 @@
+diff --git a/gcc/fortran/scanner.c b/gcc/fortran/scanner.c
+index f714ed01a..a76e68124 100644
+--- a/gcc/fortran/scanner.c
++++ b/gcc/fortran/scanner.c
+@@ -62,7 +62,10 @@ gfc_directorylist;
  static gfc_directorylist *include_dirs, *intrinsic_modules_dirs;
  
  static gfc_file *file_head, *current_file;
@@ -3819,7 +3895,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
  static int continue_flag, end_flag, openmp_flag, gcc_attribute_flag;
  static int continue_count, continue_line;
  static locus openmp_locus;
-@@ -812,6 +815,36 @@
+@@ -812,6 +815,36 @@ skip_free_comments (void)
  		      next_char ();
  		      c = next_char ();
  		    }
@@ -3856,7 +3932,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
  		  if (continue_flag || c == ' ' || c == '\t')
  		    {
  		      gfc_current_locus = old_loc;
-@@ -831,7 +864,10 @@
+@@ -831,7 +864,10 @@ skip_free_comments (void)
  
    if (openmp_flag && at_bol)
      openmp_flag = 0;
@@ -3868,7 +3944,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
    gcc_attribute_flag = 0;
    gfc_current_locus = start;
    return false;
-@@ -933,6 +969,32 @@
+@@ -933,6 +969,32 @@ skip_fixed_comments (void)
  			    }
  			}
  		    }
@@ -3901,7 +3977,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
  		  else
  		    {
  		      int digit_seen = 0;
-@@ -1005,6 +1067,9 @@
+@@ -1005,6 +1067,9 @@ skip_fixed_comments (void)
      }
  
    openmp_flag = 0;
@@ -3911,7 +3987,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
    gcc_attribute_flag = 0;
    gfc_current_locus = start;
  }
-@@ -1034,6 +1099,9 @@
+@@ -1034,6 +1099,9 @@ gfc_next_char_literal (gfc_instring in_string)
  {
    locus old_loc;
    int i, prev_openmp_flag;
@@ -3921,7 +3997,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
    gfc_char_t c;
  
    continue_flag = 0;
-@@ -1049,6 +1117,9 @@
+@@ -1049,6 +1117,9 @@ restart:
    if (gfc_current_form == FORM_FREE)
      {
        bool openmp_cond_flag;
@@ -3931,7 +4007,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
  
        if (!in_string && c == '!')
  	{
-@@ -1056,7 +1127,14 @@
+@@ -1056,7 +1127,14 @@ restart:
  	      && memcmp (&gfc_current_locus, &gcc_attribute_locus,
  		 sizeof (gfc_current_locus)) == 0)
  	    goto done;
@@ -3947,7 +4023,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
  	  if (openmp_flag
  	      && memcmp (&gfc_current_locus, &openmp_locus,
  		 sizeof (gfc_current_locus)) == 0)
-@@ -1117,6 +1195,9 @@
+@@ -1117,6 +1195,9 @@ restart:
  	}
  
        prev_openmp_flag = openmp_flag;
@@ -3957,7 +4033,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
        continue_flag = 1;
        if (c == '!')
  	skip_comment_line ();
-@@ -1141,6 +1222,9 @@
+@@ -1141,6 +1222,9 @@ restart:
  
        /* Now find where it continues. First eat any comment lines.  */
        openmp_cond_flag = skip_free_comments ();
@@ -3967,7 +4043,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
  
        if (gfc_current_locus.lb != NULL
  	  && continue_line < gfc_linebuf_linenum (gfc_current_locus.lb))
-@@ -1153,7 +1237,17 @@
+@@ -1153,7 +1237,17 @@ restart:
  	  c = '&';
  	  goto done;
  	}
@@ -3986,7 +4062,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
        /* Now that we have a non-comment line, probe ahead for the
  	 first non-whitespace character.  If it is another '&', then
  	 reading starts at the next character, otherwise we must back
-@@ -1176,7 +1270,21 @@
+@@ -1176,7 +1270,21 @@ restart:
  	  while (gfc_is_whitespace (c))
  	    c = next_char ();
  	}
@@ -4009,7 +4085,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
        if (c != '&')
  	{
  	  if (in_string)
-@@ -1190,6 +1298,10 @@
+@@ -1190,6 +1298,10 @@ restart:
  	     continuation line only optionally.  */
  	  else if (openmp_flag || openmp_cond_flag)
  	    gfc_current_locus.nextc--;
@@ -4020,7 +4096,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
  	  else
  	    {
  	      c = ' ';
-@@ -1226,6 +1338,9 @@
+@@ -1226,6 +1338,9 @@ restart:
  	}
  
        prev_openmp_flag = openmp_flag;
@@ -4030,7 +4106,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
        continue_flag = 1;
        old_loc = gfc_current_locus;
  
-@@ -1239,21 +1354,36 @@
+@@ -1239,21 +1354,36 @@ restart:
  	  goto not_continuation;
  	}
  
@@ -4072,10 +4148,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/scanner.c mpc-gcc-4.8.5/gcc/fortran/scanner.c
        c = next_char ();
        if (c == '0' || c == ' ' || c == '\n')
  	goto not_continuation;
-diff -Naur gcc-4.8.5/gcc/fortran/st.c mpc-gcc-4.8.5/gcc/fortran/st.c
---- gcc-4.8.5/gcc/fortran/st.c	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/st.c	2016-07-19 11:04:37.244484776 +0200
-@@ -212,7 +212,14 @@
+diff --git a/gcc/fortran/st.c b/gcc/fortran/st.c
+index 836dac790..fadc77cd7 100644
+--- a/gcc/fortran/st.c
++++ b/gcc/fortran/st.c
+@@ -212,7 +212,14 @@ gfc_free_statement (gfc_code *p)
      case EXEC_OMP_TASKWAIT:
      case EXEC_OMP_TASKYIELD:
        break;
@@ -4091,10 +4168,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/st.c mpc-gcc-4.8.5/gcc/fortran/st.c
      default:
        gfc_internal_error ("gfc_free_statement(): Bad statement");
      }
-diff -Naur gcc-4.8.5/gcc/fortran/symbol.c mpc-gcc-4.8.5/gcc/fortran/symbol.c
---- gcc-4.8.5/gcc/fortran/symbol.c	2015-04-14 14:23:30.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/fortran/symbol.c	2016-07-19 11:04:37.244484776 +0200
-@@ -364,7 +364,10 @@
+diff --git a/gcc/fortran/symbol.c b/gcc/fortran/symbol.c
+index 785f58200..479e17136 100644
+--- a/gcc/fortran/symbol.c
++++ b/gcc/fortran/symbol.c
+@@ -364,7 +364,10 @@ check_conflict (symbol_attribute *attr, const char *name, locus *where)
      *asynchronous = "ASYNCHRONOUS", *codimension = "CODIMENSION",
      *contiguous = "CONTIGUOUS", *generic = "GENERIC";
    static const char *threadprivate = "THREADPRIVATE";
@@ -4106,7 +4184,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/symbol.c mpc-gcc-4.8.5/gcc/fortran/symbol.c
    const char *a1, *a2;
    int standard;
  
-@@ -450,6 +453,10 @@
+@@ -450,6 +453,10 @@ check_conflict (symbol_attribute *attr, const char *name, locus *where)
    conf (dummy, entry);
    conf (dummy, intrinsic);
    conf (dummy, threadprivate);
@@ -4117,7 +4195,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/symbol.c mpc-gcc-4.8.5/gcc/fortran/symbol.c
    conf (pointer, target);
    conf (pointer, intrinsic);
    conf (pointer, elemental);
-@@ -492,6 +499,10 @@
+@@ -492,6 +499,10 @@ check_conflict (symbol_attribute *attr, const char *name, locus *where)
    conf (in_equivalence, entry);
    conf (in_equivalence, allocatable);
    conf (in_equivalence, threadprivate);
@@ -4128,7 +4206,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/symbol.c mpc-gcc-4.8.5/gcc/fortran/symbol.c
  
    conf (dummy, result);
    conf (entry, result);
-@@ -540,6 +551,10 @@
+@@ -540,6 +551,10 @@ check_conflict (symbol_attribute *attr, const char *name, locus *where)
    conf (cray_pointee, in_common);
    conf (cray_pointee, in_equivalence);
    conf (cray_pointee, threadprivate);
@@ -4139,7 +4217,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/symbol.c mpc-gcc-4.8.5/gcc/fortran/symbol.c
  
    conf (data, dummy);
    conf (data, function);
-@@ -626,6 +641,10 @@
+@@ -626,6 +641,10 @@ check_conflict (symbol_attribute *attr, const char *name, locus *where)
        conf2 (function);
        conf2 (subroutine);
        conf2 (threadprivate);
@@ -4150,7 +4228,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/symbol.c mpc-gcc-4.8.5/gcc/fortran/symbol.c
  
        if (attr->access == ACCESS_PUBLIC || attr->access == ACCESS_PRIVATE)
  	{
-@@ -667,6 +686,12 @@
+@@ -667,6 +686,12 @@ check_conflict (symbol_attribute *attr, const char *name, locus *where)
  	  conf2 (function);
  	  if (!attr->proc_pointer)
  	    conf2 (threadprivate);
@@ -4163,7 +4241,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/symbol.c mpc-gcc-4.8.5/gcc/fortran/symbol.c
  	}
  
        if (!attr->proc_pointer)
-@@ -686,6 +711,10 @@
+@@ -686,6 +711,10 @@ check_conflict (symbol_attribute *attr, const char *name, locus *where)
  	case PROC_DUMMY:
  	  conf2 (result);
  	  conf2 (threadprivate);
@@ -4174,7 +4252,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/symbol.c mpc-gcc-4.8.5/gcc/fortran/symbol.c
  	  break;
  
  	default:
-@@ -706,6 +735,10 @@
+@@ -706,6 +735,10 @@ check_conflict (symbol_attribute *attr, const char *name, locus *where)
        conf2 (function);
        conf2 (subroutine);
        conf2 (threadprivate);
@@ -4185,7 +4263,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/symbol.c mpc-gcc-4.8.5/gcc/fortran/symbol.c
        conf2 (result);
  
        if (attr->intent != INTENT_UNKNOWN)
-@@ -733,6 +766,10 @@
+@@ -733,6 +766,10 @@ check_conflict (symbol_attribute *attr, const char *name, locus *where)
        conf2 (volatile_);
        conf2 (asynchronous);
        conf2 (threadprivate);
@@ -4196,7 +4274,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/symbol.c mpc-gcc-4.8.5/gcc/fortran/symbol.c
        conf2 (value);
        conf2 (codimension);
        conf2 (result);
-@@ -905,6 +942,32 @@
+@@ -905,6 +942,32 @@ gfc_add_codimension (symbol_attribute *attr, const char *name, locus *where)
    return check_conflict (attr, name, where);
  }
  
@@ -4229,7 +4307,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/symbol.c mpc-gcc-4.8.5/gcc/fortran/symbol.c
  
  gfc_try
  gfc_add_dimension (symbol_attribute *attr, const char *name, locus *where)
-@@ -1760,6 +1823,13 @@
+@@ -1760,6 +1823,13 @@ gfc_copy_attr (symbol_attribute *dest, symbol_attribute *src, locus *where)
    if (src->threadprivate
        && gfc_add_threadprivate (dest, NULL, where) == FAILURE)
      goto fail;
@@ -4243,30 +4321,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/symbol.c mpc-gcc-4.8.5/gcc/fortran/symbol.c
    if (src->target && gfc_add_target (dest, where) == FAILURE)
      goto fail;
    if (src->dummy && gfc_add_dummy (dest, NULL, where) == FAILURE)
-diff -Naur gcc-4.8.5/gcc/fortran/trans.c mpc-gcc-4.8.5/gcc/fortran/trans.c
---- gcc-4.8.5/gcc/fortran/trans.c	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/trans.c	2016-07-19 11:04:37.248484881 +0200
-@@ -1648,7 +1648,15 @@
- 	case EXEC_OMP_WORKSHARE:
- 	  res = gfc_trans_omp_directive (code);
- 	  break;
--
-+	
-+	/* MPC HLS BEGIN */
-+	case EXEC_HLS_BARRIER:
-+	case EXEC_HLS_SINGLE:
-+	case EXEC_HLS_SINGLE_NOWAIT:
-+	  res = gfc_trans_hls_directive (code);
-+	  break;
-+	/* MPC HLS END */
-+	
- 	default:
- 	  internal_error ("gfc_trans_code(): Bad statement code");
- 	}
-diff -Naur gcc-4.8.5/gcc/fortran/trans-common.c mpc-gcc-4.8.5/gcc/fortran/trans-common.c
---- gcc-4.8.5/gcc/fortran/trans-common.c	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/trans-common.c	2016-07-19 11:04:37.244484776 +0200
-@@ -444,8 +444,86 @@
+diff --git a/gcc/fortran/trans-common.c b/gcc/fortran/trans-common.c
+index db0f385d9..93ca53088 100644
+--- a/gcc/fortran/trans-common.c
++++ b/gcc/fortran/trans-common.c
+@@ -444,8 +444,86 @@ build_common_decl (gfc_common_head *com, tree union_type, bool is_init)
  
        gfc_set_decl_location (decl, &com->where);
  
@@ -4355,10 +4414,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/trans-common.c mpc-gcc-4.8.5/gcc/fortran/trans-
  
        /* Place the back end declaration for this common block in
           GLOBAL_BINDING_LEVEL.  */
-diff -Naur gcc-4.8.5/gcc/fortran/trans-decl.c mpc-gcc-4.8.5/gcc/fortran/trans-decl.c
---- gcc-4.8.5/gcc/fortran/trans-decl.c	2015-02-01 22:51:40.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/trans-decl.c	2016-07-19 11:04:37.248484881 +0200
-@@ -608,7 +608,90 @@
+diff --git a/gcc/fortran/trans-decl.c b/gcc/fortran/trans-decl.c
+index b473d660e..99f0d7ec8 100644
+--- a/gcc/fortran/trans-decl.c
++++ b/gcc/fortran/trans-decl.c
+@@ -608,7 +608,90 @@ gfc_finish_var_decl (tree decl, gfc_symbol * sym)
    /* Handle threadprivate variables.  */
    if (sym->attr.threadprivate
        && (TREE_STATIC (decl) || DECL_EXTERNAL (decl)))
@@ -4450,7 +4510,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/trans-decl.c mpc-gcc-4.8.5/gcc/fortran/trans-de
  }
  
  
-@@ -1611,7 +1694,18 @@
+@@ -1611,7 +1694,18 @@ get_proc_pointer_decl (gfc_symbol *sym)
    /* Handle threadprivate procedure pointers.  */
    if (sym->attr.threadprivate
        && (TREE_STATIC (decl) || DECL_EXTERNAL (decl)))
@@ -4469,7 +4529,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/trans-decl.c mpc-gcc-4.8.5/gcc/fortran/trans-de
  
    attributes = add_attributes_to_decl (sym->attr, NULL_TREE);
    decl_attributes (&decl, attributes, 0);
-@@ -5534,7 +5628,11 @@
+@@ -5534,7 +5628,11 @@ gfc_generate_function_code (gfc_namespace * ns)
    gfc_traverse_ns (ns, gfc_emit_parameter_debug_info);
  
    if (sym->attr.is_main_program)
@@ -4481,10 +4541,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/trans-decl.c mpc-gcc-4.8.5/gcc/fortran/trans-de
  
    current_procedure_symbol = previous_procedure_symbol;
  }
-diff -Naur gcc-4.8.5/gcc/fortran/trans-stmt.h mpc-gcc-4.8.5/gcc/fortran/trans-stmt.h
---- gcc-4.8.5/gcc/fortran/trans-stmt.h	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/trans-stmt.h	2016-07-19 11:04:37.248484881 +0200
-@@ -64,6 +64,11 @@
+diff --git a/gcc/fortran/trans-stmt.h b/gcc/fortran/trans-stmt.h
+index 415f76d79..c08d197a2 100644
+--- a/gcc/fortran/trans-stmt.h
++++ b/gcc/fortran/trans-stmt.h
+@@ -64,6 +64,11 @@ tree gfc_trans_deallocate_array (tree);
  /* trans-openmp.c */
  tree gfc_trans_omp_directive (gfc_code *);
  
@@ -4496,10 +4557,32 @@ diff -Naur gcc-4.8.5/gcc/fortran/trans-stmt.h mpc-gcc-4.8.5/gcc/fortran/trans-st
  /* trans-io.c */
  tree gfc_trans_open (gfc_code *);
  tree gfc_trans_close (gfc_code *);
-diff -Naur gcc-4.8.5/gcc/fortran/types.def mpc-gcc-4.8.5/gcc/fortran/types.def
---- gcc-4.8.5/gcc/fortran/types.def	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/fortran/types.def	2016-07-19 11:04:37.248484881 +0200
-@@ -89,10 +89,11 @@
+diff --git a/gcc/fortran/trans.c b/gcc/fortran/trans.c
+index d7bdf268a..935b35378 100644
+--- a/gcc/fortran/trans.c
++++ b/gcc/fortran/trans.c
+@@ -1648,7 +1648,15 @@ trans_code (gfc_code * code, tree cond)
+ 	case EXEC_OMP_WORKSHARE:
+ 	  res = gfc_trans_omp_directive (code);
+ 	  break;
+-
++	
++	/* MPC HLS BEGIN */
++	case EXEC_HLS_BARRIER:
++	case EXEC_HLS_SINGLE:
++	case EXEC_HLS_SINGLE_NOWAIT:
++	  res = gfc_trans_hls_directive (code);
++	  break;
++	/* MPC HLS END */
++	
+ 	default:
+ 	  internal_error ("gfc_trans_code(): Bad statement code");
+ 	}
+diff --git a/gcc/fortran/types.def b/gcc/fortran/types.def
+index e4cd1d18e..c181bdb4e 100644
+--- a/gcc/fortran/types.def
++++ b/gcc/fortran/types.def
+@@ -89,10 +89,11 @@ DEF_FUNCTION_TYPE_1 (BT_FN_VOID_VPTR, BT_VOID, BT_VOLATILE_PTR)
  DEF_FUNCTION_TYPE_1 (BT_FN_UINT_UINT, BT_UINT, BT_UINT)
  DEF_FUNCTION_TYPE_1 (BT_FN_PTR_PTR, BT_PTR, BT_PTR)
  DEF_FUNCTION_TYPE_1 (BT_FN_VOID_INT, BT_VOID, BT_INT)
@@ -4513,7 +4596,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/types.def mpc-gcc-4.8.5/gcc/fortran/types.def
  DEF_FUNCTION_TYPE_2 (BT_FN_BOOL_LONGPTR_LONGPTR,
                       BT_BOOL, BT_PTR_LONG, BT_PTR_LONG)
  DEF_FUNCTION_TYPE_2 (BT_FN_BOOL_ULONGLONGPTR_ULONGLONGPTR,
-@@ -149,7 +150,6 @@
+@@ -149,7 +150,6 @@ DEF_FUNCTION_TYPE_3 (BT_FN_VOID_VPTR_I2_INT, BT_VOID, BT_VOLATILE_PTR, BT_I2, BT
  DEF_FUNCTION_TYPE_3 (BT_FN_VOID_VPTR_I4_INT, BT_VOID, BT_VOLATILE_PTR, BT_I4, BT_INT)
  DEF_FUNCTION_TYPE_3 (BT_FN_VOID_VPTR_I8_INT, BT_VOID, BT_VOLATILE_PTR, BT_I8, BT_INT)
  DEF_FUNCTION_TYPE_3 (BT_FN_VOID_VPTR_I16_INT, BT_VOID, BT_VOLATILE_PTR, BT_I16, BT_INT)
@@ -4521,7 +4604,7 @@ diff -Naur gcc-4.8.5/gcc/fortran/types.def mpc-gcc-4.8.5/gcc/fortran/types.def
  DEF_FUNCTION_TYPE_4 (BT_FN_VOID_OMPFN_PTR_UINT_UINT,
                       BT_VOID, BT_PTR_FN_VOID_PTR, BT_PTR, BT_UINT, BT_UINT)
  DEF_FUNCTION_TYPE_4 (BT_FN_VOID_PTR_WORD_WORD_PTR,
-@@ -158,7 +158,6 @@
+@@ -158,7 +158,6 @@ DEF_FUNCTION_TYPE_4 (BT_FN_VOID_SIZE_VPTR_PTR_INT, BT_VOID, BT_SIZE,
  		     BT_VOLATILE_PTR, BT_PTR, BT_INT)
  DEF_FUNCTION_TYPE_4 (BT_FN_VOID_SIZE_CONST_VPTR_PTR_INT, BT_VOID, BT_SIZE,
  		     BT_CONST_VOLATILE_PTR, BT_PTR, BT_INT)
@@ -4529,10 +4612,11 @@ diff -Naur gcc-4.8.5/gcc/fortran/types.def mpc-gcc-4.8.5/gcc/fortran/types.def
  DEF_FUNCTION_TYPE_5 (BT_FN_BOOL_LONG_LONG_LONG_LONGPTR_LONGPTR,
                       BT_BOOL, BT_LONG, BT_LONG, BT_LONG,
  		     BT_PTR_LONG, BT_PTR_LONG)
-diff -Naur gcc-4.8.5/gcc/gcc.c mpc-gcc-4.8.5/gcc/gcc.c
---- gcc-4.8.5/gcc/gcc.c	2015-06-23 09:35:08.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/gcc.c	2016-07-19 11:04:37.248484881 +0200
-@@ -731,6 +731,9 @@
+diff --git a/gcc/gcc.c b/gcc/gcc.c
+index 74f88a751..147d0e536 100644
+--- a/gcc/gcc.c
++++ b/gcc/gcc.c
+@@ -731,6 +731,9 @@ proper position among the other output files.  */
  /* We pass any -flto flags on to the linker, which is expected
     to understand them.  In practice, this means it had better be collect2.  */
  /* %{e*} includes -export-dynamic; see comment in common.opt.  */
@@ -4542,7 +4626,7 @@ diff -Naur gcc-4.8.5/gcc/gcc.c mpc-gcc-4.8.5/gcc/gcc.c
  #ifndef LINK_COMMAND_SPEC
  #define LINK_COMMAND_SPEC "\
  %{!fsyntax-only:%{!c:%{!M:%{!MM:%{!E:%{!S:\
-@@ -749,6 +752,26 @@
+@@ -749,6 +752,26 @@ proper position among the other output files.  */
      %{!nostdlib:%{!nodefaultlibs:%(link_ssp) %(link_gcc_c_sequence)}}\
      %{!nostdlib:%{!nostartfiles:%E}} %{T*} }}}}}}"
  #endif
@@ -4569,10 +4653,11 @@ diff -Naur gcc-4.8.5/gcc/gcc.c mpc-gcc-4.8.5/gcc/gcc.c
  
  #ifndef LINK_LIBGCC_SPEC
  /* Generate -L options for startfile prefix list.  */
-diff -Naur gcc-4.8.5/gcc/gimplify.c mpc-gcc-4.8.5/gcc/gimplify.c
---- gcc-4.8.5/gcc/gimplify.c	2014-04-23 14:45:23.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/gimplify.c	2016-07-19 11:04:37.248484881 +0200
-@@ -5954,14 +5954,24 @@
+diff --git a/gcc/gimplify.c b/gcc/gimplify.c
+index 52fbfc573..2864f92f9 100644
+--- a/gcc/gimplify.c
++++ b/gcc/gimplify.c
+@@ -5954,14 +5954,24 @@ omp_notice_variable (struct gimplify_omp_ctx *ctx, tree decl, bool in_code)
    /* Threadprivate variables are predetermined.  */
    if (is_global_var (decl))
      {
@@ -4597,9 +4682,11 @@ diff -Naur gcc-4.8.5/gcc/gimplify.c mpc-gcc-4.8.5/gcc/gimplify.c
  	    return omp_notice_threadprivate_variable (ctx, decl, value);
  	}
      }
-diff -Naur gcc-4.8.5/gcc/hls-builtins.def mpc-gcc-4.8.5/gcc/hls-builtins.def
---- gcc-4.8.5/gcc/hls-builtins.def	1970-01-01 01:00:00.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/hls-builtins.def	2016-07-19 11:04:37.248484881 +0200
+diff --git a/gcc/hls-builtins.def b/gcc/hls-builtins.def
+new file mode 100644
+index 000000000..ab8a85eb9
+--- /dev/null
++++ b/gcc/hls-builtins.def
 @@ -0,0 +1,8 @@
 +DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_BARRIER, "__extls_hls_barrier",
 +		  BT_FN_VOID_INT, ATTR_NOTHROW_LIST)
@@ -4609,49 +4696,11 @@ diff -Naur gcc-4.8.5/gcc/hls-builtins.def mpc-gcc-4.8.5/gcc/hls-builtins.def
 +		  BT_FN_VOID_INT, ATTR_NOTHROW_LIST)
 +DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_SINGLE_NOWAIT, "__extls_hls_single_nowait",
 +		  BT_FN_BOOL_INT, ATTR_NOTHROW_LIST)
-diff -Naur gcc-4.8.5/gcc/Makefile.in mpc-gcc-4.8.5/gcc/Makefile.in
---- gcc-4.8.5/gcc/Makefile.in	2014-04-05 12:26:19.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/Makefile.in	2016-07-19 11:04:37.220484151 +0200
-@@ -862,7 +862,7 @@
- READ_MD_H = $(OBSTACK_H) $(HASHTAB_H) read-md.h
- PARAMS_H = params.h params.def
- BUILTINS_DEF = builtins.def sync-builtins.def omp-builtins.def \
--	gtm-builtins.def sanitizer.def
-+	gtm-builtins.def sanitizer.def hls-builtins.def
- INTERNAL_FN_DEF = internal-fn.def
- INTERNAL_FN_H = internal-fn.h $(INTERNAL_FN_DEF)
- TREE_H = coretypes.h tree.h all-tree.def tree.def c-family/c-common.def \
-@@ -1305,6 +1305,7 @@
- 	mcf.o \
- 	mode-switching.o \
- 	modulo-sched.o \
-+	mpc-pass.o \
- 	omega.o \
- 	omp-low.o \
- 	optabs.o \
-@@ -2537,6 +2538,11 @@
-    $(TREE_FLOW_H) $(FLAGS_H) $(EXPR_H) $(DIAGNOSTIC_CORE_H) \
-    $(TREE_PASS_H) $(GGC_H) $(EXCEPT_H) $(SPLAY_TREE_H) $(OPTABS_H) \
-    $(CFGLOOP_H) tree-iterator.h gt-omp-low.h
-+mpc-pass.o : mpc-pass.c $(CONFIG_H) $(SYSTEM_H) coretypes.h $(TM_H) $(TREE_H) \
-+   $(RTL_H) $(GIMPLE_H) $(TREE_INLINE_H) langhooks.h $(DIAGNOSTIC_H) \
-+   $(TREE_FLOW_H) $(TIMEVAR_H) $(FLAGS_H) $(EXPR_H) $(TOPLEV_H) tree-pass.h \
-+   $(GGC_H) except.h $(SPLAY_TREE_H) $(OPTABS_H) $(CFGLOOP_H) \
-+   tree-iterator.h
- tree-browser.o : tree-browser.c tree-browser.def $(CONFIG_H) $(SYSTEM_H) \
-    coretypes.h $(TREE_H) $(TREE_PRETTY_PRINT_H)
- omega.o : omega.c $(OMEGA_H) $(CONFIG_H) $(SYSTEM_H) coretypes.h dumpfile.h \
-@@ -3744,6 +3750,7 @@
-   $(srcdir)/tree-profile.c $(srcdir)/tree-nested.c \
-   $(srcdir)/tree-parloops.c \
-   $(srcdir)/omp-low.c \
-+  $(srcdir)/mpc-pass.c \
-   $(srcdir)/targhooks.c $(out_file) $(srcdir)/passes.c $(srcdir)/cgraphunit.c \
-   $(srcdir)/cgraphclones.c \
-   $(srcdir)/tree-ssa-propagate.c \
-diff -Naur gcc-4.8.5/gcc/mpc-pass.c mpc-gcc-4.8.5/gcc/mpc-pass.c
---- gcc-4.8.5/gcc/mpc-pass.c	1970-01-01 01:00:00.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/mpc-pass.c	2016-07-19 11:04:37.248484881 +0200
+diff --git a/gcc/mpc-pass.c b/gcc/mpc-pass.c
+new file mode 100644
+index 000000000..254efb8ac
+--- /dev/null
++++ b/gcc/mpc-pass.c
 @@ -0,0 +1,303 @@
 +#include "config.h"
 +#include "system.h"
@@ -4956,10 +5005,11 @@ diff -Naur gcc-4.8.5/gcc/mpc-pass.c mpc-gcc-4.8.5/gcc/mpc-pass.c
 +};
 +
 +
-diff -Naur gcc-4.8.5/gcc/omp-low.c mpc-gcc-4.8.5/gcc/omp-low.c
---- gcc-4.8.5/gcc/omp-low.c	2015-06-03 23:36:26.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/omp-low.c	2016-07-19 11:04:37.248484881 +0200
-@@ -6462,6 +6462,10 @@
+diff --git a/gcc/omp-low.c b/gcc/omp-low.c
+index 6a3969bd7..2aa3048ec 100644
+--- a/gcc/omp-low.c
++++ b/gcc/omp-low.c
+@@ -6462,6 +6462,10 @@ lower_omp_critical (gimple_stmt_iterator *gsi_p, omp_context *ctx)
  	  DECL_COMMON (decl) = 1;
  	  DECL_ARTIFICIAL (decl) = 1;
  	  DECL_IGNORED_P (decl) = 1;
@@ -4970,10 +5020,11 @@ diff -Naur gcc-4.8.5/gcc/omp-low.c mpc-gcc-4.8.5/gcc/omp-low.c
  	  varpool_finalize_decl (decl);
  
  	  splay_tree_insert (critical_name_mutexes, (splay_tree_key) name,
-diff -Naur gcc-4.8.5/gcc/passes.c mpc-gcc-4.8.5/gcc/passes.c
---- gcc-4.8.5/gcc/passes.c	2014-01-09 16:25:34.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/passes.c	2016-07-19 11:04:37.248484881 +0200
-@@ -1302,6 +1302,10 @@
+diff --git a/gcc/passes.c b/gcc/passes.c
+index 22d843aa5..2b624882d 100644
+--- a/gcc/passes.c
++++ b/gcc/passes.c
+@@ -1302,6 +1302,10 @@ init_optimization_passes (void)
    p = &all_small_ipa_passes;
    NEXT_PASS (pass_ipa_free_lang_data);
    NEXT_PASS (pass_ipa_function_and_variable_visibility);
@@ -4984,10 +5035,11 @@ diff -Naur gcc-4.8.5/gcc/passes.c mpc-gcc-4.8.5/gcc/passes.c
    NEXT_PASS (pass_early_local_passes);
      {
        struct opt_pass **p = &pass_early_local_passes.pass.sub;
-diff -Naur gcc-4.8.5/gcc/print-tree.c mpc-gcc-4.8.5/gcc/print-tree.c
---- gcc-4.8.5/gcc/print-tree.c	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/print-tree.c	2016-07-19 11:04:37.248484881 +0200
-@@ -464,6 +464,44 @@
+diff --git a/gcc/print-tree.c b/gcc/print-tree.c
+index e8a0c7700..e0bf7d977 100644
+--- a/gcc/print-tree.c
++++ b/gcc/print-tree.c
+@@ -464,6 +464,44 @@ print_node (FILE *file, const char *prefix, tree node, int indent)
  	      case TLS_MODEL_LOCAL_EXEC:
  		fputs (" tls-local-exec", file);
  		break;
@@ -5032,10 +5084,11 @@ diff -Naur gcc-4.8.5/gcc/print-tree.c mpc-gcc-4.8.5/gcc/print-tree.c
  	      default:
  		gcc_unreachable ();
  	    }
-diff -Naur gcc-4.8.5/gcc/rtl.h mpc-gcc-4.8.5/gcc/rtl.h
---- gcc-4.8.5/gcc/rtl.h	2014-03-17 16:31:43.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/rtl.h	2016-07-19 11:04:37.248484881 +0200
-@@ -1616,28 +1616,55 @@
+diff --git a/gcc/rtl.h b/gcc/rtl.h
+index 91f3387c7..07c66f2e6 100644
+--- a/gcc/rtl.h
++++ b/gcc/rtl.h
+@@ -1616,28 +1616,55 @@ do {									\
  #define SYMBOL_FLAG_SMALL	(1 << 2)
  #define SYMBOL_REF_SMALL_P(RTX) \
    ((SYMBOL_REF_FLAGS (RTX) & SYMBOL_FLAG_SMALL) != 0)
@@ -5097,10 +5150,11 @@ diff -Naur gcc-4.8.5/gcc/rtl.h mpc-gcc-4.8.5/gcc/rtl.h
  
  /* If SYMBOL_REF_HAS_BLOCK_INFO_P (RTX), this is the object_block
     structure to which the symbol belongs, or NULL if it has not been
-diff -Naur gcc-4.8.5/gcc/stor-layout.c mpc-gcc-4.8.5/gcc/stor-layout.c
---- gcc-4.8.5/gcc/stor-layout.c	2014-10-15 12:30:03.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/stor-layout.c	2016-07-19 11:04:37.252484984 +0200
-@@ -685,6 +685,7 @@
+diff --git a/gcc/stor-layout.c b/gcc/stor-layout.c
+index 24cad6c88..bd691c1d6 100644
+--- a/gcc/stor-layout.c
++++ b/gcc/stor-layout.c
+@@ -685,6 +685,7 @@ layout_decl (tree decl, unsigned int known_align)
    /* Evaluate nonconstant size only once, either now or as soon as safe.  */
    if (DECL_SIZE (decl) != 0 && TREE_CODE (DECL_SIZE (decl)) != INTEGER_CST)
      DECL_SIZE (decl) = variable_size (DECL_SIZE (decl));
@@ -5108,10 +5162,62 @@ diff -Naur gcc-4.8.5/gcc/stor-layout.c mpc-gcc-4.8.5/gcc/stor-layout.c
    if (DECL_SIZE_UNIT (decl) != 0
        && TREE_CODE (DECL_SIZE_UNIT (decl)) != INTEGER_CST)
      DECL_SIZE_UNIT (decl) = variable_size (DECL_SIZE_UNIT (decl));
-diff -Naur gcc-4.8.5/gcc/tree.c mpc-gcc-4.8.5/gcc/tree.c
---- gcc-4.8.5/gcc/tree.c	2014-12-01 14:48:21.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/tree.c	2016-07-19 11:15:05.032841971 +0200
-@@ -2632,23 +2632,38 @@
+diff --git a/gcc/tree-pass.h b/gcc/tree-pass.h
+index 0c83921f7..1c29c1279 100644
+--- a/gcc/tree-pass.h
++++ b/gcc/tree-pass.h
+@@ -365,6 +365,12 @@ extern struct gimple_opt_pass pass_split_functions;
+ extern struct gimple_opt_pass pass_feedback_split_functions;
+ extern struct gimple_opt_pass pass_strength_reduction;
+ 
++/* MPC ADD BEGIN */
++extern struct simple_ipa_opt_pass pass_mpc_warning_global_vars;/* IPA Passes */
++extern struct simple_ipa_opt_pass pass_mpc_warning_thread_mixing;extern struct simple_ipa_opt_pass pass_ipa_lower_emutls;
++extern struct simple_ipa_opt_pass pass_mpc_remove_hls_node;extern struct simple_ipa_opt_pass pass_ipa_function_and_variable_visibility;
++/* MPC ADD END */
++
+ /* IPA Passes */
+ extern struct simple_ipa_opt_pass pass_ipa_lower_emutls;
+ extern struct simple_ipa_opt_pass pass_ipa_function_and_variable_visibility;
+diff --git a/gcc/tree-profile.c b/gcc/tree-profile.c
+index 9985b40a2..9d8ed8c01 100644
+--- a/gcc/tree-profile.c
++++ b/gcc/tree-profile.c
+@@ -565,7 +565,7 @@ struct simple_ipa_opt_pass pass_ipa_tree_profile =
+ {
+  {
+   SIMPLE_IPA_PASS,
+-  "profile",  		               /* name */
++  "profile",  		               	   /* name */
+   OPTGROUP_NONE,                       /* optinfo_flags */
+   gate_tree_profile_ipa,               /* gate */
+   tree_profiling,                      /* execute */
+diff --git a/gcc/tree-ssa-operands.c b/gcc/tree-ssa-operands.c
+index a4ddb6e81..b8152955b 100644
+--- a/gcc/tree-ssa-operands.c
++++ b/gcc/tree-ssa-operands.c
+@@ -362,12 +362,10 @@ finalize_ssa_uses (gimple stmt)
+   if (build_vuse != NULL_TREE)
+     {
+       tree oldvuse = gimple_vuse (stmt);
+-      if (oldvuse
+-	  && TREE_CODE (oldvuse) == SSA_NAME)
+-	oldvuse = SSA_NAME_VAR (oldvuse);
+-      if (oldvuse != (build_vuse != NULL_TREE
+-		      ? build_vuse : build_vdef))
+-	gimple_set_vuse (stmt, NULL_TREE);
++      if (oldvuse && TREE_CODE (oldvuse) == SSA_NAME)
++		oldvuse = SSA_NAME_VAR (oldvuse);
++      if (oldvuse != (build_vuse != NULL_TREE ? build_vuse : build_vdef))
++		gimple_set_vuse (stmt, NULL_TREE);
+       build_uses.safe_insert (0, (tree)gimple_vuse_ptr (stmt));
+     }
+ 
+diff --git a/gcc/tree.c b/gcc/tree.c
+index 077eed8ac..7284a6b49 100644
+--- a/gcc/tree.c
++++ b/gcc/tree.c
+@@ -2632,23 +2632,38 @@ staticp (tree arg)
        return arg;
  
      case VAR_DECL:
@@ -5152,7 +5258,7 @@ diff -Naur gcc-4.8.5/gcc/tree.c mpc-gcc-4.8.5/gcc/tree.c
        /* If the thing being referenced is not a field, then it is
  	 something language specific.  */
        gcc_assert (TREE_CODE (TREE_OPERAND (arg, 1)) == FIELD_DECL);
-@@ -11696,3 +11711,102 @@
+@@ -11696,3 +11711,102 @@ contains_bitfld_component_ref_p (const_tree ref)
  }
  
  #include "gt-tree.h"
@@ -5255,10 +5361,11 @@ diff -Naur gcc-4.8.5/gcc/tree.c mpc-gcc-4.8.5/gcc/tree.c
 +}
 +
 +/* MPC END */
-diff -Naur gcc-4.8.5/gcc/tree.h mpc-gcc-4.8.5/gcc/tree.h
---- gcc-4.8.5/gcc/tree.h	2014-04-10 11:35:39.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/tree.h	2016-07-19 11:04:37.252484984 +0200
-@@ -3177,6 +3177,12 @@
+diff --git a/gcc/tree.h b/gcc/tree.h
+index 33d8c5d8b..ca89d4566 100644
+--- a/gcc/tree.h
++++ b/gcc/tree.h
+@@ -3177,6 +3177,12 @@ struct GTY(()) tree_parm_decl {
     thread-local storage.  */
  #define DECL_THREAD_LOCAL_P(NODE) \
    (VAR_DECL_CHECK (NODE)->decl_with_vis.tls_model >= TLS_MODEL_REAL)
@@ -5271,7 +5378,7 @@ diff -Naur gcc-4.8.5/gcc/tree.h mpc-gcc-4.8.5/gcc/tree.h
  
  /* In a non-local VAR_DECL with static storage duration, true if the
     variable has an initialization priority.  If false, the variable
-@@ -3212,8 +3218,12 @@
+@@ -3212,8 +3218,12 @@ struct GTY(()) tree_decl_with_vis {
   ENUM_BITFIELD(symbol_visibility) visibility : 2;
   unsigned visibility_specified : 1;
   /* Belongs to VAR_DECL exclusively.  */
@@ -5286,58 +5393,11 @@ diff -Naur gcc-4.8.5/gcc/tree.h mpc-gcc-4.8.5/gcc/tree.h
   /* Belong to FUNCTION_DECL exclusively.  */
   unsigned init_priority_p : 1;
   /* Used by C++ only.  Might become a generic decl flag.  */
-diff -Naur gcc-4.8.5/gcc/tree-pass.h mpc-gcc-4.8.5/gcc/tree-pass.h
---- gcc-4.8.5/gcc/tree-pass.h	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/tree-pass.h	2016-07-19 11:04:37.252484984 +0200
-@@ -365,6 +365,12 @@
- extern struct gimple_opt_pass pass_feedback_split_functions;
- extern struct gimple_opt_pass pass_strength_reduction;
- 
-+/* MPC ADD BEGIN */
-+extern struct simple_ipa_opt_pass pass_mpc_warning_global_vars;/* IPA Passes */
-+extern struct simple_ipa_opt_pass pass_mpc_warning_thread_mixing;extern struct simple_ipa_opt_pass pass_ipa_lower_emutls;
-+extern struct simple_ipa_opt_pass pass_mpc_remove_hls_node;extern struct simple_ipa_opt_pass pass_ipa_function_and_variable_visibility;
-+/* MPC ADD END */
-+
- /* IPA Passes */
- extern struct simple_ipa_opt_pass pass_ipa_lower_emutls;
- extern struct simple_ipa_opt_pass pass_ipa_function_and_variable_visibility;
-diff -Naur gcc-4.8.5/gcc/tree-profile.c mpc-gcc-4.8.5/gcc/tree-profile.c
---- gcc-4.8.5/gcc/tree-profile.c	2013-01-10 21:38:27.000000000 +0100
-+++ mpc-gcc-4.8.5/gcc/tree-profile.c	2016-07-19 11:04:37.252484984 +0200
-@@ -565,7 +565,7 @@
- {
-  {
-   SIMPLE_IPA_PASS,
--  "profile",  		               /* name */
-+  "profile",  		               	   /* name */
-   OPTGROUP_NONE,                       /* optinfo_flags */
-   gate_tree_profile_ipa,               /* gate */
-   tree_profiling,                      /* execute */
-diff -Naur gcc-4.8.5/gcc/tree-ssa-operands.c mpc-gcc-4.8.5/gcc/tree-ssa-operands.c
---- gcc-4.8.5/gcc/tree-ssa-operands.c	2014-05-05 15:48:42.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/tree-ssa-operands.c	2016-07-19 11:04:37.252484984 +0200
-@@ -362,12 +362,10 @@
-   if (build_vuse != NULL_TREE)
-     {
-       tree oldvuse = gimple_vuse (stmt);
--      if (oldvuse
--	  && TREE_CODE (oldvuse) == SSA_NAME)
--	oldvuse = SSA_NAME_VAR (oldvuse);
--      if (oldvuse != (build_vuse != NULL_TREE
--		      ? build_vuse : build_vdef))
--	gimple_set_vuse (stmt, NULL_TREE);
-+      if (oldvuse && TREE_CODE (oldvuse) == SSA_NAME)
-+		oldvuse = SSA_NAME_VAR (oldvuse);
-+      if (oldvuse != (build_vuse != NULL_TREE ? build_vuse : build_vdef))
-+		gimple_set_vuse (stmt, NULL_TREE);
-       build_uses.safe_insert (0, (tree)gimple_vuse_ptr (stmt));
-     }
- 
-diff -Naur gcc-4.8.5/gcc/varasm.c mpc-gcc-4.8.5/gcc/varasm.c
---- gcc-4.8.5/gcc/varasm.c	2015-05-26 22:11:44.000000000 +0200
-+++ mpc-gcc-4.8.5/gcc/varasm.c	2016-07-19 11:04:37.252484984 +0200
-@@ -1872,10 +1872,38 @@
+diff --git a/gcc/varasm.c b/gcc/varasm.c
+index d39d2910a..975edcf33 100644
+--- a/gcc/varasm.c
++++ b/gcc/varasm.c
+@@ -1872,10 +1872,38 @@ assemble_variable_contents (tree decl, const char *name,
        if (DECL_INITIAL (decl)
  	  && DECL_INITIAL (decl) != error_mark_node
  	  && !initializer_zerop (DECL_INITIAL (decl)))
@@ -5380,97 +5440,11 @@ diff -Naur gcc-4.8.5/gcc/varasm.c mpc-gcc-4.8.5/gcc/varasm.c
        else
  	/* Leave space for it.  */
  	assemble_zeros (tree_low_cst (DECL_SIZE_UNIT (decl), 1));
-diff -Naur gcc-4.8.5/libgfortran/gfortran.map mpc-gcc-4.8.5/libgfortran/gfortran.map
---- gcc-4.8.5/libgfortran/gfortran.map	2012-12-20 19:15:13.000000000 +0100
-+++ mpc-gcc-4.8.5/libgfortran/gfortran.map	2016-07-19 11:04:37.256485089 +0200
-@@ -30,6 +30,7 @@
-     _gfortran_chmod_func;
-     _gfortran_chmod_i4_sub;
-     _gfortran_chmod_i8_sub;
-+    _gfortran_close_units;
-     _gfortran_compare_string;
-     _gfortran_concat_string;
-     _gfortran_count_1_l;
-@@ -165,6 +166,7 @@
-     _gfortran_idate_i8;
-     _gfortran_ierrno_i4;
-     _gfortran_ierrno_i8;
-+    _gfortran_init_units;
-     _gfortran_internal_pack;
-     _gfortran_internal_unpack;
-     _gfortran_irand;
-@@ -1027,6 +1029,7 @@
-     __iso_c_binding_c_f_pointer_l4;
-     __iso_c_binding_c_f_pointer_l8;
-     __iso_c_binding_c_f_pointer_u0;
-+    __extls_get_addr_task;
-   local:
-     *;
- };
-diff -Naur gcc-4.8.5/libgfortran/io/unit.c mpc-gcc-4.8.5/libgfortran/io/unit.c
---- gcc-4.8.5/libgfortran/io/unit.c	2014-07-30 23:59:08.000000000 +0200
-+++ mpc-gcc-4.8.5/libgfortran/io/unit.c	2016-07-19 11:04:37.256485089 +0200
-@@ -27,6 +27,7 @@
- #include "fbuf.h"
- #include "format.h"
- #include "unix.h"
-+#include "libgfortran.h"
- #include <stdlib.h>
- #include <string.h>
- #include <stdbool.h>
-@@ -664,6 +665,7 @@
-   for (i = 0; i < sizeof (max_offset) * 8 - 1; i++)
-     max_offset = max_offset + ((gfc_offset) 1 << i);
- }
-+iexport(init_units);
- 
- 
- static int
-@@ -742,6 +744,7 @@
-     close_unit_1 (unit_root, 1);
-   __gthread_mutex_unlock (&unit_lock);
- }
-+iexport(close_units);
- 
- 
- /* High level interface to truncate a file, i.e. flush format buffers,
-@@ -862,3 +865,16 @@
-     }
-   return num;
- }
-+
-+/* Just a fake __sctk__tls_get_addr__task_scope to allow MPC to test the compiler during configuration */
-+typedef struct
-+{
-+  unsigned long int ti_module;
-+  unsigned long int ti_offset;
-+} tls_index;
-+
-+void * __attribute__ ((weak))
-+__extls_get_addr_task (tls_index * tmp)
-+{
-+    return NULL;
-+}
-diff -Naur gcc-4.8.5/libgfortran/libgfortran.h mpc-gcc-4.8.5/libgfortran/libgfortran.h
---- gcc-4.8.5/libgfortran/libgfortran.h	2014-07-30 23:59:08.000000000 +0200
-+++ mpc-gcc-4.8.5/libgfortran/libgfortran.h	2016-07-19 11:04:37.256485089 +0200
-@@ -816,10 +816,10 @@
- /* io.c */
- 
- extern void init_units (void);
--internal_proto(init_units);
-+iexport_proto(init_units);
- 
- extern void close_units (void);
--internal_proto(close_units);
-+iexport_proto(close_units);
- 
- extern int unit_to_fd (int);
- internal_proto(unit_to_fd);
-diff -Naur gcc-4.8.5/libgfortran/Makefile.am mpc-gcc-4.8.5/libgfortran/Makefile.am
---- gcc-4.8.5/libgfortran/Makefile.am	2012-03-26 17:16:05.000000000 +0200
-+++ mpc-gcc-4.8.5/libgfortran/Makefile.am	2016-07-19 11:04:37.252484984 +0200
-@@ -71,6 +71,12 @@
+diff --git a/libgfortran/Makefile.am b/libgfortran/Makefile.am
+index abc23cd1e..04c99a20e 100644
+--- a/libgfortran/Makefile.am
++++ b/libgfortran/Makefile.am
+@@ -71,6 +71,12 @@ AM_CFLAGS += $(SECTION_FLAGS)
  # Some targets require additional compiler options for IEEE compatibility.
  AM_CFLAGS += $(IEEE_FLAGS)
  
@@ -5483,7 +5457,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.am mpc-gcc-4.8.5/libgfortran/Makefile.
  gfor_io_src= \
  io/close.c \
  io/file_pos.c \
-@@ -79,13 +85,10 @@
+@@ -79,13 +85,10 @@ io/inquire.c \
  io/intrinsics.c \
  io/list_read.c \
  io/lock.c \
@@ -5497,7 +5471,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.am mpc-gcc-4.8.5/libgfortran/Makefile.
  io/write.c \
  io/fbuf.c
  
-@@ -817,6 +820,21 @@
+@@ -817,6 +820,21 @@ BUILT_SOURCES=$(gfor_built_src) $(gfor_built_specific_src) \
  prereq_SRC = $(gfor_src) $(gfor_built_src) $(gfor_io_src) \
      $(gfor_helper_src) $(gfor_io_headers) $(gfor_specific_src)
  
@@ -5519,7 +5493,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.am mpc-gcc-4.8.5/libgfortran/Makefile.
  if onestep
  # dummy sources for libtool
  BUILT_SOURCES+=libgfortran_c.c libgfortran_f.f90
-@@ -842,10 +860,10 @@
+@@ -842,10 +860,10 @@ libgfortran_c.lo: $(filter %.c,$(prereq_SRC))
  #	$(LTPPFCCOMPILE) -c -o $@ $^ -combine
  
  libgfortran_la_SOURCES = libgfortran_c.c $(filter-out %.c,$(prereq_SRC))
@@ -5532,10 +5506,11 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.am mpc-gcc-4.8.5/libgfortran/Makefile.
  endif
  
  I_M4_DEPS=m4/iparm.m4
-diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.in
---- gcc-4.8.5/libgfortran/Makefile.in	2015-06-23 09:55:27.000000000 +0200
-+++ mpc-gcc-4.8.5/libgfortran/Makefile.in	2016-07-19 11:04:37.256485089 +0200
-@@ -66,6 +66,15 @@
+diff --git a/libgfortran/Makefile.in b/libgfortran/Makefile.in
+index 62b9f7abf..67133abf7 100644
+--- a/libgfortran/Makefile.in
++++ b/libgfortran/Makefile.in
+@@ -66,6 +66,15 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/../mkinstalldirs
  CONFIG_HEADER = config.h
  CONFIG_CLEAN_FILES = libgfortran.spec
  CONFIG_CLEAN_VPATH_FILES =
@@ -5551,7 +5526,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
  am__vpath_adj = case $$p in \
      $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
-@@ -101,15 +110,14 @@
+@@ -101,15 +110,14 @@ LTLIBRARIES = $(cafexeclib_LTLIBRARIES) $(myexeclib_LTLIBRARIES) \
  libcaf_single_la_LIBADD =
  am_libcaf_single_la_OBJECTS = single.lo
  libcaf_single_la_OBJECTS = $(am_libcaf_single_la_OBJECTS)
@@ -5572,7 +5547,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  	maxloc0_4_i2.lo maxloc0_8_i2.lo maxloc0_16_i2.lo \
  	maxloc0_4_i4.lo maxloc0_8_i4.lo maxloc0_16_i4.lo \
  	maxloc0_4_i8.lo maxloc0_8_i8.lo maxloc0_16_i8.lo \
-@@ -118,7 +126,7 @@
+@@ -118,7 +126,7 @@ am__objects_5 = maxloc0_4_i1.lo maxloc0_8_i1.lo maxloc0_16_i1.lo \
  	maxloc0_4_r8.lo maxloc0_8_r8.lo maxloc0_16_r8.lo \
  	maxloc0_4_r10.lo maxloc0_8_r10.lo maxloc0_16_r10.lo \
  	maxloc0_4_r16.lo maxloc0_8_r16.lo maxloc0_16_r16.lo
@@ -5581,7 +5556,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  	maxloc1_4_i2.lo maxloc1_8_i2.lo maxloc1_16_i2.lo \
  	maxloc1_4_i4.lo maxloc1_8_i4.lo maxloc1_16_i4.lo \
  	maxloc1_4_i8.lo maxloc1_8_i8.lo maxloc1_16_i8.lo \
-@@ -127,10 +135,10 @@
+@@ -127,10 +135,10 @@ am__objects_6 = maxloc1_4_i1.lo maxloc1_8_i1.lo maxloc1_16_i1.lo \
  	maxloc1_4_r8.lo maxloc1_8_r8.lo maxloc1_16_r8.lo \
  	maxloc1_4_r10.lo maxloc1_8_r10.lo maxloc1_16_r10.lo \
  	maxloc1_4_r16.lo maxloc1_8_r16.lo maxloc1_16_r16.lo
@@ -5594,7 +5569,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  	minloc0_4_i2.lo minloc0_8_i2.lo minloc0_16_i2.lo \
  	minloc0_4_i4.lo minloc0_8_i4.lo minloc0_16_i4.lo \
  	minloc0_4_i8.lo minloc0_8_i8.lo minloc0_16_i8.lo \
-@@ -139,7 +147,7 @@
+@@ -139,7 +147,7 @@ am__objects_8 = minloc0_4_i1.lo minloc0_8_i1.lo minloc0_16_i1.lo \
  	minloc0_4_r8.lo minloc0_8_r8.lo minloc0_16_r8.lo \
  	minloc0_4_r10.lo minloc0_8_r10.lo minloc0_16_r10.lo \
  	minloc0_4_r16.lo minloc0_8_r16.lo minloc0_16_r16.lo
@@ -5603,7 +5578,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  	minloc1_4_i2.lo minloc1_8_i2.lo minloc1_16_i2.lo \
  	minloc1_4_i4.lo minloc1_8_i4.lo minloc1_16_i4.lo \
  	minloc1_4_i8.lo minloc1_8_i8.lo minloc1_16_i8.lo \
-@@ -148,60 +156,60 @@
+@@ -148,60 +156,60 @@ am__objects_9 = minloc1_4_i1.lo minloc1_8_i1.lo minloc1_16_i1.lo \
  	minloc1_4_r8.lo minloc1_8_r8.lo minloc1_16_r8.lo \
  	minloc1_4_r10.lo minloc1_8_r10.lo minloc1_16_r10.lo \
  	minloc1_4_r16.lo minloc1_8_r16.lo minloc1_16_r16.lo
@@ -5688,7 +5663,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  	pow_c4_i4.lo pow_c8_i4.lo pow_c10_i4.lo pow_c16_i4.lo \
  	pow_i4_i8.lo pow_i8_i8.lo pow_i16_i8.lo pow_r4_i8.lo \
  	pow_r8_i8.lo pow_r10_i8.lo pow_r16_i8.lo pow_c4_i8.lo \
-@@ -209,43 +217,42 @@
+@@ -209,43 +217,42 @@ am__objects_33 = pow_i4_i4.lo pow_i8_i4.lo pow_i16_i4.lo pow_r16_i4.lo \
  	pow_i8_i16.lo pow_i16_i16.lo pow_r4_i16.lo pow_r8_i16.lo \
  	pow_r10_i16.lo pow_r16_i16.lo pow_c4_i16.lo pow_c8_i16.lo \
  	pow_c10_i16.lo pow_c16_i16.lo
@@ -5755,7 +5730,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  	bit_intrinsics.lo c99_functions.lo chdir.lo chmod.lo clock.lo \
  	cpu_time.lo cshift0.lo ctime.lo date_and_time.lo dtime.lo \
  	env.lo eoshift0.lo eoshift2.lo erfc_scaled.lo etime.lo \
-@@ -260,8 +267,8 @@
+@@ -260,8 +267,8 @@ am__objects_42 = associated.lo abort.lo access.lo args.lo \
  	system_clock.lo time.lo transpose_generic.lo umask.lo \
  	unlink.lo unpack_generic.lo in_pack_generic.lo \
  	in_unpack_generic.lo
@@ -5766,7 +5741,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  	_abs_i4.lo _abs_i8.lo _abs_i16.lo _abs_r4.lo _abs_r8.lo \
  	_abs_r10.lo _abs_r16.lo _aimag_c4.lo _aimag_c8.lo \
  	_aimag_c10.lo _aimag_c16.lo _exp_r4.lo _exp_r8.lo _exp_r10.lo \
-@@ -285,18 +292,18 @@
+@@ -285,18 +292,18 @@ am__objects_44 = _abs_c4.lo _abs_c8.lo _abs_c10.lo _abs_c16.lo \
  	_conjg_c4.lo _conjg_c8.lo _conjg_c10.lo _conjg_c16.lo \
  	_aint_r4.lo _aint_r8.lo _aint_r10.lo _aint_r16.lo _anint_r4.lo \
  	_anint_r8.lo _anint_r10.lo _anint_r16.lo
@@ -5791,7 +5766,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  @onestep_TRUE@am_libgfortran_la_OBJECTS = libgfortran_c.lo
  libgfortran_la_OBJECTS = $(am_libgfortran_la_OBJECTS)
  libgfortranbegin_la_LIBADD =
-@@ -327,8 +334,8 @@
+@@ -327,8 +334,8 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
  FCCOMPILE = $(FC) $(AM_FCFLAGS) $(FCFLAGS)
  LTFCCOMPILE = $(LIBTOOL) --tag=FC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
  	--mode=compile $(FC) $(AM_FCFLAGS) $(FCFLAGS)
@@ -5802,7 +5777,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  MULTISRCTOP = 
  MULTIBUILDTOP = 
  MULTIDIRS = 
-@@ -522,6 +529,13 @@
+@@ -522,6 +529,13 @@ AM_CPPFLAGS = -iquote$(srcdir)/io -I$(srcdir)/$(MULTISRCTOP)../gcc \
  	      -I$(srcdir)/$(MULTISRCTOP)../libgcc \
  	      -I$(MULTIBUILDTOP)../libgcc
  
@@ -5816,7 +5791,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  gfor_io_src = \
  io/close.c \
  io/file_pos.c \
-@@ -530,13 +544,10 @@
+@@ -530,13 +544,10 @@ io/inquire.c \
  io/intrinsics.c \
  io/list_read.c \
  io/lock.c \
@@ -5830,7 +5805,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  io/write.c \
  io/fbuf.c
  
-@@ -1258,6 +1269,20 @@
+@@ -1258,6 +1269,20 @@ BUILT_SOURCES = $(gfor_built_src) $(gfor_built_specific_src) \
  prereq_SRC = $(gfor_src) $(gfor_built_src) $(gfor_io_src) \
      $(gfor_helper_src) $(gfor_io_headers) $(gfor_specific_src)
  
@@ -5851,7 +5826,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  @onestep_FALSE@libgfortran_la_SOURCES = $(prereq_SRC)
  
  #libgfortran_f.o: $(filter %.f %.f90,$(prereq_SRC))
-@@ -1272,6 +1297,8 @@
+@@ -1272,6 +1297,8 @@ prereq_SRC = $(gfor_src) $(gfor_built_src) $(gfor_io_src) \
  #libgfortran_F.lo: 
  #	$(LTPPFCCOMPILE) -c -o $@ $^ -combine
  @onestep_TRUE@libgfortran_la_SOURCES = libgfortran_c.c $(filter-out %.c,$(prereq_SRC))
@@ -5860,7 +5835,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  I_M4_DEPS = m4/iparm.m4
  I_M4_DEPS0 = $(I_M4_DEPS) m4/iforeach.m4
  I_M4_DEPS1 = $(I_M4_DEPS) m4/ifunction.m4
-@@ -1333,6 +1360,13 @@
+@@ -1333,6 +1360,13 @@ distclean-hdr:
  	-rm -f config.h stamp-h1
  libgfortran.spec: $(top_builddir)/config.status $(srcdir)/libgfortran.spec.in
  	cd $(top_builddir) && $(SHELL) ./config.status $@
@@ -5874,7 +5849,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  install-cafexeclibLTLIBRARIES: $(cafexeclib_LTLIBRARIES)
  	@$(NORMAL_INSTALL)
  	test -z "$(cafexeclibdir)" || $(MKDIR_P) "$(DESTDIR)$(cafexeclibdir)"
-@@ -1579,6 +1613,9 @@
+@@ -1579,6 +1613,9 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/iso_c_generated_procs.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kill.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgfortran_c.Plo@am__quote@
@@ -5884,7 +5859,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/link.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list_read.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lock.Plo@am__quote@
-@@ -1737,7 +1774,6 @@
+@@ -1737,7 +1774,6 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/norm2_r16.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/norm2_r4.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/norm2_r8.Plo@am__quote@
@@ -5892,7 +5867,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pack_c10.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pack_c16.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pack_c4.Plo@am__quote@
-@@ -1891,8 +1927,6 @@
+@@ -1891,8 +1927,6 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/transpose_r4.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/transpose_r8.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/umask.Plo@am__quote@
@@ -5901,7 +5876,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unlink.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unpack_c10.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unpack_c16.Plo@am__quote@
-@@ -2354,6 +2388,48 @@
+@@ -2354,6 +2388,48 @@ f2c_specifics.lo: intrinsics/f2c_specifics.F90
  @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
  
@@ -5950,7 +5925,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  single.lo: caf/single.c
  @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT single.lo -MD -MP -MF $(DEPDIR)/single.Tpo -c -o single.lo `test -f 'caf/single.c' || echo '$(srcdir)/'`caf/single.c
  @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/single.Tpo $(DEPDIR)/single.Plo
-@@ -5140,13 +5216,6 @@
+@@ -5140,13 +5216,6 @@ lock.lo: io/lock.c
  @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o lock.lo `test -f 'io/lock.c' || echo '$(srcdir)/'`io/lock.c
  
@@ -5964,7 +5939,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  read.lo: io/read.c
  @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT read.lo -MD -MP -MF $(DEPDIR)/read.Tpo -c -o read.lo `test -f 'io/read.c' || echo '$(srcdir)/'`io/read.c
  @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/read.Tpo $(DEPDIR)/read.Plo
-@@ -5175,20 +5244,6 @@
+@@ -5175,20 +5244,6 @@ transfer128.lo: io/transfer128.c
  @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o transfer128.lo `test -f 'io/transfer128.c' || echo '$(srcdir)/'`io/transfer128.c
  
@@ -5985,7 +5960,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  write.lo: io/write.c
  @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT write.lo -MD -MP -MF $(DEPDIR)/write.Tpo -c -o write.lo `test -f 'io/write.c' || echo '$(srcdir)/'`io/write.c
  @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/write.Tpo $(DEPDIR)/write.Plo
-@@ -5746,7 +5801,8 @@
+@@ -5746,7 +5801,8 @@ distclean-tags:
  check-am: all-am
  check: $(BUILT_SOURCES)
  	$(MAKE) $(AM_MAKEFLAGS) check-am
@@ -5995,7 +5970,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  installdirs:
  	for dir in "$(DESTDIR)$(cafexeclibdir)" "$(DESTDIR)$(myexeclibdir)" "$(DESTDIR)$(toolexeclibdir)" "$(DESTDIR)$(toolexeclibdir)"; do \
  	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
-@@ -5786,8 +5842,8 @@
+@@ -5786,8 +5842,8 @@ maintainer-clean-generic:
  clean: clean-am clean-multi
  
  clean-am: clean-cafexeclibLTLIBRARIES clean-generic clean-libtool \
@@ -6006,7 +5981,7 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  
  distclean: distclean-am distclean-multi
  	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-@@ -5868,7 +5924,7 @@
+@@ -5868,7 +5924,7 @@ uninstall-am: uninstall-cafexeclibLTLIBRARIES \
  
  .PHONY: CTAGS GTAGS all all-am all-multi am--refresh check check-am \
  	clean clean-cafexeclibLTLIBRARIES clean-generic clean-libtool \
@@ -6015,10 +5990,112 @@ diff -Naur gcc-4.8.5/libgfortran/Makefile.in mpc-gcc-4.8.5/libgfortran/Makefile.
  	clean-toolexeclibLTLIBRARIES ctags distclean distclean-compile \
  	distclean-generic distclean-hdr distclean-libtool \
  	distclean-multi distclean-tags dvi dvi-am html html-am info \
-diff -Naur gcc-4.8.5/libgfortran/runtime/main.c mpc-gcc-4.8.5/libgfortran/runtime/main.c
---- gcc-4.8.5/libgfortran/runtime/main.c	2014-10-20 10:16:06.000000000 +0200
-+++ mpc-gcc-4.8.5/libgfortran/runtime/main.c	2016-07-19 11:04:37.256485089 +0200
-@@ -233,8 +233,9 @@
+diff --git a/libgfortran/gfortran.map b/libgfortran/gfortran.map
+index 80a9a0007..d87df4692 100644
+--- a/libgfortran/gfortran.map
++++ b/libgfortran/gfortran.map
+@@ -30,6 +30,7 @@ GFORTRAN_1.0 {
+     _gfortran_chmod_func;
+     _gfortran_chmod_i4_sub;
+     _gfortran_chmod_i8_sub;
++    _gfortran_ap_close_units;
+     _gfortran_compare_string;
+     _gfortran_concat_string;
+     _gfortran_count_1_l;
+@@ -165,6 +166,7 @@ GFORTRAN_1.0 {
+     _gfortran_idate_i8;
+     _gfortran_ierrno_i4;
+     _gfortran_ierrno_i8;
++    _gfortran_ap_init_units;
+     _gfortran_internal_pack;
+     _gfortran_internal_unpack;
+     _gfortran_irand;
+@@ -1027,6 +1029,7 @@ GFORTRAN_1.0 {
+     __iso_c_binding_c_f_pointer_l4;
+     __iso_c_binding_c_f_pointer_l8;
+     __iso_c_binding_c_f_pointer_u0;
++    __extls_get_addr_task;
+   local:
+     *;
+ };
+diff --git a/libgfortran/io/unit.c b/libgfortran/io/unit.c
+index 3b46bba56..dda202f03 100644
+--- a/libgfortran/io/unit.c
++++ b/libgfortran/io/unit.c
+@@ -27,6 +27,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ #include "fbuf.h"
+ #include "format.h"
+ #include "unix.h"
++#include "libgfortran.h"
+ #include <stdlib.h>
+ #include <string.h>
+ #include <stdbool.h>
+@@ -664,6 +665,11 @@ init_units (void)
+   for (i = 0; i < sizeof (max_offset) * 8 - 1; i++)
+     max_offset = max_offset + ((gfc_offset) 1 << i);
+ }
++void ap_init_units(void)
++{
++  init_units();
++}
++iexport(ap_init_units);
+ 
+ 
+ static int
+@@ -742,6 +748,11 @@ close_units (void)
+     close_unit_1 (unit_root, 1);
+   __gthread_mutex_unlock (&unit_lock);
+ }
++void ap_close_units(void)
++{
++  close_units();
++}
++iexport(ap_close_units);
+ 
+ 
+ /* High level interface to truncate a file, i.e. flush format buffers,
+@@ -862,3 +873,16 @@ get_unique_unit_number (st_parameter_open *opp)
+     }
+   return num;
+ }
++
++/* Just a fake __sctk__tls_get_addr__task_scope to allow MPC to test the compiler during configuration */
++typedef struct
++{
++  unsigned long int ti_module;
++  unsigned long int ti_offset;
++} tls_index;
++
++void * __attribute__ ((weak))
++__extls_get_addr_task (tls_index * tmp)
++{
++    return NULL;
++}
+diff --git a/libgfortran/libgfortran.h b/libgfortran/libgfortran.h
+index 9a713d852..f07951b9f 100644
+--- a/libgfortran/libgfortran.h
++++ b/libgfortran/libgfortran.h
+@@ -815,11 +815,11 @@ internal_proto(flush_all_units);
+ 
+ /* io.c */
+ 
+-extern void init_units (void);
+-internal_proto(init_units);
++extern void ap_init_units (void);
++iexport_proto(ap_init_units);
+ 
+-extern void close_units (void);
+-internal_proto(close_units);
++extern void ap_close_units (void);
++iexport_proto(ap_close_units);
+ 
+ extern int unit_to_fd (int);
+ internal_proto(unit_to_fd);
+diff --git a/libgfortran/runtime/main.c b/libgfortran/runtime/main.c
+index 32033ba3e..4d0d72269 100644
+--- a/libgfortran/runtime/main.c
++++ b/libgfortran/runtime/main.c
+@@ -233,8 +233,9 @@ init (void)
  
    /* Must be first */
    init_variables ();
@@ -6030,7 +6107,7 @@ diff -Naur gcc-4.8.5/libgfortran/runtime/main.c mpc-gcc-4.8.5/libgfortran/runtim
    set_fpu ();
    init_compile_options ();
  
-@@ -259,7 +260,8 @@
+@@ -259,7 +260,8 @@ init (void)
  static void __attribute__((destructor))
  cleanup (void)
  {
