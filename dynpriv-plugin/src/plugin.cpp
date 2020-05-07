@@ -1306,7 +1306,6 @@ bool TLS_dyn_gate()
 	 * to enable or disable the pass */
 	if( !getenv("MPC_DYN_PRIV_ENABLED") )
 	{
-		fprintf(stderr,"(gcc-DYNTLS) MPC Dynamic Privatization Plugin DISABLED\n");
 		return false;
 	}
 	
