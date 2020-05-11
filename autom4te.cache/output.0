@@ -19355,8 +19355,6 @@ ac_config_files="$ac_config_files tools/ap++"
 
 ac_config_files="$ac_config_files tools/apfortran"
 
-ac_config_files="$ac_config_files tools/extls.pc"
-
 
 ################
 #### OUTPUT ####
@@ -20571,7 +20569,6 @@ do
     "tools/apcc") CONFIG_FILES="$CONFIG_FILES tools/apcc" ;;
     "tools/ap++") CONFIG_FILES="$CONFIG_FILES tools/ap++" ;;
     "tools/apfortran") CONFIG_FILES="$CONFIG_FILES tools/apfortran" ;;
-    "tools/extls.pc") CONFIG_FILES="$CONFIG_FILES tools/extls.pc" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

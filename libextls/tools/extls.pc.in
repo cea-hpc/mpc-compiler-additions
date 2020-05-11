@@ -10,3 +10,4 @@ Version: @VERSION@
 Requires:
 Cflags: -I${incdir}
 Libs:-L${libdir} -Wl,-rpath=${libdir} -lextls
+Libs.private: @LIBELF_LDFLAGS@ @HWLOC_LDFLAGS@

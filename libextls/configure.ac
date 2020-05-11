@@ -30,7 +30,7 @@ AM_PROG_LIBTOOL
 #########################
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([src/Makefile])
-AC_CONFIG_FILES([doc/Makefile tools/Makefile tools/libextls.sh])
+AC_CONFIG_FILES([doc/Makefile tools/Makefile tools/libextls.sh tools/extls.pc])
 
 ###################################################################################
 ###################################################################################
@@ -62,7 +62,10 @@ if test -n "x$with_hwloc" ; then
 fi
 AC_SEARCH_LIBS([hwloc_topology_init], [hwloc], [HWLOC_OK=1], [HWLOC_OK=0])
 AS_IF([test "x$HWLOC_OK" = "x1"],
-				[AC_DEFINE([HAVE_HWLOC], [1], [Define hardware topology support])],
+				[
+				 AC_DEFINE([HAVE_HWLOC], [1], [Define hardware topology support])
+				 AC_SUBST(HWLOC_LDFLAGS, [-lhwloc])
+				],
 				[AC_MSG_WARN([Hwloc library not found ! - Disabling HLS])])
 
 ##################
@@ -100,7 +103,10 @@ fi
 
 AC_SEARCH_LIBS([elf_version], [elf], [LIBELF_OK=1], [LIBELF_OK=0])
 AS_IF([test "x$LIBELF_OK" = "x1"],
-				[AC_DEFINE([HAVE_LIBELF], [1], [Define libelf support])],
+				[
+				 AC_DEFINE([HAVE_LIBELF], [1], [Define libelf support])
+				 AC_SUBST(LIBELF_LDFLAGS, [-lelf])
+				],
 				[AC_MSG_WARN([Libelf library not found ! - Disabling optimized introspection])])
 
 

@@ -638,6 +638,8 @@ LTLIBOBJS
 LIB@&t@OBJS
 DEBUG_MODE_FALSE
 DEBUG_MODE_TRUE
+LIBELF_LDFLAGS
+HWLOC_LDFLAGS
 HAVE_DOXYGEN_FALSE
 HAVE_DOXYGEN_TRUE
 DOXYGEN
@@ -12166,7 +12168,7 @@ ac_config_files="$ac_config_files Makefile"
 
 ac_config_files="$ac_config_files src/Makefile"
 
-ac_config_files="$ac_config_files doc/Makefile tools/Makefile tools/libextls.sh"
+ac_config_files="$ac_config_files doc/Makefile tools/Makefile tools/libextls.sh tools/extls.pc"
 
 
 ###################################################################################
@@ -12321,8 +12323,12 @@ fi
 
 if test "x$HWLOC_OK" = "x1"; then :
   
+				 
 $as_echo "@%:@define HAVE_HWLOC 1" >>confdefs.h
 
+				 HWLOC_LDFLAGS=-lhwloc
+
+				
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Hwloc library not found ! - Disabling HLS" >&5
 $as_echo "$as_me: WARNING: Hwloc library not found ! - Disabling HLS" >&2;}
@@ -12443,8 +12449,12 @@ fi
 
 if test "x$LIBELF_OK" = "x1"; then :
   
+				 
 $as_echo "@%:@define HAVE_LIBELF 1" >>confdefs.h
 
+				 LIBELF_LDFLAGS=-lelf
+
+				
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Libelf library not found ! - Disabling optimized introspection" >&5
 $as_echo "$as_me: WARNING: Libelf library not found ! - Disabling optimized introspection" >&2;}
@@ -13514,6 +13524,7 @@ do
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "tools/Makefile") CONFIG_FILES="$CONFIG_FILES tools/Makefile" ;;
     "tools/libextls.sh") CONFIG_FILES="$CONFIG_FILES tools/libextls.sh" ;;
+    "tools/extls.pc") CONFIG_FILES="$CONFIG_FILES tools/extls.pc" ;;
     "doc/Doxyfile") CONFIG_FILES="$CONFIG_FILES doc/Doxyfile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
