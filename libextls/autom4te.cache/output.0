@@ -638,7 +638,9 @@ LTLIBOBJS
 LIB@&t@OBJS
 DEBUG_MODE_FALSE
 DEBUG_MODE_TRUE
+LIBELF_DEP
 LIBELF_LDFLAGS
+HWLOC_DEP
 HWLOC_LDFLAGS
 HAVE_DOXYGEN_FALSE
 HAVE_DOXYGEN_TRUE
@@ -12328,6 +12330,8 @@ $as_echo "@%:@define HAVE_HWLOC 1" >>confdefs.h
 
 				 HWLOC_LDFLAGS=-lhwloc
 
+				 HWLOC_DEP=hwloc
+
 				
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Hwloc library not found ! - Disabling HLS" >&5
@@ -12453,6 +12457,8 @@ if test "x$LIBELF_OK" = "x1"; then :
 $as_echo "@%:@define HAVE_LIBELF 1" >>confdefs.h
 
 				 LIBELF_LDFLAGS=-lelf
+
+				 LIBELF_DEP=libelf
 
 				
 else

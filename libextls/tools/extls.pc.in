@@ -7,7 +7,7 @@ Name: extls
 Description: Extended TLS support library
 URL: http://mpc.hpcframework.com/
 Version: @VERSION@
-Requires:
+Requires: @LIBELF_DEP@ @HWLOC_DEP@
 Cflags: -I${incdir}
 Libs:-L${libdir} -Wl,-rpath=${libdir} -lextls
 Libs.private: @LIBELF_LDFLAGS@ @HWLOC_LDFLAGS@

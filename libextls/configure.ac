@@ -65,6 +65,7 @@ AS_IF([test "x$HWLOC_OK" = "x1"],
 				[
 				 AC_DEFINE([HAVE_HWLOC], [1], [Define hardware topology support])
 				 AC_SUBST(HWLOC_LDFLAGS, [-lhwloc])
+				 AC_SUBST(HWLOC_DEP, [hwloc])
 				],
 				[AC_MSG_WARN([Hwloc library not found ! - Disabling HLS])])
 
@@ -106,6 +107,7 @@ AS_IF([test "x$LIBELF_OK" = "x1"],
 				[
 				 AC_DEFINE([HAVE_LIBELF], [1], [Define libelf support])
 				 AC_SUBST(LIBELF_LDFLAGS, [-lelf])
+				 AC_SUBST(LIBELF_DEP, [libelf])
 				],
 				[AC_MSG_WARN([Libelf library not found ! - Disabling optimized introspection])])
 
