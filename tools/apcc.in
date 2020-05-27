@@ -134,4 +134,7 @@ do
 	esac
 done
 
+# as multiple case may enable/disable privatisation & plugin independently
+# a last check disable the plugin insertion if privatisation is not requested
+test -z "$AP_ENABLED_FLAG" && AP_PLUGIN_FLAG=""
 eval $AP_PRE_CMD ${AP_CC} ${AP_COMPILE} ${AP_ENABLED_FLAG} ${AP_PLUGIN_FLAG} $AP_DOWNSTREAM_ARGS ${AP_LINK} $AP_POST_CMD
