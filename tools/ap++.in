@@ -30,6 +30,7 @@ AP_COMPILE="-L${lib_inst} -L${lib64_inst} -Wl,-rpath=${lib_inst} -Wl,-rpath=${li
 AP_LINK="-lextls"
 AP_DOWNSTREAM_ARGS=""
 
+test -z "$AP_ROOT" && . "$bin_inst/autopriv.sh"
 test -z "$AP_CXX" && AP_CXX=@CXX@
 
 #

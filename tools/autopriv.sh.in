@@ -1,6 +1,6 @@
 #!/bin/sh
 
-prefix=@prefix@
+AP_ROOT=@prefix@
 
 prune_prev_path()
 {
@@ -9,13 +9,13 @@ prune_prev_path()
 	echo "$1" | awk -v RS=: -v ORS=: '/'"$prev"'/ {next} {print}' | sed 's/:*$//'
 }
 
-PATH=`prune_prev_path "$PATH" "$prefix"`
-INCLUDE_PATH=`prune_prev_path "$INCLUDE_PATH" "$prefix"`
-CPATH=`prune_prev_path "$CPATH" "$prefix"`
-LD_LIBRARY_PATH=`prune_prev_path "$LD_LIBRARY_PATH" "$prefix"`
-LIBRARY_PATH=`prune_prev_path "$LIBRARRY_PATH" "$prefix"`
-MANPATH=`prune_prev_path "$MANPATH" "$prefix"`
-PKG_CONFIG_PATH=`prune_prev_path "$PKG_CONFIG_PATH" "$prefix"`
+PATH=`prune_prev_path "$PATH" "$AP_ROOT"`
+INCLUDE_PATH=`prune_prev_path "$INCLUDE_PATH" "$AP_ROOT"`
+CPATH=`prune_prev_path "$CPATH" "$AP_ROOT"`
+LD_LIBRARY_PATH=`prune_prev_path "$LD_LIBRARY_PATH" "$AP_ROOT"`
+LIBRARY_PATH=`prune_prev_path "$LIBRARRY_PATH" "$AP_ROOT"`
+MANPATH=`prune_prev_path "$MANPATH" "$AP_ROOT"`
+PKG_CONFIG_PATH=`prune_prev_path "$PKG_CONFIG_PATH" "$AP_ROOT"`
 
 
 if test -n "$AUTOPRIV_PRUNE"; then
@@ -26,10 +26,12 @@ if test -n "$AUTOPRIV_PRUNE"; then
 	export MANPATH
 	export PKG_CONFIG_PATH
 else
-	export PATH=$prefix/bin:$PATH
-	export INCLUDE_PATH=$prefix/include:$INCLUDE_PATH
-	export CPATH=$prefix/include:$CPATH
-	export LD_LIBRARY_PATH=$prefix/lib:$prefix/lib64:$LD_LIBRARY_PATH
-	export MANPATH=$prefix/man:$MANPATH
-	export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
+	export AP_ROOT
+	export PATH=$AP_ROOT/bin:$PATH
+	export INCLUDE_PATH=$AP_ROOT/include:$INCLUDE_PATH
+	export CPATH=$AP_ROOT/include:$CPATH
+	export LD_LIBRARY_PATH=$AP_ROOT/lib:$AP_ROOT/lib64:$LD_LIBRARY_PATH
+	export MANPATH=$AP_ROOT/man:$MANPATH
+	export PKG_CONFIG_PATH=$AP_ROOT/lib/pkgconfig:$PKG_CONFIG_PATH
 fi
+
