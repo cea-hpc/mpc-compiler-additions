@@ -1,0 +1,125 @@
+#!/bin/sh
+
+is_gcc_priv()
+{
+	test "x@EXTLS_COMPILER_FAMILY^" = "xgcc"
+}
+
+assert_gcc()
+{
+	if test ! "x@EXTLS_COMPILER_FAMILY@" = "xgcc"; then
+		echo "Option requires autopriv patched GCC: $1 not suported"
+	fi
+}
+
+usage()
+{
+	printf "Usage: $0 [-fmpc-privatize] file\n"
+	printf "    -f[no-]mpc-privatize        Enable/disable automatic privatization.\n"
+	if is_gcc_priv; then
+		printf "    -f[no-]mpc-tlsopt           Enable/disable linker-optimized TLS.\n"
+		printf "    -fno-priv-file=*            Comma separated list of files not to privatize.\n"
+		printf "    -fno-priv-var=*             Comma separated list of variables not to privatize.\n"
+	fi
+	printf "    -show|--show                Print command line instead of running it.\n"
+	printf "    -ap-h | --ap-help           Print this help.\n"
+	printf "    <any GCC options>           Any GCC-compatible option will be forwarded.\n"
+	printf "\n"
+	printf "Useful environment variables:\n"
+	printf "    - AP_CXX                    Define the C++ compiler\n"
+	if is_gcc_priv; then
+		printf "    - AP_UNPRIVATIZED_FILES     Same as '-fno-priv-file'\n"
+		printf "    - AP_UNPRIVATIZED_VARS      Same as '-fno-priv-var'\n"
+	fi
+}
+
+inst=@prefix@
+
+bin_inst=${inst}/bin
+lib_inst=${inst}/lib
+lib64_inst=${inst}/lib64
+
+AP_PRE_CMD=""
+AP_POST_CMD=""
+AP_ENABLED_FLAG=""
+AP_COMPILE="-L${lib_inst} -L${lib64_inst} -Wl,-rpath=${lib_inst} -Wl,-rpath=${lib64_inst}"
+AP_LINK="-lextlsgetopt -lextls"
+AP_DOWNSTREAM_ARGS=""
+
+test -z "$AP_ROOT" && . "$bin_inst/autopriv.sh"
+test -z "$AP_CXX" && AP_CXX=@CXX@
+
+#
+# Retro Compatibility
+#
+
+# Variable comes from env
+# shellcheck disable=SC2153
+if test -n "$MPC_UNPRIVATIZED_FILES"; then
+	AP_UNPRIVATIZED_FILES="$AP_UNPRIVATIZED_FILES:$MPC_UNPRIVATIZED_FILES"
+fi
+
+# Variable comes from env
+# shellcheck disable=SC2153
+if test -n "$MPC_UNPRIVATIZED_VARS"; then
+	AP_UNPRIVATIZED_VARS="$AP_UNPRIVATIZED_VARS:$MPC_UNPRIVATIZED_VARS"
+fi
+
+#
+# Arg Parsing
+#
+
+extract_arg_value()
+{
+	arg_value="$(echo "$1" | cut -d '=' -f 2)"
+}
+
+for arg in "$@";
+do
+	case $arg in
+		-fmpc-privatize|-fmpcprivatize)
+			export MPC_DYN_PRIV_ENABLED=1
+			AP_ENABLED_FLAG="@EXTLS_PRIV_FLAG@ -DAUTOPRIV_ENABLED"
+			;;
+		-fnompcprivatize|-fno-mpcprivatize|-fno-mpc-privatize|-fmpc-noprivatize|-fmpc-no-privatize|-fmpcnoprivatize)
+			unset MPC_DYN_PRIV_ENABLED
+			AP_ENABLED_FLAG=""
+			;;
+		-fmpc-tlsopt|-fmpctlsopt|-ftls-opt|-ftlsopt)
+			assert_gcc "$arg"
+			unset MPC_DISABLE_TLS_OPT
+			;;
+		-fmpc-notlopt|-fmpcnotlsopt|-fno-mpctlsopt|-fnompctlsopt|-fnotlsopt|-fno-tlsopt)
+			assert_gcc "$arg"
+			export MPC_DISABLE_TLS_OPT=1
+			;;
+		-fno-priv-file=*|-fnopriv-file=*|-fno-privfile=*|-fnoprivfile=*)
+			assert_gcc "$arg"
+			extract_arg_value "$arg"
+			# Change comma to colon
+			arg_value="$(echo "$arg_value" | sed "s/,/:/g")"
+			export AP_UNPRIVATIZED_FILES="${AP_UNPRIVATIZED_FILES}:$arg_value"
+			;;
+		-fno-priv-var=*|-fnopriv-var=*|-fno-privvar=*|-fnoprivvar=*)
+			assert_gcc "$arg"
+			extract_arg_value "$arg"
+			# Change comma to colon
+			arg_value="$(echo "$arg_value" | sed "s/,/:/g")"
+			export AP_UNPRIVATIZED_VARS="${AP_UNPRIVATIZED_VARS}:$arg_value"
+			;;
+		-ap-h|--ap-help)
+			usage
+			exit 0
+			;;
+		-show|--show)
+			AP_PRE_CMD="echo"
+			AP_POST_CMD=""
+			;;
+		*)
+			modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
+			AP_DOWNSTREAM_ARGS="$AP_DOWNSTREAM_ARGS $modarg"
+			;;
+	esac
+done
+
+eval ${AP_PRE_CMD} ${AP_CXX} ${AP_COMPILE} ${AP_ENABLED_FLAG} ${AP_PLUGIN_FLAG} $AP_DOWNSTREAM_ARGS ${AP_LINK} ${AP_POST_CMD}

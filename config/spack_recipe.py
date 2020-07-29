@@ -24,11 +24,11 @@ from spack import *
 
 
 def _gcc_patch_variants():
-    return {"workshare", "autopriv", }
+    return {@VARIANTS_LIST@}
 
 
 def _gcc_version():
-    return {"7.4.0", "7.3.0", }
+    return {@GCC_VERSIONS_LIST@}
 
 
 class Autopriv(AutotoolsPackage):
@@ -37,8 +37,8 @@ class Autopriv(AutotoolsPackage):
 
     homepage = "http://mpc.hpcframework.com"
     url = "https://france.paratools.com/autopriv/autopriv-0.5.0.tar.gz"
-    version('0.6.0',
-            sha256='79571cf780221bb2061d46aaf1247aa541083fa488866983fb7bc552bc11fd65')
+    version('@AUTOPRIV_VERSION@',
+            sha256='@SHA256SUM@')
 
     depends_on("hwloc@1.11.11")
     depends_on("openpa")
@@ -51,14 +51,9 @@ class Autopriv(AutotoolsPackage):
     variant("gcc_version", default="7.3.0",
             description='GCC version to be deployed',
             values=_gcc_version())
-    
-    variant("autopriv", default=True, description="Enable autopriv support")
-    variant("workshare", default=True, description="Enable workshare support")
+    @SPACK_VARIANT_FLAGS@
 
-    
-    conflicts("+workshare",
-              when="gcc_version=7.4.0",
-              msg="gcc_version=7.4.0 is not compatible with variant workshare")
+    @GCC_VERSION_CONFLICTS@
 
     def configure_args(self):
         spec = self.spec
@@ -75,10 +70,6 @@ class Autopriv(AutotoolsPackage):
         else:
             options.extend(['--gcc-version={}'.format(spec.variants['gcc_version'].value)])
 
-        
-        if spec.satisfies("-autopriv"):
-            options.extend(['--disable-autopriv'])
-        if spec.satisfies("-workshare"):
-            options.extend(['--disable-workshare'])
+        @SPACK_VARIANT_CONF_FLAGS@
 
         return options

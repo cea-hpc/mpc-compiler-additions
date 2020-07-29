@@ -3,9 +3,8 @@
 stages:
   - Initialization
   - Setup
-  - Tests
-  - Wrappers
-  - Not supported
+  - Privatization Tests
+  - Workshare Tests
   - Finalization
 
 .run_by_main: &run_by_main
@@ -36,7 +35,7 @@ Env Sanitize:
   <<: *run_by_main
   stage: Initialization
   script:
-    - mkdir -p $HOME/GL_$CI_PIPELINE_ID/{build,install,test}
+    - mkdir -p $HOME/GL_$CI_PIPELINE_ID/{build,build-nogcc,install,test}
     - echo "Environment Cleaned !"
 
 # post-actions to cleanup the machine after the run
@@ -52,17 +51,6 @@ Artifact Deletion:
     - $HOME/clean_old_pipelines.sh
     - rm -rf $HOME/$CI_PIPELINE_ID/
 
-Resource Relinquishing:
-  <<: *run_by_main
-  stage: Finalization
-  allow_failure: true
-  when: always
-  script:
-  - scancel --name GL-build_$CI_PIPELINE_ID
-  # Ugly, our way to kill allocations from tests
-  - scancel -u $USER
-
-
 ############################
 ####### BUILD STAGE ########
 ############################
@@ -71,39 +59,53 @@ Build:
   <<: *run_by_main
   stage: Setup
   script:
-  - srun -J GL-build_$CI_PIPELINE_ID -N 1 -c 8 ${CI_PROJECT_DIR}/autopriv_deploy.sh -i $HOME/GL_$CI_PIPELINE_ID/install -b $HOME/GL_$CI_PIPELINE_ID/build -j8 -s -o "--enable-debug --enable-color"
+  - cd $HOME/GL_$CI_PIPELINE_ID/build
+  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install --enable-debug --enable-color
+  - make -j8
 
 Build-nogcc:
   <<: *run_by_main
   stage: Setup
   script:
-  - srun -J GL-build_$CI_PIPELINE_ID -N 1 -c 8 ${CI_PROJECT_DIR}/autopriv_deploy.sh -i $HOME/GL_$CI_PIPELINE_ID/install-nogcc -b $HOME/GL_$CI_PIPELINE_ID/build-nogcc -j8 -s -o "--enable-debug --enable-color" -d
+  - cd $HOME/GL_$CI_PIPELINE_ID/build-nogcc
+  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install-nogcc --enable-debug --enable-color --disable-gcc
+  - make -j8
 
 No-privatization:
   <<: *run_by_main
-  stage: Tests
+  stage: Privatization Tests
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build/autopriv
+  - cd $HOME/GL_$CI_PIPELINE_ID/build/BUILD_autopriv
   - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
 
 With-privatization:
   <<: *run_by_main
-  stage: Tests
+  stage: Privatization Tests
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build/autopriv
+  - cd $HOME/GL_$CI_PIPELINE_ID/build/BUILD_autopriv
   - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
 
 Compil Wrappers:
   <<: *run_by_main
-  stage: Wrappers
+  stage: Privatization Tests
   script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build/autopriv
+  - cd $HOME/GL_$CI_PIPELINE_ID/build/BUILD_autopriv
   - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
 
 Not supported:
   <<: *run_by_main
-  stage: Not supported
+  stage: Privatization Tests
   allow_failure: true
   script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build/autopriv
+  - cd $HOME/GL_$CI_PIPELINE_ID/build/BUILD_autopriv
   - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
+
+
+
+Simple Tests:
+  <<: *run_by_main
+  stage: Workshare Tests
+  allow_failure: false
+  script: 
+  - cd $HOME/GL_$CI_PIPELINE_ID/build/BUILD_workshare
+  - make check -C tests/simple VERBOSE=1

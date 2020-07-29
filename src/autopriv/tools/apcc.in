@@ -1,0 +1,189 @@
+#!/bin/sh
+
+has_dynpriv()
+{
+	test -n "@AUTOPRIV_DYNPRIV@"
+}
+
+assert_dynpriv()
+{
+	if test -z "@AUTOPRIV_DYNPRIV@"; then
+		echo "Dynamic privatization support missing: $1 not supported"
+		exit 1
+	fi
+}
+
+is_gcc_priv()
+{
+	test "x@EXTLS_COMPILER_FAMILY^" = "xgcc"
+}
+
+assert_gcc()
+{
+	if test ! "x@EXTLS_COMPILER_FAMILY@" = "xgcc"; then
+		echo "Option requires autopriv patched GCC: $1 not suported"
+	fi
+}
+
+usage()
+{
+	printf "Usage: apcc [-fmpc-privatize] file\n"
+	printf "    -f[no-]mpc-privatize        Enable/disable automatic privatization.\n"
+	if is_gcc_priv; then
+		printf "    -f[no-]mpc-tlsopt           Enable/disable linker-optimized TLS.\n"
+		printf "    -fno-priv-file=*            Comma separated list of files not to privatize.\n"
+		printf "    -fno-priv-var=*             Comma separated list of variables not to privatize.\n"
+	fi
+	if has_dynpriv; then
+		printf "    -f[no]mpc-plugin            Enable/disable C dynamic initialization.\n"
+		printf "    -f[no]mpc-dyn-insert        Enable/disable the 'wrapped TLS' dyn model.\n"
+		printf "    -f[no]dump-dyn-tree         Enable/disable printing the dyn-related AST.\n"
+		printf "    -f[no]mpc-dyn-debug         Enable/disable debug printf in TLS wrappers.\n"
+	fi
+	printf "    -show|--show                Print command line instead of running it.\n"
+	printf "    -ap-h | --ap-help           Print this help.\n"
+	printf "    <any compiler options>           Any compiler-compatible option will be forwarded.\n"
+	printf "\n"
+	printf "Useful environment variables:\n"
+	printf "    - AP_CC                     Define the C compiler\n"
+	if has_dynpriv; then
+		printf "    - MPC_DYN_PRIV_DUMP         Same as '-fdump-dyn-tree'\n"
+		printf "    - MPC_DYN_PRIV_INSERT       Same as '-fmpc-dyn-insert'\n"
+		printf "    - MPC_DYN_PRIV_DEBUG        Same as '-fmpc-dyn-debug'\n"
+	fi
+	if is_gcc_priv; then
+		printf "    - AP_UNPRIVATIZED_FILES     Same as '-fno-priv-file'\n"
+		printf "    - AP_UNPRIVATIZED_VARS      Same as '-fno-priv-var'\n"
+	fi
+}
+
+inst=@prefix@
+
+bin_inst=${inst}/bin
+lib_inst=${inst}/lib
+lib64_inst=${inst}/lib64
+
+AP_PRE_CMD=""
+AP_POST_CMD=""
+AP_ENABLED_FLAG=""
+
+if has_dynpriv; then
+	AP_PLUGIN_FLAG="-fplugin=${lib_inst}/dynpriv.so"
+fi
+
+AP_COMPILE="-L${lib_inst} -L${lib64_inst} -Wl,-rpath=${lib_inst} -Wl,-rpath=${lib64_inst}"
+AP_LINK="-lextlsgetopt -lextls"
+AP_DOWNSTREAM_ARGS=""
+
+test -z "$AP_ROOT" && . "$bin_inst/autopriv.sh"
+test -z "$AP_CC" && AP_CC=@CC@
+
+#
+# Retro Compatibility
+#
+
+# Variable comes from env
+# shellcheck disable=SC2153
+if test -n "$MPC_UNPRIVATIZED_FILES"; then
+	AP_UNPRIVATIZED_FILES="$AP_UNPRIVATIZED_FILES:$MPC_UNPRIVATIZED_FILES"
+fi
+
+# Variable comes from env
+# shellcheck disable=SC2153
+if test -n "$MPC_UNPRIVATIZED_VARS"; then
+	AP_UNPRIVATIZED_VARS="$AP_UNPRIVATIZED_VARS:$MPC_UNPRIVATIZED_VARS"
+fi
+
+#
+# Arg Parsing
+#
+
+extract_arg_value()
+{
+	arg_value="$(echo "$1" | cut -d '=' -f 2)"
+}
+
+for arg in "$@";
+do
+	case $arg in
+		-fmpc-privatize|-fmpcprivatize)
+			export MPC_DYN_PRIV_ENABLED=1
+			AP_ENABLED_FLAG="@EXTLS_PRIV_FLAG@ -DAUTOPRIV_ENABLED"
+			;;
+		-fnompcprivatize|-fno-mpcprivatize|-fno-mpc-privatize|-fmpc-noprivatize|-fmpc-no-privatize|-fmpcnoprivatize)
+			unset MPC_DYN_PRIV_ENABLED
+			AP_ENABLED_FLAG=""
+			;;
+		-fmpc-tlsopt|-fmpctlsopt|-ftls-opt|-ftlsopt)
+			assert_gcc "$arg"
+			unset MPC_DISABLE_TLS_OPT
+			;;
+		-fmpc-notlopt|-fmpcnotlsopt|-fno-mpctlsopt|-fnompctlsopt|-fnotlsopt|-fno-tlsopt)
+			assert_gcc "$arg"
+			export MPC_DISABLE_TLS_OPT=1
+			;;
+		-fmpc-plugin|-fmpcplugin)
+			assert_dynpriv "$arg"
+			AP_PLUGIN_FLAG="-fplugin=${lib_inst}/dynpriv.so"
+			;;
+		-fnompc-plugin|-fno-mpc-plugin|-fnompcplugin)
+			assert_dynpriv "$arg"
+			AP_PLUGIN_FLAG=""
+			;;
+		-ap-h|--ap-help)
+			usage
+			exit 0
+			;;
+		-fno-priv-file=*|-fnopriv-file=*|-fno-privfile=*|-fnoprivfile=*)
+			assert_gcc "$arg"
+			extract_arg_value "$arg"
+			# Change comma to colon
+			arg_value="$(echo "$arg_value" | sed "s/,/:/g")"
+			export AP_UNPRIVATIZED_FILES="${AP_UNPRIVATIZED_FILES}:$arg_value"
+			;;
+		-fno-priv-var=*|-fnopriv-var=*|-fno-privvar=*|-fnoprivvar=*)
+			assert_gcc "$arg"
+			extract_arg_value "$arg"
+			# Change comma to colon
+			arg_value="$(echo "$arg_value" | sed "s/,/:/g")"
+			export AP_UNPRIVATIZED_VARS="${AP_UNPRIVATIZED_VARS}:$arg_value"
+			;;
+		-fmpc-dyndebug|-fmpcdyndebug|-fmpc-dyn-debug)
+			assert_dynpriv "$arg"
+			export MPC_DYN_PRIV_DEBUG=1
+			;;
+		-fno-mpc-dyn-debug|-fno-mpc-dyndebug|-fno-mpcdyndebug|-fnompcdyndebug)
+			assert_dynpriv "$arg"
+			unset MPC_DYN_PRIV_DEBUG
+			;;
+		-fmpc-dyninsert|-fmpcdyninsert|-fmpc-dyn-insert)
+			assert_dynpriv "$arg"
+			export MPC_DYN_PRIV_INSERT=1
+			;;
+		-fno-mpc-dyn-insert|-fno-mpc-dyninsert|-fno-mpcdyninsert|-fnompcdyninsert)
+			assert_dynpriv "$arg"
+			unset MPC_DYN_PRIV_INSERT
+			;;
+		-fdump-dyn-tree|-fdump-dyntree|-fdumpdyntree)
+			assert_dynpriv "$arg"
+			export MPC_DYN_PRIV_DUMP=1
+			;;
+		-fno-dump-dyn-tree|-fno-dump-dyntree|-fno-dumpdyntree|-fnodumpdyntree)
+			assert_dynpriv "$arg"
+			unset MPC_DYN_PRIV_DUMP
+			;;
+		-show|--show)
+			AP_PRE_CMD="echo"
+			AP_POST_CMD=""
+			;;
+		*)
+			modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
+			AP_DOWNSTREAM_ARGS="$AP_DOWNSTREAM_ARGS $modarg"
+			;;
+	esac
+done
+
+# as multiple case may enable/disable privatisation & plugin independently
+# a last check disable the plugin insertion if privatisation is not requested
+test -z "$AP_ENABLED_FLAG" && AP_PLUGIN_FLAG=""
+eval $AP_PRE_CMD ${AP_CC} ${AP_COMPILE} ${AP_ENABLED_FLAG} ${AP_PLUGIN_FLAG} $AP_DOWNSTREAM_ARGS ${AP_LINK} $AP_POST_CMD

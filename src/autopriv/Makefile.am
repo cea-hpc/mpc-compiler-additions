@@ -1,0 +1,9 @@
+ACLOCAL_AMFLAGS=-I config-aux/m4
+SUBDIRS=@EXTLS@ @AUTOPRIV_DYNPRIV@ tools 
+
+if HAVE_GETOPT
+SUBDIRS+=getopt
+endif
+
+
+SUBDIRS+=tests
