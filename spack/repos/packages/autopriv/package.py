@@ -40,7 +40,7 @@ class Autopriv(AutotoolsPackage):
     version('0.6.2',
             sha256='6054c9531f0545f0ce843fad03a1c6852305bf95b84e2971811b6c3ae5621a77')
 
-    depends_on("hwloc@1.11.11")
+    depends_on("hwloc@2.2.0")
     depends_on("openpa")
     depends_on("libelf", when="+libelf")
 
