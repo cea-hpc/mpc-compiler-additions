@@ -2,7 +2,7 @@
 #### PREAMBLE ####
 ##################
 AC_PREREQ([2.69])                                    # Minimum Autoconf Version
-m4_define(AUTOPRIV_VERSION, m4_esyscmd_s([. $PWD/.autopriv_version]))
+m4_define(AUTOPRIV_VERSION, m4_esyscmd_s([. $PWD/../../.autopriv_version]))
 AC_INIT([AUTOPRIV], [AUTOPRIV_VERSION], [marc.perache@cea.fr])  # Init project configuration
 AC_CONFIG_AUX_DIR([config-aux])                      # Autotools config files
 AC_CONFIG_MACRO_DIR([config-aux/m4])                 # dependencies macros files
