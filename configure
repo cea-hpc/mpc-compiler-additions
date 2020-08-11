@@ -100,7 +100,7 @@ for arg in "$@" ; do
 				CONTRIB_OPTIONS="--enable-color ${CONTRIB_OPTIONS}"
 			;;
 			--opts=*)
-				CONTRIB_OPTIONS=$(echo "A$arg" | sed -e 's/A--opts=//g')
+				CONTRIB_OPTIONS=$(echo "A$arg" | sed -e 's/A--opts=//g' | xargs)
 				;;
 			--gcc-version=*)
 				GCC_VERSION=$(echo "A$arg" | sed -e 's/A--gcc-version=//g')
@@ -248,7 +248,6 @@ do
 				VARIANT_DEPS="gcc ${VARIANT_DEPS}"
 				EXTRA_ARGS="${EXTRA_ARGS} CC=${PREFIX}/bin/ap-gcc CXX=${PREFIX}/bin/ap-g++ FC=${PREFIX}/bin/ap-gfortran CXXFLAGS='-I${PWD}/BUILD_gcc/gmp/'"
 			fi
-			echo "===> ${AUTOPRIV_DEPS_ARGS}"
 		;;
 		workshare)
 			if test "x${COMPILE_GCC}" = "xyes"; then
