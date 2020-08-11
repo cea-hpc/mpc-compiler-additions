@@ -259,7 +259,7 @@ do
 	esac
 
 	if test -d "${SCRIPTPATH}/src/${variant}/"; then
-		makefile_configure_package "${variant}" "${SCRIPTPATH}/src/${variant}/" "${VARIANT_DEPS}" "--prefix=$PREFIX ${CONTRIB_OPTIONS} ${EXTRA_ARGS}"
+		makefile_configure_package "${variant}" "${SCRIPTPATH}/src/${variant}/" "${VARIANT_DEPS}" "--prefix=$PREFIX" ${CONTRIB_OPTIONS} ${EXTRA_ARGS}
 		makefile_set_as_main_package "${variant}"
 		BUILT_VARIANTS="$variant ${BUILT_VARIANTS}"
 	fi
