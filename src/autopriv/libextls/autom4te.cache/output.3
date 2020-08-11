@@ -638,6 +638,10 @@ LTLIBOBJS
 LIB@&t@OBJS
 DEBUG_MODE_FALSE
 DEBUG_MODE_TRUE
+LIBELF_DEP
+LIBELF_LDFLAGS
+HWLOC_LDFLAGS
+HWLOC_DEP
 HAVE_DOXYGEN_FALSE
 HAVE_DOXYGEN_TRUE
 DOXYGEN
@@ -735,6 +739,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -773,7 +778,6 @@ with_openpa
 with_libelf
 enable_debug
 enable_color
-enable_hls
 '
       ac_precious_vars='build_alias
 host_alias
@@ -823,6 +827,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1075,6 +1080,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1212,7 +1226,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1365,6 +1379,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1416,7 +1431,6 @@ Optional Features:
   --disable-libtool-lock  avoid locking (might break parallel builds)
   --enable-debug          Enable library debug mode (disabled by default)
   --enable-color          Enable library color mode (disabled by default)
-  --disable-hls           Disable HLS support (enabled by default)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -6233,11 +6247,8 @@ _LT_EOF
   test $ac_status = 0; }; then
     # Now try to grab the symbols.
     nlist=conftest.nm
-    if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$NM conftest.$ac_objext \| "$lt_cv_sys_global_symbol_pipe" \> $nlist\""; } >&5
-  (eval $NM conftest.$ac_objext \| "$lt_cv_sys_global_symbol_pipe" \> $nlist) 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; } && test -s "$nlist"; then
+    $ECHO "$as_me:$LINENO: $NM conftest.$ac_objext | $lt_cv_sys_global_symbol_pipe > $nlist" >&5
+    if eval "$NM" conftest.$ac_objext \| "$lt_cv_sys_global_symbol_pipe" \> $nlist 2>&5 && test -s "$nlist"; then
       # Try sorting and uniquifying the output.
       if sort "$nlist" | uniq > "$nlist"T; then
 	mv -f "$nlist"T "$nlist"
@@ -12146,8 +12157,8 @@ CC=$lt_save_CC
 
                                               # Init libtool
 
-#AC_PROG_LIBTOOL
-#AM_PROG_LIBTOOL
+
+
 
 #########################
 #### GENERATED FILES ####
@@ -12156,7 +12167,7 @@ ac_config_files="$ac_config_files Makefile"
 
 ac_config_files="$ac_config_files src/Makefile"
 
-ac_config_files="$ac_config_files doc/Makefile tools/Makefile tools/libextls.sh"
+ac_config_files="$ac_config_files doc/Makefile tools/Makefile tools/libextls.sh tools/extls.pc"
 
 
 ###################################################################################
@@ -12243,13 +12254,26 @@ if test "${with_hwloc+set}" = set; then :
 fi
 
 
-if test -n "x$with_hwloc" ; then
+if test -n "$with_hwloc" ; then
 		if test ! -d $with_hwloc; then
 			as_fn_error $? "--with-hwloc path does not point to a directory" "$LINENO" 5
 		fi
+		HWLOC_LDFLAGS="-lhwloc"
 		LIBS="-L$with_hwloc/lib -L$with_hwloc/lib64 $LIBS"
 		CFLAGS="-I$with_hwloc/include $CFLAGS"
+		CPPFLAGS="-I$with_hwloc/include $CPPFLAGS"
+else
+	# First try with PKG config
+	PKG_CHECK_MODULES(HWLOC, hwloc, pkg_found=1, pkg_found=0)
+
+	if test "x$pkg_found" = "x1"
+	then
+		LIBS="${HWLOC_LDFLAGS} $LIBS"
+		CFLAGS="-I${HWLOC_CFLAGS} $CFLAGS"
+		CPPFLAGS="-I${HWLOC_CFLAGS} $CPPFLAGS"
+	fi
 fi
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing hwloc_topology_init" >&5
 $as_echo_n "checking for library containing hwloc_topology_init... " >&6; }
 if ${ac_cv_search_hwloc_topology_init+:} false; then :
@@ -12310,12 +12334,20 @@ fi
 
 if test "x$HWLOC_OK" = "x1"; then :
   
-$as_echo "@%:@define HAVE_TOPOLOGY 1" >>confdefs.h
+				
+$as_echo "@%:@define HAVE_HWLOC 1" >>confdefs.h
 
+										HWLOC_DEP=hwloc
+
+				
+				HWLOC_DEP=hwloc
+
+				
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Hwloc library not found ! - Disabling HLS" >&5
 $as_echo "$as_me: WARNING: Hwloc library not found ! - Disabling HLS" >&2;}
 fi
+
 
 ##################
 ##### OpenPA #####
@@ -12327,14 +12359,27 @@ if test "${with_openpa+set}" = set; then :
 fi
 
 
-if test -n "x$with_openpa" ; then
+if test -n "$with_openpa" ; then
 		if test ! -d $with_openpa; then
 			as_fn_error $? "--with-openpa path does not point to a directory" "$LINENO" 5
 		fi
 		LIBS="-L$with_openpa/lib -L$with_openpa/lib64 $LIBS"
 		CFLAGS="-I$with_openpa/include $CFLAGS"
-		CPPFLAGS="-I$with_openpa/include $PPCFLAGS"
+		CPPFLAGS="-I$with_openpa/include $CPPCFLAGS"
+else
+
+	# First try with PKG config
+	PKG_CHECK_MODULES(OPENPA, openpa, pkg_found=1, pkg_found=0)
+
+	if test "x$pkg_found" = "x1"
+	then
+		LIBS="${OPENPA_LDFLAGS}"
+		CFLAGS="-I${OPENPA_CFLAGS} $CFLAGS"
+		CPPFLAGS="-I${OPENPA_CFLAGS} $CPPFLAGS"
+	fi
+
 fi
+
 ac_fn_c_check_header_mongrel "$LINENO" "opa_config.h" "ac_cv_header_opa_config_h" "$ac_includes_default"
 if test "x$ac_cv_header_opa_config_h" = xyes; then :
   OPA_OK=1
@@ -12364,31 +12409,97 @@ if test "${with_libelf+set}" = set; then :
 fi
 
 
-if test -n "x$with_libelf" ; then
+if test -n "$with_libelf" ; then
 		if test ! -d $with_libelf; then
 			as_fn_error $? "--with-libelf path does not point to a directory" "$LINENO" 5
 		fi
+		LIBELF_LDFLAGS="-lelf"
 		LIBS="-L$with_libelf/lib -L$with_libelf/lib64 $LIBS"
 		CFLAGS="-I$with_libelf/include $CFLAGS"
+else
+
+	# First try with PKG config
+	PKG_CHECK_MODULES(LIBELF, libelf, pkg_found=1, pkg_found=0)
+
+	if test "x$pkg_found" = "x1"
+	then
+		LIBS="${LIBELF_LDFLAGS} $LIBS"
+		CFLAGS="-I${LIBELF_CFLAGS} $CFLAGS"
+		CPPFLAGS="-I${LIBELF_CFLAGS} $CPPFLAGS"
+	fi
 fi
 
-ac_fn_c_check_header_mongrel "$LINENO" "libelf.h" "ac_cv_header_libelf_h" "$ac_includes_default"
-if test "x$ac_cv_header_libelf_h" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing elf_version" >&5
+$as_echo_n "checking for library containing elf_version... " >&6; }
+if ${ac_cv_search_elf_version+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char elf_version ();
+int
+main ()
+{
+return elf_version ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' elf; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_elf_version=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_elf_version+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_elf_version+:} false; then :
+  
+else
+  ac_cv_search_elf_version=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_elf_version" >&5
+$as_echo "$ac_cv_search_elf_version" >&6; }
+ac_res=$ac_cv_search_elf_version
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   LIBELF_OK=1
 else
   LIBELF_OK=0
 fi
 
-
 if test "x$LIBELF_OK" = "x1"; then :
   
+				
 $as_echo "@%:@define HAVE_LIBELF 1" >>confdefs.h
 
+				
+				LIBELF_DEP=libelf
+
+				
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Libelf library not found ! - Disabling optimized introspection" >&5
 $as_echo "$as_me: WARNING: Libelf library not found ! - Disabling optimized introspection" >&2;}
 fi
-
 
 ##################
 ##### CUSTOM #####
@@ -12419,20 +12530,6 @@ if test "x$enable_color" = "xyes"; then :
   
 	   
 $as_echo "@%:@define EXTLS_COLOR_ENABLED 1" >>confdefs.h
-
-		 
-fi
-
-
-@%:@ Check whether --enable-hls was given.
-if test "${enable_hls+set}" = set; then :
-  enableval=$enable_hls; 
-fi
-
-if test "x$enable_hls" != "xno"; then :
-  
-	   
-$as_echo "@%:@define ENABLE_HLS 1" >>confdefs.h
 
 		 
 fi
@@ -13467,6 +13564,7 @@ do
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "tools/Makefile") CONFIG_FILES="$CONFIG_FILES tools/Makefile" ;;
     "tools/libextls.sh") CONFIG_FILES="$CONFIG_FILES tools/libextls.sh" ;;
+    "tools/extls.pc") CONFIG_FILES="$CONFIG_FILES tools/extls.pc" ;;
     "doc/Doxyfile") CONFIG_FILES="$CONFIG_FILES doc/Doxyfile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

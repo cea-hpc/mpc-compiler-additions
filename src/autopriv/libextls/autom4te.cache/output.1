@@ -640,17 +640,8 @@ DEBUG_MODE_FALSE
 DEBUG_MODE_TRUE
 LIBELF_DEP
 LIBELF_LDFLAGS
-LIBELF_LIBS
-LIBELF_CFLAGS
-OPENPA_LIBS
-OPENPA_CFLAGS
 HWLOC_LDFLAGS
 HWLOC_DEP
-HWLOC_LIBS
-HWLOC_CFLAGS
-PKG_CONFIG_LIBDIR
-PKG_CONFIG_PATH
-PKG_CONFIG
 HAVE_DOXYGEN_FALSE
 HAVE_DOXYGEN_TRUE
 DOXYGEN
@@ -692,6 +683,7 @@ am__nodep
 AMDEPBACKSLASH
 AMDEP_FALSE
 AMDEP_TRUE
+am__quote
 am__include
 DEPDIR
 OBJEXT
@@ -766,8 +758,7 @@ PACKAGE_VERSION
 PACKAGE_TARNAME
 PACKAGE_NAME
 PATH_SEPARATOR
-SHELL
-am__quote'
+SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
@@ -797,16 +788,7 @@ LDFLAGS
 LIBS
 CPPFLAGS
 LT_SYS_LIBRARY_PATH
-CPP
-PKG_CONFIG
-PKG_CONFIG_PATH
-PKG_CONFIG_LIBDIR
-HWLOC_CFLAGS
-HWLOC_LIBS
-OPENPA_CFLAGS
-OPENPA_LIBS
-LIBELF_CFLAGS
-LIBELF_LIBS'
+CPP'
 
 
 # Initialize some variables set by options.
@@ -1477,20 +1459,6 @@ Some influential environment variables:
   LT_SYS_LIBRARY_PATH 
               User-defined run-time library search path.
   CPP         C preprocessor
-  PKG_CONFIG  path to pkg-config utility
-  PKG_CONFIG_PATH 
-              directories to add to pkg-config's search path
-  PKG_CONFIG_LIBDIR 
-              path overriding pkg-config's built-in search path
-  HWLOC_CFLAGS 
-              C compiler flags for HWLOC, overriding pkg-config
-  HWLOC_LIBS  linker flags for HWLOC, overriding pkg-config
-  OPENPA_CFLAGS 
-              C compiler flags for OPENPA, overriding pkg-config
-  OPENPA_LIBS linker flags for OPENPA, overriding pkg-config
-  LIBELF_CFLAGS 
-              C compiler flags for LIBELF, overriding pkg-config
-  LIBELF_LIBS linker flags for LIBELF, overriding pkg-config
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -2308,7 +2276,7 @@ ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
                  # dependencies macros files
 ac_config_headers="$ac_config_headers config.h"
                         # header-generated config files
-am__api_version='1.16'
+am__api_version='1.15'
 
 # Find a good install program.  We prefer a C program (faster),
 # so one script is as good as another.  But avoid the broken or
@@ -2824,8 +2792,8 @@ MAKEINFO=${MAKEINFO-"${am_missing_run}makeinfo"}
 
 # For better backward compatibility.  To be removed once Automake 1.9.x
 # dies out for good.  For more background, see:
-# <https://lists.gnu.org/archive/html/automake/2012-07/msg00001.html>
-# <https://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
+# <http://lists.gnu.org/archive/html/automake/2012-07/msg00001.html>
+# <http://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
 mkdir_p='$(MKDIR_P)'
 
 # We need awk for the "check" target (and possibly the TAP driver).  The
@@ -2876,7 +2844,7 @@ END
 Aborting the configuration process, to ensure you take notice of the issue.
 
 You can download and install GNU coreutils to get an 'rm' implementation
-that behaves properly: <https://www.gnu.org/software/coreutils/>.
+that behaves properly: <http://www.gnu.org/software/coreutils/>.
 
 If you want to complete the configuration process using your problematic
 'rm' anyway, export the environment variable ACCEPT_INFERIOR_RM_PROGRAM
@@ -3743,45 +3711,45 @@ DEPDIR="${am__leading_dot}deps"
 
 ac_config_commands="$ac_config_commands depfiles"
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether ${MAKE-make} supports the include directive" >&5
-$as_echo_n "checking whether ${MAKE-make} supports the include directive... " >&6; }
-cat > confinc.mk << 'END'
+
+am_make=${MAKE-make}
+cat > confinc << 'END'
 am__doit:
-	@echo this is the am__doit target >confinc.out
+	@echo this is the am__doit target
 .PHONY: am__doit
 END
+# If we don't find an include directive, just comment out the code.
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for style of include used by $am_make" >&5
+$as_echo_n "checking for style of include used by $am_make... " >&6; }
 am__include="#"
 am__quote=
-# BSD make does it like this.
-echo '.include "confinc.mk" # ignored' > confmf.BSD
-# Other make implementations (GNU, Solaris 10, AIX) do it like this.
-echo 'include confinc.mk # ignored' > confmf.GNU
-_am_result=no
-for s in GNU BSD; do
-  { echo "$as_me:$LINENO: ${MAKE-make} -f confmf.$s && cat confinc.out" >&5
-   (${MAKE-make} -f confmf.$s && cat confinc.out) >&5 2>&5
-   ac_status=$?
-   echo "$as_me:$LINENO: \$? = $ac_status" >&5
-   (exit $ac_status); }
-  case $?:`cat confinc.out 2>/dev/null` in @%:@(
-  '0:this is the am__doit target') :
-    case $s in @%:@(
-  BSD) :
-    am__include='.include' am__quote='"' ;; @%:@(
-  *) :
-    am__include='include' am__quote='' ;;
-esac ;; @%:@(
-  *) :
-     ;;
+_am_result=none
+# First try GNU make style include.
+echo "include confinc" > confmf
+# Ignore all kinds of additional output from 'make'.
+case `$am_make -s -f confmf 2> /dev/null` in #(
+*the\ am__doit\ target*)
+  am__include=include
+  am__quote=
+  _am_result=GNU
+  ;;
 esac
-  if test "$am__include" != "#"; then
-    _am_result="yes ($s style)"
-    break
-  fi
-done
-rm -f confinc.* confmf.*
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ${_am_result}" >&5
-$as_echo "${_am_result}" >&6; }
+# Now try BSD make style include.
+if test "$am__include" = "#"; then
+   echo '.include "confinc"' > confmf
+   case `$am_make -s -f confmf 2> /dev/null` in #(
+   *the\ am__doit\ target*)
+     am__include=.include
+     am__quote="\""
+     _am_result=BSD
+     ;;
+   esac
+fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $_am_result" >&5
+$as_echo "$_am_result" >&6; }
+rm -f confinc confmf
 
 @%:@ Check whether --enable-dependency-tracking was given.
 if test "${enable_dependency_tracking+set}" = set; then :
@@ -12296,197 +12264,7 @@ if test -n "$with_hwloc" ; then
 		CPPFLAGS="-I$with_hwloc/include $CPPFLAGS"
 else
 	# First try with PKG config
-	
-
-
-
-
-
-
-if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
-	if test -n "$ac_tool_prefix"; then
-  # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
-set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_path_PKG_CONFIG+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  case $PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  ;;
-esac
-fi
-PKG_CONFIG=$ac_cv_path_PKG_CONFIG
-if test -n "$PKG_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PKG_CONFIG" >&5
-$as_echo "$PKG_CONFIG" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-fi
-if test -z "$ac_cv_path_PKG_CONFIG"; then
-  ac_pt_PKG_CONFIG=$PKG_CONFIG
-  # Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_path_ac_pt_PKG_CONFIG+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  case $ac_pt_PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_ac_pt_PKG_CONFIG="$ac_pt_PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_ac_pt_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  ;;
-esac
-fi
-ac_pt_PKG_CONFIG=$ac_cv_path_ac_pt_PKG_CONFIG
-if test -n "$ac_pt_PKG_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_pt_PKG_CONFIG" >&5
-$as_echo "$ac_pt_PKG_CONFIG" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-  if test "x$ac_pt_PKG_CONFIG" = x; then
-    PKG_CONFIG=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    PKG_CONFIG=$ac_pt_PKG_CONFIG
-  fi
-else
-  PKG_CONFIG="$ac_cv_path_PKG_CONFIG"
-fi
-
-fi
-if test -n "$PKG_CONFIG"; then
-	_pkg_min_version=0.9.0
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking pkg-config is at least version $_pkg_min_version" >&5
-$as_echo_n "checking pkg-config is at least version $_pkg_min_version... " >&6; }
-	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-	else
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-		PKG_CONFIG=""
-	fi
-fi
-
-pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for HWLOC" >&5
-$as_echo_n "checking for HWLOC... " >&6; }
-
-if test -n "$HWLOC_CFLAGS"; then
-    pkg_cv_HWLOC_CFLAGS="$HWLOC_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"hwloc\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "hwloc") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_HWLOC_CFLAGS=`$PKG_CONFIG --cflags "hwloc" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes 
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-if test -n "$HWLOC_LIBS"; then
-    pkg_cv_HWLOC_LIBS="$HWLOC_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"hwloc\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "hwloc") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_HWLOC_LIBS=`$PKG_CONFIG --libs "hwloc" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes 
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-        
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        HWLOC_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "hwloc" 2>&1`
-        else 
-	        HWLOC_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "hwloc" 2>&1`
-        fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$HWLOC_PKG_ERRORS" >&5
-
-	pkg_found=0
-elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-	pkg_found=0
-else
-	HWLOC_CFLAGS=$pkg_cv_HWLOC_CFLAGS
-	HWLOC_LIBS=$pkg_cv_HWLOC_LIBS
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-	pkg_found=1
-fi
+	PKG_CHECK_MODULES(HWLOC, hwloc, pkg_found=1, pkg_found=0)
 
 	if test "x$pkg_found" = "x1"
 	then
@@ -12591,77 +12369,7 @@ if test -n "$with_openpa" ; then
 else
 
 	# First try with PKG config
-	
-pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for OPENPA" >&5
-$as_echo_n "checking for OPENPA... " >&6; }
-
-if test -n "$OPENPA_CFLAGS"; then
-    pkg_cv_OPENPA_CFLAGS="$OPENPA_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"openpa\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "openpa") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_OPENPA_CFLAGS=`$PKG_CONFIG --cflags "openpa" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes 
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-if test -n "$OPENPA_LIBS"; then
-    pkg_cv_OPENPA_LIBS="$OPENPA_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"openpa\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "openpa") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_OPENPA_LIBS=`$PKG_CONFIG --libs "openpa" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes 
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-        
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        OPENPA_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "openpa" 2>&1`
-        else 
-	        OPENPA_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "openpa" 2>&1`
-        fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$OPENPA_PKG_ERRORS" >&5
-
-	pkg_found=0
-elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-	pkg_found=0
-else
-	OPENPA_CFLAGS=$pkg_cv_OPENPA_CFLAGS
-	OPENPA_LIBS=$pkg_cv_OPENPA_LIBS
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-	pkg_found=1
-fi
+	PKG_CHECK_MODULES(OPENPA, openpa, pkg_found=1, pkg_found=0)
 
 	if test "x$pkg_found" = "x1"
 	then
@@ -12711,77 +12419,7 @@ if test -n "$with_libelf" ; then
 else
 
 	# First try with PKG config
-	
-pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for LIBELF" >&5
-$as_echo_n "checking for LIBELF... " >&6; }
-
-if test -n "$LIBELF_CFLAGS"; then
-    pkg_cv_LIBELF_CFLAGS="$LIBELF_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libelf\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "libelf") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_LIBELF_CFLAGS=`$PKG_CONFIG --cflags "libelf" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes 
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-if test -n "$LIBELF_LIBS"; then
-    pkg_cv_LIBELF_LIBS="$LIBELF_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libelf\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "libelf") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_LIBELF_LIBS=`$PKG_CONFIG --libs "libelf" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes 
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-        
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        LIBELF_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libelf" 2>&1`
-        else 
-	        LIBELF_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libelf" 2>&1`
-        fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$LIBELF_PKG_ERRORS" >&5
-
-	pkg_found=0
-elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-	pkg_found=0
-else
-	LIBELF_CFLAGS=$pkg_cv_LIBELF_CFLAGS
-	LIBELF_LIBS=$pkg_cv_LIBELF_LIBS
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-	pkg_found=1
-fi
+	PKG_CHECK_MODULES(LIBELF, libelf, pkg_found=1, pkg_found=0)
 
 	if test "x$pkg_found" = "x1"
 	then
@@ -13625,7 +13263,7 @@ cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
 #
 # INIT-COMMANDS
 #
-AMDEP_TRUE="$AMDEP_TRUE" MAKE="${MAKE-make}"
+AMDEP_TRUE="$AMDEP_TRUE" ac_aux_dir="$ac_aux_dir"
 
 
 # The HP-UX ksh and POSIX shell print the target directory to stdout
@@ -14527,35 +14165,29 @@ $as_echo "$as_me: executing $ac_file commands" >&6;}
   # Older Autoconf quotes --file arguments for eval, but not when files
   # are listed without --file.  Let's play safe and only enable the eval
   # if we detect the quoting.
-  # TODO: see whether this extra hack can be removed once we start
-  # requiring Autoconf 2.70 or later.
-  case $CONFIG_FILES in @%:@(
-  *\'*) :
-    eval set x "$CONFIG_FILES" ;; @%:@(
-  *) :
-    set x $CONFIG_FILES ;; @%:@(
-  *) :
-     ;;
-esac
+  case $CONFIG_FILES in
+  *\'*) eval set x "$CONFIG_FILES" ;;
+  *)   set x $CONFIG_FILES ;;
+  esac
   shift
-  # Used to flag and report bootstrapping failures.
-  am_rc=0
-  for am_mf
+  for mf
   do
     # Strip MF so we end up with the name of the file.
-    am_mf=`$as_echo "$am_mf" | sed -e 's/:.*$//'`
-    # Check whether this is an Automake generated Makefile which includes
-    # dependency-tracking related rules and includes.
-    # Grep'ing the whole file directly is not great: AIX grep has a line
+    mf=`echo "$mf" | sed -e 's/:.*$//'`
+    # Check whether this is an Automake generated Makefile or not.
+    # We used to match only the files named 'Makefile.in', but
+    # some people rename them; so instead we look at the file content.
+    # Grep'ing the first line is not enough: some people post-process
+    # each Makefile.in and add a new line on top of each file to say so.
+    # Grep'ing the whole file is not good either: AIX grep has a line
     # limit of 2048, but all sed's we know have understand at least 4000.
-    sed -n 's,^am--depfiles:.*,X,p' "$am_mf" | grep X >/dev/null 2>&1 \
-      || continue
-    am_dirpart=`$as_dirname -- "$am_mf" ||
-$as_expr X"$am_mf" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
-	 X"$am_mf" : 'X\(//\)[^/]' \| \
-	 X"$am_mf" : 'X\(//\)$' \| \
-	 X"$am_mf" : 'X\(/\)' \| . 2>/dev/null ||
-$as_echo X"$am_mf" |
+    if sed -n 's,^#.*generated by automake.*,X,p' "$mf" | grep X >/dev/null 2>&1; then
+      dirpart=`$as_dirname -- "$mf" ||
+$as_expr X"$mf" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+	 X"$mf" : 'X\(//\)[^/]' \| \
+	 X"$mf" : 'X\(//\)$' \| \
+	 X"$mf" : 'X\(/\)' \| . 2>/dev/null ||
+$as_echo X"$mf" |
     sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{
 	    s//\1/
 	    q
@@ -14573,48 +14205,53 @@ $as_echo X"$am_mf" |
 	    q
 	  }
 	  s/.*/./; q'`
-    am_filepart=`$as_basename -- "$am_mf" ||
-$as_expr X/"$am_mf" : '.*/\([^/][^/]*\)/*$' \| \
-	 X"$am_mf" : 'X\(//\)$' \| \
-	 X"$am_mf" : 'X\(/\)' \| . 2>/dev/null ||
-$as_echo X/"$am_mf" |
-    sed '/^.*\/\([^/][^/]*\)\/*$/{
+    else
+      continue
+    fi
+    # Extract the definition of DEPDIR, am__include, and am__quote
+    # from the Makefile without running 'make'.
+    DEPDIR=`sed -n 's/^DEPDIR = //p' < "$mf"`
+    test -z "$DEPDIR" && continue
+    am__include=`sed -n 's/^am__include = //p' < "$mf"`
+    test -z "$am__include" && continue
+    am__quote=`sed -n 's/^am__quote = //p' < "$mf"`
+    # Find all dependency output files, they are included files with
+    # $(DEPDIR) in their names.  We invoke sed twice because it is the
+    # simplest approach to changing $(DEPDIR) to its actual value in the
+    # expansion.
+    for file in `sed -n "
+      s/^$am__include $am__quote\(.*(DEPDIR).*\)$am__quote"'$/\1/p' <"$mf" | \
+	 sed -e 's/\$(DEPDIR)/'"$DEPDIR"'/g'`; do
+      # Make sure the directory exists.
+      test -f "$dirpart/$file" && continue
+      fdir=`$as_dirname -- "$file" ||
+$as_expr X"$file" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+	 X"$file" : 'X\(//\)[^/]' \| \
+	 X"$file" : 'X\(//\)$' \| \
+	 X"$file" : 'X\(/\)' \| . 2>/dev/null ||
+$as_echo X"$file" |
+    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{
 	    s//\1/
 	    q
 	  }
-	  /^X\/\(\/\/\)$/{
+	  /^X\(\/\/\)[^/].*/{
 	    s//\1/
 	    q
 	  }
-	  /^X\/\(\/\).*/{
+	  /^X\(\/\/\)$/{
+	    s//\1/
+	    q
+	  }
+	  /^X\(\/\).*/{
 	    s//\1/
 	    q
 	  }
 	  s/.*/./; q'`
-    { echo "$as_me:$LINENO: cd "$am_dirpart" \
-      && sed -e '/# am--include-marker/d' "$am_filepart" \
-        | $MAKE -f - am--depfiles" >&5
-   (cd "$am_dirpart" \
-      && sed -e '/# am--include-marker/d' "$am_filepart" \
-        | $MAKE -f - am--depfiles) >&5 2>&5
-   ac_status=$?
-   echo "$as_me:$LINENO: \$? = $ac_status" >&5
-   (exit $ac_status); } || am_rc=$?
+      as_dir=$dirpart/$fdir; as_fn_mkdir_p
+      # echo "creating $dirpart/$file"
+      echo '# dummy' > "$dirpart/$file"
+    done
   done
-  if test $am_rc -ne 0; then
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
-$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "Something went wrong bootstrapping makefile fragments
-    for automatic dependency tracking.  Try re-running configure with the
-    '--disable-dependency-tracking' option to at least be able to build
-    the package (albeit without support for automatic dependency tracking).
-See \`config.log' for more details" "$LINENO" 5; }
-  fi
-  { am_dirpart=; unset am_dirpart;}
-  { am_filepart=; unset am_filepart;}
-  { am_mf=; unset am_mf;}
-  { am_rc=; unset am_rc;}
-  rm -f conftest-deps.mk
 }
  ;;
     "libtool":C) 
