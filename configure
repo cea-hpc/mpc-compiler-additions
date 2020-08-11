@@ -242,10 +242,13 @@ do
 
 	case $variant in
 		autopriv)
+			VARIANT_DEPS="${AUTOPRIV_DEPS}"
+			EXTRA_ARGS="${AUTOPRIV_DEPS_ARGS}"
 			if test "x${COMPILE_GCC}" = "xyes"; then
-				VARIANT_DEPS="gcc ${AUTOPRIV_DEPS}"
-				EXTRA_ARGS=" ${AUTOPRIV_DEPS_ARGS} CC=${PREFIX}/bin/ap-gcc CXX=${PREFIX}/bin/ap-g++ FC=${PREFIX}/bin/ap-gfortran CXXFLAGS='-I${PWD}/BUILD_gcc/gmp/'"
+				VARIANT_DEPS="gcc ${VARIANT_DEPS}"
+				EXTRA_ARGS="${EXTRA_ARGS} CC=${PREFIX}/bin/ap-gcc CXX=${PREFIX}/bin/ap-g++ FC=${PREFIX}/bin/ap-gfortran CXXFLAGS='-I${PWD}/BUILD_gcc/gmp/'"
 			fi
+			echo "===> ${AUTOPRIV_DEPS_ARGS}"
 		;;
 		workshare)
 			if test "x${COMPILE_GCC}" = "xyes"; then

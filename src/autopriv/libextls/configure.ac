@@ -52,41 +52,70 @@ AM_COND_IF([HAVE_DOXYGEN],
 #################
 AC_ARG_WITH([hwloc], AS_HELP_STRING([--with-hwloc=PATH], [Provide hwloc installation path]))
 
-if test -n "x$with_hwloc" ; then
+if test -n "$with_hwloc" ; then
 		if test ! -d $with_hwloc; then
 			AC_MSG_ERROR([--with-hwloc path does not point to a directory])
 		fi
 		LIBS="-L$with_hwloc/lib -L$with_hwloc/lib64 $LIBS"
 		CFLAGS="-I$with_hwloc/include $CFLAGS"
 		CPPFLAGS="-I$with_hwloc/include $CPPFLAGS"
+else
+	# First try with PKG config
+	PKG_CHECK_MODULES([HWLOC], [hwloc], [pkg_found=1], [pkg_found=0])
+
+	if test "x$pkg_found" = "x1"
+	then
+		AC_DEFINE([HAVE_HWLOC], [1], [Define hardware topology support])
+		AC_SUBST(HWLOC_LDFLAGS)
+		AC_SUBST(HWLOC_DEP, [hwloc])
+		CFLAGS="-I${HWLOC_CFLAGS} $CFLAGS"
+		CPPFLAGS="-I${HWLOC_CFLAGS} $CPPFLAGS"
+	else
+
+		AC_SEARCH_LIBS([hwloc_topology_init], [hwloc], [HWLOC_OK=1], [HWLOC_OK=0])
+		AS_IF([test "x$HWLOC_OK" = "x1"],
+						[
+						AC_DEFINE([HAVE_HWLOC], [1], [Define hardware topology support])
+						AC_SUBST(HWLOC_LDFLAGS, [-lhwloc])
+						AC_SUBST(HWLOC_DEP, [hwloc])
+						],
+						[AC_MSG_WARN([Hwloc library not found ! - Disabling HLS])])
+
+	fi
 fi
-AC_SEARCH_LIBS([hwloc_topology_init], [hwloc], [HWLOC_OK=1], [HWLOC_OK=0])
-AS_IF([test "x$HWLOC_OK" = "x1"],
-				[
-				 AC_DEFINE([HAVE_HWLOC], [1], [Define hardware topology support])
-				 AC_SUBST(HWLOC_LDFLAGS, [-lhwloc])
-				 AC_SUBST(HWLOC_DEP, [hwloc])
-				],
-				[AC_MSG_WARN([Hwloc library not found ! - Disabling HLS])])
 
 ##################
 ##### OpenPA #####
 ##################
 AC_ARG_WITH([openpa], AS_HELP_STRING([--with-openpa=PATH], [Provide OpenPA installation path]))
 
-if test -n "x$with_openpa" ; then
+if test -n "$with_openpa" ; then
 		if test ! -d $with_openpa; then
 			AC_MSG_ERROR([--with-openpa path does not point to a directory])
 		fi
 		LIBS="-L$with_openpa/lib -L$with_openpa/lib64 $LIBS"
 		CFLAGS="-I$with_openpa/include $CFLAGS"
 		CPPFLAGS="-I$with_openpa/include $CPPCFLAGS"
-fi
-AC_CHECK_HEADER([opa_config.h], [OPA_OK=1], [OPA_OK=0])
-AS_IF([test "x$OPA_OK" = "x1"],
-				[AC_DEFINE([HAVE_ATOMICS], [1], [Define Atomic operation support])],
-				[AC_MSG_WARN([Atomic Operation (OpenPA) library not found ! - Disabling HLS])])
+else
 
+	# First try with PKG config
+	PKG_CHECK_MODULES([OPENPA], [openpa], [pkg_found=1], [pkg_found=0])
+
+	if test "x$pkg_found" = "x1"
+	then
+		AC_DEFINE([HAVE_ATOMICS], [1], [Define Atomic operation support])
+		AC_SUBST(OPENPA_LDFLAGS)
+		CFLAGS="-I${OPENPA_CFLAGS} $CFLAGS"
+		CPPFLAGS="-I${OPENPA_CFLAGS} $CPPFLAGS"
+	else
+		AC_CHECK_HEADER([opa_config.h], [OPA_OK=1], [OPA_OK=0])
+		AS_IF([test "x$OPA_OK" = "x1"],
+						[AC_DEFINE([HAVE_ATOMICS], [1], [Define Atomic operation support])],
+						[AC_MSG_WARN([Atomic Operation (OpenPA) library not found ! - Disabling HLS])])
+
+	fi
+
+fi
 
 ##################
 ##### LibELF #####
@@ -94,23 +123,36 @@ AS_IF([test "x$OPA_OK" = "x1"],
 
 AC_ARG_WITH([libelf], AS_HELP_STRING([--with-libelf=PATH], [Provide libelf installation path]))
 
-if test -n "x$with_libelf" ; then
+	echo "######################## aaa! >$with_libelf<"
+if test -n "$with_libelf" ; then
 		if test ! -d $with_libelf; then
 			AC_MSG_ERROR([--with-libelf path does not point to a directory])
 		fi
 		LIBS="-L$with_libelf/lib -L$with_libelf/lib64 $LIBS"
 		CFLAGS="-I$with_libelf/include $CFLAGS"
+else
+	echo "######################## !"
+	# First try with PKG config
+	PKG_CHECK_MODULES([LIBELF], [libelf], [pkg_found=1], [pkg_found=0])
+
+	if test "x$pkg_found" = "x1"
+	then
+		AC_DEFINE([HAVE_LIBELF], [1], [Define libelf support])
+		AC_SUBST(LIBELF_DEP, [libelf])
+		AC_SUBST(LIBELF_LDFLAGS)
+		CFLAGS="-I${LIBELF_CFLAGS} $CFLAGS"
+		CPPFLAGS="-I${LIBELF_CFLAGS} $CPPFLAGS"
+	else
+		AC_SEARCH_LIBS([elf_version], [elf], [LIBELF_OK=1], [LIBELF_OK=0])
+		AS_IF([test "x$LIBELF_OK" = "x1"],
+						[
+						AC_DEFINE([HAVE_LIBELF], [1], [Define libelf support])
+						AC_SUBST(LIBELF_LDFLAGS, [-lelf])
+						AC_SUBST(LIBELF_DEP, [libelf])
+						],
+						[AC_MSG_WARN([Libelf library not found ! - Disabling optimized introspection])])
+	fi
 fi
-
-AC_SEARCH_LIBS([elf_version], [elf], [LIBELF_OK=1], [LIBELF_OK=0])
-AS_IF([test "x$LIBELF_OK" = "x1"],
-				[
-				 AC_DEFINE([HAVE_LIBELF], [1], [Define libelf support])
-				 AC_SUBST(LIBELF_LDFLAGS, [-lelf])
-				 AC_SUBST(LIBELF_DEP, [libelf])
-				],
-				[AC_MSG_WARN([Libelf library not found ! - Disabling optimized introspection])])
-
 
 ##################
 ##### CUSTOM #####
