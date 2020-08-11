@@ -2875,69 +2875,62 @@ m4trace:configure.ac:45: -1- _AM_SUBST_NOTMAKE([HAVE_DOXYGEN_TRUE])
 m4trace:configure.ac:45: -1- _AM_SUBST_NOTMAKE([HAVE_DOXYGEN_FALSE])
 m4trace:configure.ac:46: -1- AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/Doxyfile])], [{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Doxygen not found - continuing without Documentation support" >&5
 $as_echo "$as_me: WARNING: Doxygen not found - continuing without Documentation support" >&2;}])
-m4trace:configure.ac:64: -1- PKG_CHECK_MODULES([HWLOC], [hwloc], [pkg_found=1], [pkg_found=0])
-m4trace:configure.ac:64: -1- PKG_PROG_PKG_CONFIG
-m4trace:configure.ac:64: -1- m4_pattern_forbid([^_?PKG_[A-Z_]+$])
-m4trace:configure.ac:64: -1- m4_pattern_allow([^PKG_CONFIG(_(PATH|LIBDIR|SYSROOT_DIR|ALLOW_SYSTEM_(CFLAGS|LIBS)))?$])
-m4trace:configure.ac:64: -1- m4_pattern_allow([^PKG_CONFIG_(DISABLE_UNINSTALLED|TOP_BUILD_DIR|DEBUG_SPEW)$])
-m4trace:configure.ac:64: -1- m4_pattern_allow([^PKG_CONFIG$])
-m4trace:configure.ac:64: -1- m4_pattern_allow([^PKG_CONFIG_PATH$])
-m4trace:configure.ac:64: -1- m4_pattern_allow([^PKG_CONFIG_LIBDIR$])
-m4trace:configure.ac:64: -1- m4_pattern_allow([^PKG_CONFIG$])
-m4trace:configure.ac:64: -1- m4_pattern_allow([^HWLOC_CFLAGS$])
-m4trace:configure.ac:64: -1- m4_pattern_allow([^HWLOC_LIBS$])
-m4trace:configure.ac:64: -1- PKG_CHECK_EXISTS([hwloc], [pkg_cv_[]HWLOC_CFLAGS=`$PKG_CONFIG --[]cflags "hwloc" 2>/dev/null`
+m4trace:configure.ac:65: -1- PKG_CHECK_MODULES([HWLOC], [hwloc], [pkg_found=1], [pkg_found=0])
+m4trace:configure.ac:65: -1- PKG_PROG_PKG_CONFIG
+m4trace:configure.ac:65: -1- m4_pattern_forbid([^_?PKG_[A-Z_]+$])
+m4trace:configure.ac:65: -1- m4_pattern_allow([^PKG_CONFIG(_(PATH|LIBDIR|SYSROOT_DIR|ALLOW_SYSTEM_(CFLAGS|LIBS)))?$])
+m4trace:configure.ac:65: -1- m4_pattern_allow([^PKG_CONFIG_(DISABLE_UNINSTALLED|TOP_BUILD_DIR|DEBUG_SPEW)$])
+m4trace:configure.ac:65: -1- m4_pattern_allow([^PKG_CONFIG$])
+m4trace:configure.ac:65: -1- m4_pattern_allow([^PKG_CONFIG_PATH$])
+m4trace:configure.ac:65: -1- m4_pattern_allow([^PKG_CONFIG_LIBDIR$])
+m4trace:configure.ac:65: -1- m4_pattern_allow([^PKG_CONFIG$])
+m4trace:configure.ac:65: -1- m4_pattern_allow([^HWLOC_CFLAGS$])
+m4trace:configure.ac:65: -1- m4_pattern_allow([^HWLOC_LIBS$])
+m4trace:configure.ac:65: -1- PKG_CHECK_EXISTS([hwloc], [pkg_cv_[]HWLOC_CFLAGS=`$PKG_CONFIG --[]cflags "hwloc" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes ], [pkg_failed=yes])
-m4trace:configure.ac:64: -1- PKG_CHECK_EXISTS([hwloc], [pkg_cv_[]HWLOC_LIBS=`$PKG_CONFIG --[]libs "hwloc" 2>/dev/null`
+m4trace:configure.ac:65: -1- PKG_CHECK_EXISTS([hwloc], [pkg_cv_[]HWLOC_LIBS=`$PKG_CONFIG --[]libs "hwloc" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes ], [pkg_failed=yes])
-m4trace:configure.ac:64: -1- _PKG_SHORT_ERRORS_SUPPORTED
-m4trace:configure.ac:68: -1- m4_pattern_allow([^HAVE_HWLOC$])
-m4trace:configure.ac:69: -1- m4_pattern_allow([^HWLOC_LDFLAGS$])
-m4trace:configure.ac:70: -1- m4_pattern_allow([^HWLOC_DEP$])
+m4trace:configure.ac:65: -1- _PKG_SHORT_ERRORS_SUPPORTED
 m4trace:configure.ac:76: -1- m4_pattern_allow([^HAVE_HWLOC$])
+m4trace:configure.ac:76: -1- m4_pattern_allow([^HWLOC_DEP$])
 m4trace:configure.ac:76: -1- m4_pattern_allow([^HWLOC_LDFLAGS$])
 m4trace:configure.ac:76: -1- m4_pattern_allow([^HWLOC_DEP$])
-m4trace:configure.ac:102: -1- PKG_CHECK_MODULES([OPENPA], [openpa], [pkg_found=1], [pkg_found=0])
-m4trace:configure.ac:102: -1- m4_pattern_allow([^OPENPA_CFLAGS$])
-m4trace:configure.ac:102: -1- m4_pattern_allow([^OPENPA_LIBS$])
-m4trace:configure.ac:102: -1- PKG_CHECK_EXISTS([openpa], [pkg_cv_[]OPENPA_CFLAGS=`$PKG_CONFIG --[]cflags "openpa" 2>/dev/null`
+m4trace:configure.ac:101: -1- PKG_CHECK_MODULES([OPENPA], [openpa], [pkg_found=1], [pkg_found=0])
+m4trace:configure.ac:101: -1- m4_pattern_allow([^OPENPA_CFLAGS$])
+m4trace:configure.ac:101: -1- m4_pattern_allow([^OPENPA_LIBS$])
+m4trace:configure.ac:101: -1- PKG_CHECK_EXISTS([openpa], [pkg_cv_[]OPENPA_CFLAGS=`$PKG_CONFIG --[]cflags "openpa" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes ], [pkg_failed=yes])
-m4trace:configure.ac:102: -1- PKG_CHECK_EXISTS([openpa], [pkg_cv_[]OPENPA_LIBS=`$PKG_CONFIG --[]libs "openpa" 2>/dev/null`
+m4trace:configure.ac:101: -1- PKG_CHECK_EXISTS([openpa], [pkg_cv_[]OPENPA_LIBS=`$PKG_CONFIG --[]libs "openpa" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes ], [pkg_failed=yes])
-m4trace:configure.ac:102: -1- _PKG_SHORT_ERRORS_SUPPORTED
-m4trace:configure.ac:106: -1- m4_pattern_allow([^HAVE_ATOMICS$])
-m4trace:configure.ac:107: -1- m4_pattern_allow([^OPENPA_LDFLAGS$])
-m4trace:configure.ac:112: -1- m4_pattern_allow([^HAVE_ATOMICS$])
-m4trace:configure.ac:136: -1- PKG_CHECK_MODULES([LIBELF], [libelf], [pkg_found=1], [pkg_found=0])
-m4trace:configure.ac:136: -1- m4_pattern_allow([^LIBELF_CFLAGS$])
-m4trace:configure.ac:136: -1- m4_pattern_allow([^LIBELF_LIBS$])
-m4trace:configure.ac:136: -1- PKG_CHECK_EXISTS([libelf], [pkg_cv_[]LIBELF_CFLAGS=`$PKG_CONFIG --[]cflags "libelf" 2>/dev/null`
+m4trace:configure.ac:101: -1- _PKG_SHORT_ERRORS_SUPPORTED
+m4trace:configure.ac:113: -1- m4_pattern_allow([^HAVE_ATOMICS$])
+m4trace:configure.ac:134: -1- PKG_CHECK_MODULES([LIBELF], [libelf], [pkg_found=1], [pkg_found=0])
+m4trace:configure.ac:134: -1- m4_pattern_allow([^LIBELF_CFLAGS$])
+m4trace:configure.ac:134: -1- m4_pattern_allow([^LIBELF_LIBS$])
+m4trace:configure.ac:134: -1- PKG_CHECK_EXISTS([libelf], [pkg_cv_[]LIBELF_CFLAGS=`$PKG_CONFIG --[]cflags "libelf" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes ], [pkg_failed=yes])
-m4trace:configure.ac:136: -1- PKG_CHECK_EXISTS([libelf], [pkg_cv_[]LIBELF_LIBS=`$PKG_CONFIG --[]libs "libelf" 2>/dev/null`
+m4trace:configure.ac:134: -1- PKG_CHECK_EXISTS([libelf], [pkg_cv_[]LIBELF_LIBS=`$PKG_CONFIG --[]libs "libelf" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes ], [pkg_failed=yes])
-m4trace:configure.ac:136: -1- _PKG_SHORT_ERRORS_SUPPORTED
-m4trace:configure.ac:140: -1- m4_pattern_allow([^HAVE_LIBELF$])
-m4trace:configure.ac:141: -1- m4_pattern_allow([^LIBELF_DEP$])
-m4trace:configure.ac:142: -1- m4_pattern_allow([^LIBELF_LDFLAGS$])
-m4trace:configure.ac:147: -1- m4_pattern_allow([^HAVE_LIBELF$])
-m4trace:configure.ac:147: -1- m4_pattern_allow([^LIBELF_LDFLAGS$])
-m4trace:configure.ac:147: -1- m4_pattern_allow([^LIBELF_DEP$])
-m4trace:configure.ac:164: -1- AM_CONDITIONAL([DEBUG_MODE], [test "x$enable_debug" = "xyes"])
-m4trace:configure.ac:164: -1- m4_pattern_allow([^DEBUG_MODE_TRUE$])
-m4trace:configure.ac:164: -1- m4_pattern_allow([^DEBUG_MODE_FALSE$])
-m4trace:configure.ac:164: -1- _AM_SUBST_NOTMAKE([DEBUG_MODE_TRUE])
-m4trace:configure.ac:164: -1- _AM_SUBST_NOTMAKE([DEBUG_MODE_FALSE])
-m4trace:configure.ac:167: -1- m4_pattern_allow([^EXTLS_COLOR_ENABLED$])
-m4trace:configure.ac:177: -1- m4_pattern_allow([^LIB@&t@OBJS$])
-m4trace:configure.ac:177: -1- m4_pattern_allow([^LTLIBOBJS$])
-m4trace:configure.ac:177: -1- AM_CONDITIONAL([am__EXEEXT], [test -n "$EXEEXT"])
-m4trace:configure.ac:177: -1- m4_pattern_allow([^am__EXEEXT_TRUE$])
-m4trace:configure.ac:177: -1- m4_pattern_allow([^am__EXEEXT_FALSE$])
-m4trace:configure.ac:177: -1- _AM_SUBST_NOTMAKE([am__EXEEXT_TRUE])
-m4trace:configure.ac:177: -1- _AM_SUBST_NOTMAKE([am__EXEEXT_FALSE])
-m4trace:configure.ac:177: -1- _AC_AM_CONFIG_HEADER_HOOK(["$ac_file"])
-m4trace:configure.ac:177: -1- _AM_OUTPUT_DEPENDENCY_COMMANDS
-m4trace:configure.ac:177: -1- AM_RUN_LOG([cd "$am_dirpart" \
+m4trace:configure.ac:134: -1- _PKG_SHORT_ERRORS_SUPPORTED
+m4trace:configure.ac:145: -1- m4_pattern_allow([^HAVE_LIBELF$])
+m4trace:configure.ac:145: -1- m4_pattern_allow([^LIBELF_LDFLAGS$])
+m4trace:configure.ac:145: -1- m4_pattern_allow([^LIBELF_DEP$])
+m4trace:configure.ac:160: -1- AM_CONDITIONAL([DEBUG_MODE], [test "x$enable_debug" = "xyes"])
+m4trace:configure.ac:160: -1- m4_pattern_allow([^DEBUG_MODE_TRUE$])
+m4trace:configure.ac:160: -1- m4_pattern_allow([^DEBUG_MODE_FALSE$])
+m4trace:configure.ac:160: -1- _AM_SUBST_NOTMAKE([DEBUG_MODE_TRUE])
+m4trace:configure.ac:160: -1- _AM_SUBST_NOTMAKE([DEBUG_MODE_FALSE])
+m4trace:configure.ac:163: -1- m4_pattern_allow([^EXTLS_COLOR_ENABLED$])
+m4trace:configure.ac:173: -1- m4_pattern_allow([^LIB@&t@OBJS$])
+m4trace:configure.ac:173: -1- m4_pattern_allow([^LTLIBOBJS$])
+m4trace:configure.ac:173: -1- AM_CONDITIONAL([am__EXEEXT], [test -n "$EXEEXT"])
+m4trace:configure.ac:173: -1- m4_pattern_allow([^am__EXEEXT_TRUE$])
+m4trace:configure.ac:173: -1- m4_pattern_allow([^am__EXEEXT_FALSE$])
+m4trace:configure.ac:173: -1- _AM_SUBST_NOTMAKE([am__EXEEXT_TRUE])
+m4trace:configure.ac:173: -1- _AM_SUBST_NOTMAKE([am__EXEEXT_FALSE])
+m4trace:configure.ac:173: -1- _AC_AM_CONFIG_HEADER_HOOK(["$ac_file"])
+m4trace:configure.ac:173: -1- _AM_OUTPUT_DEPENDENCY_COMMANDS
+m4trace:configure.ac:173: -1- AM_RUN_LOG([cd "$am_dirpart" \
       && sed -e '/# am--include-marker/d' "$am_filepart" \
         | $MAKE -f - am--depfiles])
-m4trace:configure.ac:177: -1- _LT_PROG_LTMAIN
+m4trace:configure.ac:173: -1- _LT_PROG_LTMAIN

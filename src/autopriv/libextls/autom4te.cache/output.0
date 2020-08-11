@@ -638,15 +638,14 @@ LTLIBOBJS
 LIB@&t@OBJS
 DEBUG_MODE_FALSE
 DEBUG_MODE_TRUE
-LIBELF_LDFLAGS
 LIBELF_DEP
+LIBELF_LDFLAGS
 LIBELF_LIBS
 LIBELF_CFLAGS
-OPENPA_LDFLAGS
 OPENPA_LIBS
 OPENPA_CFLAGS
-HWLOC_DEP
 HWLOC_LDFLAGS
+HWLOC_DEP
 HWLOC_LIBS
 HWLOC_CFLAGS
 PKG_CONFIG_LIBDIR
@@ -12291,6 +12290,7 @@ if test -n "$with_hwloc" ; then
 		if test ! -d $with_hwloc; then
 			as_fn_error $? "--with-hwloc path does not point to a directory" "$LINENO" 5
 		fi
+		HWLOC_LDFLAGS="-lhwloc"
 		LIBS="-L$with_hwloc/lib -L$with_hwloc/lib64 $LIBS"
 		CFLAGS="-I$with_hwloc/include $CFLAGS"
 		CPPFLAGS="-I$with_hwloc/include $CPPFLAGS"
@@ -12490,17 +12490,13 @@ fi
 
 	if test "x$pkg_found" = "x1"
 	then
-		
-$as_echo "@%:@define HAVE_HWLOC 1" >>confdefs.h
-
-		
-		HWLOC_DEP=hwloc
-
+		LIBS="${HWLOC_LDFLAGS} $LIBS"
 		CFLAGS="-I${HWLOC_CFLAGS} $CFLAGS"
 		CPPFLAGS="-I${HWLOC_CFLAGS} $CPPFLAGS"
-	else
+	fi
+fi
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing hwloc_topology_init" >&5
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing hwloc_topology_init" >&5
 $as_echo_n "checking for library containing hwloc_topology_init... " >&6; }
 if ${ac_cv_search_hwloc_topology_init+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12558,23 +12554,22 @@ else
   HWLOC_OK=0
 fi
 
-		if test "x$HWLOC_OK" = "x1"; then :
+if test "x$HWLOC_OK" = "x1"; then :
   
-						
+				
 $as_echo "@%:@define HAVE_HWLOC 1" >>confdefs.h
 
-						HWLOC_LDFLAGS=-lhwloc
+										HWLOC_DEP=hwloc
 
-						HWLOC_DEP=hwloc
+				
+				HWLOC_DEP=hwloc
 
-						
+				
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Hwloc library not found ! - Disabling HLS" >&5
 $as_echo "$as_me: WARNING: Hwloc library not found ! - Disabling HLS" >&2;}
 fi
 
-	fi
-fi
 
 ##################
 ##### OpenPA #####
@@ -12670,14 +12665,14 @@ fi
 
 	if test "x$pkg_found" = "x1"
 	then
-		
-$as_echo "@%:@define HAVE_ATOMICS 1" >>confdefs.h
-
-		
+		LIBS="${OPENPA_LDFLAGS}"
 		CFLAGS="-I${OPENPA_CFLAGS} $CFLAGS"
 		CPPFLAGS="-I${OPENPA_CFLAGS} $CPPFLAGS"
-	else
-		ac_fn_c_check_header_mongrel "$LINENO" "opa_config.h" "ac_cv_header_opa_config_h" "$ac_includes_default"
+	fi
+
+fi
+
+ac_fn_c_check_header_mongrel "$LINENO" "opa_config.h" "ac_cv_header_opa_config_h" "$ac_includes_default"
 if test "x$ac_cv_header_opa_config_h" = xyes; then :
   OPA_OK=1
 else
@@ -12685,7 +12680,7 @@ else
 fi
 
 
-		if test "x$OPA_OK" = "x1"; then :
+if test "x$OPA_OK" = "x1"; then :
   
 $as_echo "@%:@define HAVE_ATOMICS 1" >>confdefs.h
 
@@ -12694,9 +12689,6 @@ else
 $as_echo "$as_me: WARNING: Atomic Operation (OpenPA) library not found ! - Disabling HLS" >&2;}
 fi
 
-	fi
-
-fi
 
 ##################
 ##### LibELF #####
@@ -12709,15 +12701,15 @@ if test "${with_libelf+set}" = set; then :
 fi
 
 
-	echo "######################## aaa! >$with_libelf<"
 if test -n "$with_libelf" ; then
 		if test ! -d $with_libelf; then
 			as_fn_error $? "--with-libelf path does not point to a directory" "$LINENO" 5
 		fi
+		LIBELF_LDFLAGS="-lelf"
 		LIBS="-L$with_libelf/lib -L$with_libelf/lib64 $LIBS"
 		CFLAGS="-I$with_libelf/include $CFLAGS"
 else
-	echo "######################## !"
+
 	# First try with PKG config
 	
 pkg_failed=no
@@ -12793,16 +12785,13 @@ fi
 
 	if test "x$pkg_found" = "x1"
 	then
-		
-$as_echo "@%:@define HAVE_LIBELF 1" >>confdefs.h
-
-		LIBELF_DEP=libelf
-
-		
+		LIBS="${LIBELF_LDFLAGS} $LIBS"
 		CFLAGS="-I${LIBELF_CFLAGS} $CFLAGS"
 		CPPFLAGS="-I${LIBELF_CFLAGS} $CPPFLAGS"
-	else
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing elf_version" >&5
+	fi
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing elf_version" >&5
 $as_echo_n "checking for library containing elf_version... " >&6; }
 if ${ac_cv_search_elf_version+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12860,21 +12849,18 @@ else
   LIBELF_OK=0
 fi
 
-		if test "x$LIBELF_OK" = "x1"; then :
+if test "x$LIBELF_OK" = "x1"; then :
   
-						
+				
 $as_echo "@%:@define HAVE_LIBELF 1" >>confdefs.h
 
-						LIBELF_LDFLAGS=-lelf
+				
+				LIBELF_DEP=libelf
 
-						LIBELF_DEP=libelf
-
-						
+				
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Libelf library not found ! - Disabling optimized introspection" >&5
 $as_echo "$as_me: WARNING: Libelf library not found ! - Disabling optimized introspection" >&2;}
-fi
-	fi
 fi
 
 ##################
