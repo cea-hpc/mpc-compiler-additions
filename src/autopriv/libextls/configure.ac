@@ -66,7 +66,7 @@ else
 
 	if test "x$pkg_found" = "x1"
 	then
-		LIBS="${HWLOC_LDFLAGS} $LIBS"
+		HWLOC_LDFLAGS="${HWLOC_LIBS}"
 		CFLAGS="-I${HWLOC_CFLAGS} $CFLAGS"
 		CPPFLAGS="-I${HWLOC_CFLAGS} $CPPFLAGS"
 	fi
@@ -102,7 +102,7 @@ else
 
 	if test "x$pkg_found" = "x1"
 	then
-		LIBS="${OPENPA_LDFLAGS}"
+		LIBS="${OPENPA_LIBS} ${LIBS}"
 		CFLAGS="-I${OPENPA_CFLAGS} $CFLAGS"
 		CPPFLAGS="-I${OPENPA_CFLAGS} $CPPFLAGS"
 	fi
@@ -135,7 +135,7 @@ else
 
 	if test "x$pkg_found" = "x1"
 	then
-		LIBS="${LIBELF_LDFLAGS} $LIBS"
+		LIBELF_LDFLAGS="${LIBELF_LIBS}"
 		CFLAGS="-I${LIBELF_CFLAGS} $CFLAGS"
 		CPPFLAGS="-I${LIBELF_CFLAGS} $CPPFLAGS"
 	fi
