@@ -119,28 +119,28 @@ Not supported:
 #################################
 
 
-No-privatization:
+No-privatization 750:
   <<: *run_by_main
   stage: Privatization Tests 7.5.0
   script:
   - cd $HOME/GL_$CI_PIPELINE_ID/build_750/BUILD_autopriv
   - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
 
-With-privatization:
+With-privatization 750:
   <<: *run_by_main
   stage: Privatization Tests 7.5.0
   script:
   - cd $HOME/GL_$CI_PIPELINE_ID/build_750/BUILD_autopriv
   - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
 
-Compil Wrappers:
+Compil Wrappers 750:
   <<: *run_by_main
   stage: Privatization Tests 7.5.0
   script: 
   - cd $HOME/GL_$CI_PIPELINE_ID/build_750/BUILD_autopriv
   - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
 
-Not supported:
+Not supported 750:
   <<: *run_by_main
   stage: Privatization Tests 7.5.0
   allow_failure: true
