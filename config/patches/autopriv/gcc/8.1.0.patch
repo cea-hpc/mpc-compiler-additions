@@ -2396,7 +2396,7 @@ index 55e234334..d8348ccc1 100644
        if (DECL_EXTERNAL (decl) || TREE_STATIC (decl))
  	{
 diff --git c/gcc/cp/decl2.c w/gcc/cp/decl2.c
-index b0bf8241f..b380d4a3f 100644
+index b0bf8241f..a7d704e09 100644
 --- c/gcc/cp/decl2.c
 +++ w/gcc/cp/decl2.c
 @@ -54,6 +54,8 @@ int raw_dump_id;
@@ -2584,7 +2584,7 @@ index b0bf8241f..b380d4a3f 100644
  static void
  handle_tls_init (void)
  {
-@@ -4374,51 +4479,68 @@ handle_tls_init (void)
+@@ -4374,51 +4479,67 @@ handle_tls_init (void)
  
    write_out_vars (vars);
  
@@ -2654,14 +2654,13 @@ index b0bf8241f..b380d4a3f 100644
 -		(single_init_fn, fn);
 -	  gcc_assert (alias != NULL);
 +	  if (single_init_fn != NULL_TREE)
-+    {
-+      cgraph_node *alias
-+        = cgraph_node::get_create (fn)->create_same_body_alias
-+      (single_init_fn, fn);
-+      gcc_assert (alias != NULL);
-+    }
++	    {
++	      cgraph_node *alias
++	        = cgraph_node::get_create (fn)->create_same_body_alias
++	      (single_init_fn, fn);
++	      gcc_assert (alias != NULL);
++	    }
  	}
-+#endif
 +
 +  /* MPC the initialization is moved here too to be in the If */
 +  one_static_initialization_or_destruction(var, init, true);
@@ -2680,7 +2679,7 @@ index b0bf8241f..b380d4a3f 100644
  
  /* We're at the end of compilation, so generate any mangling aliases that
     we've been saving up, if DECL is going to be output and ID2 isn't
-@@ -4754,6 +4876,8 @@ c_parse_final_cleanups (void)
+@@ -4754,6 +4875,8 @@ c_parse_final_cleanups (void)
  	    unemitted_tinfo_decls->unordered_remove (i);
  	  }
  
@@ -2689,7 +2688,7 @@ index b0bf8241f..b380d4a3f 100644
        /* The list of objects with static storage duration is built up
  	 in reverse order.  We clear STATIC_AGGREGATES so that any new
  	 aggregates added during the initialization of these will be
-@@ -4761,7 +4885,7 @@ c_parse_final_cleanups (void)
+@@ -4761,7 +4884,7 @@ c_parse_final_cleanups (void)
  	 loop.  */
        vars = prune_vars_needing_no_initialization (&static_aggregates);
  
@@ -2698,7 +2697,7 @@ index b0bf8241f..b380d4a3f 100644
  	{
  	  /* We need to start a new initialization function each time
  	     through the loop.  That's because we need to know which
-@@ -4775,7 +4899,7 @@ c_parse_final_cleanups (void)
+@@ -4775,7 +4898,7 @@ c_parse_final_cleanups (void)
  	  /* Set the line and file, so that it is obviously not from
  	     the source file.  */
  	  input_location = locus_at_end_of_parsing;
@@ -2707,7 +2706,7 @@ index b0bf8241f..b380d4a3f 100644
  
  	  /* Make sure the back end knows about all the variables.  */
  	  write_out_vars (vars);
-@@ -4811,13 +4935,14 @@ c_parse_final_cleanups (void)
+@@ -4811,13 +4934,14 @@ c_parse_final_cleanups (void)
  	  /* ??? was:  locus_at_end_of_parsing.line++; */
  	}
  
