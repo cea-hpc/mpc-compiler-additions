@@ -5990,10 +5990,26 @@ index 38fd9d82c..92e141e56 100644
  
    if (d->ndeps == d->deps_size)
 diff --git c/libgfortran/Makefile.am w/libgfortran/Makefile.am
-index bf9dce405..300f56c62 100644
+index bf9dce405..9c162d568 100644
 --- c/libgfortran/Makefile.am
 +++ w/libgfortran/Makefile.am
-@@ -80,6 +80,13 @@ if LIBGFOR_MINIMAL
+@@ -36,11 +36,13 @@ LTLDFLAGS = $(shell $(SHELL) $(top_srcdir)/../libtool-ldflags $(LDFLAGS)) \
+ toolexeclib_LTLIBRARIES = libgfortran.la
+ toolexeclib_DATA = libgfortran.spec
+ libgfortran_la_LINK = $(LINK) $(libgfortran_la_LDFLAGS)
++# MPC HAD A CONFLICT IN FLAGS BELOW
++# DID REMOVE: ../libbacktrace/libbacktrace.la $(version_arg) 
+ libgfortran_la_LDFLAGS = -version-info `grep -v '^\#' $(srcdir)/libtool-version` \
+-	$(LTLDFLAGS) $(LIBQUADLIB) ../libbacktrace/libbacktrace.la \
++	$(LTLDFLAGS) $(LIBQUADLIB)  \
+ 	$(HWCAP_LDFLAGS) \
+ 	-lm $(extra_ldflags_libgfortran) \
+-	$(version_arg) -Wc,-shared-libgcc
++	-Wc,-shared-libgcc
+ libgfortran_la_DEPENDENCIES = $(version_dep) libgfortran.spec $(LIBQUADLIB_DEP)
+ 
+ cafexeclib_LTLIBRARIES = libcaf_single.la
+@@ -80,6 +82,13 @@ if LIBGFOR_MINIMAL
  AM_CFLAGS += -DLIBGFOR_MINIMAL
  endif
  
@@ -6007,7 +6023,7 @@ index bf9dce405..300f56c62 100644
  gfor_io_src= \
  io/size_from_kind.c
  
-@@ -93,12 +100,8 @@ io/inquire.c \
+@@ -93,12 +102,8 @@ io/inquire.c \
  io/intrinsics.c \
  io/list_read.c \
  io/lock.c \
@@ -6020,7 +6036,7 @@ index bf9dce405..300f56c62 100644
  io/write.c \
  io/fbuf.c
  
-@@ -953,6 +956,21 @@ BUILT_SOURCES=$(gfor_built_src) $(gfor_built_specific_src) \
+@@ -953,6 +958,21 @@ BUILT_SOURCES=$(gfor_built_src) $(gfor_built_specific_src) \
  prereq_SRC = $(gfor_src) $(gfor_built_src) $(gfor_io_src) \
      $(gfor_helper_src) $(gfor_ieee_src) $(gfor_io_headers) $(gfor_specific_src)
  
@@ -6042,7 +6058,7 @@ index bf9dce405..300f56c62 100644
  if onestep
  # dummy sources for libtool
  BUILT_SOURCES+=libgfortran_c.c libgfortran_f.f90
-@@ -978,10 +996,10 @@ libgfortran_c.lo: $(filter %.c,$(prereq_SRC))
+@@ -978,10 +998,10 @@ libgfortran_c.lo: $(filter %.c,$(prereq_SRC))
  #	$(LTPPFCCOMPILE) -c -o $@ $^ -combine
  
  libgfortran_la_SOURCES = libgfortran_c.c $(filter-out %.c,$(prereq_SRC))
@@ -6056,7 +6072,7 @@ index bf9dce405..300f56c62 100644
  
  I_M4_DEPS=m4/iparm.m4
 diff --git c/libgfortran/Makefile.in w/libgfortran/Makefile.in
-index 03c396873..ab0eb5e5c 100644
+index 03c396873..4e573c4f1 100644
 --- c/libgfortran/Makefile.in
 +++ w/libgfortran/Makefile.in
 @@ -1,9 +1,8 @@
@@ -6120,26 +6136,30 @@ index 03c396873..ab0eb5e5c 100644
  @LIBGFOR_MINIMAL_FALSE@io/write.c \
  @LIBGFOR_MINIMAL_FALSE@io/fbuf.c
  
-@@ -120,11 +102,15 @@ target_triplet = @target@
+@@ -120,11 +102,19 @@ target_triplet = @target@
  
  # dummy sources for libtool
  @onestep_TRUE@am__append_7 = libgfortran_c.c libgfortran_f.f90
 -subdir = .
 -DIST_COMMON = ChangeLog $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-+DIST_COMMON = $(srcdir)/../config.guess $(srcdir)/../config.sub \
-+	ChangeLog $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
++DIST_COMMON = $(srcdir)/../config.guess $(srcdir)/../config.guess \
++	$(srcdir)/../config.sub $(srcdir)/../config.sub ChangeLog \
++	$(srcdir)/Makefile.in $(srcdir)/Makefile.am \
  	$(top_srcdir)/configure $(am__configure_deps) \
  	$(srcdir)/config.h.in $(srcdir)/../mkinstalldirs \
 -	$(srcdir)/libgfortran.spec.in $(srcdir)/../depcomp
-+	$(srcdir)/libgfortran.spec.in $(srcdir)/../compile \
++	$(srcdir)/../mkinstalldirs $(srcdir)/libgfortran.spec.in \
 +	$(srcdir)/../compile $(srcdir)/../compile $(srcdir)/../compile \
-+	$(srcdir)/../depcomp $(srcdir)/../ltmain.sh \
-+	$(srcdir)/../config.guess $(srcdir)/../config.sub
++	$(srcdir)/../compile $(srcdir)/../compile $(srcdir)/../compile \
++	$(srcdir)/../compile $(srcdir)/../depcomp \
++	$(srcdir)/../ltmain.sh $(srcdir)/../ltmain.sh \
++	$(srcdir)/../config.guess $(srcdir)/../config.guess \
++	$(srcdir)/../config.sub $(srcdir)/../config.sub
 +subdir = .
  ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
  am__aclocal_m4_deps = $(top_srcdir)/../config/depstand.m4 \
  	$(top_srcdir)/../config/hwcaps.m4 \
-@@ -145,57 +131,46 @@ am__aclocal_m4_deps = $(top_srcdir)/../config/depstand.m4 \
+@@ -145,57 +135,46 @@ am__aclocal_m4_deps = $(top_srcdir)/../config/depstand.m4 \
  am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
  	$(ACLOCAL_M4)
  am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -6219,7 +6239,7 @@ index 03c396873..ab0eb5e5c 100644
  	maxloc0_4_i2.lo maxloc0_8_i2.lo maxloc0_16_i2.lo \
  	maxloc0_4_i4.lo maxloc0_8_i4.lo maxloc0_16_i4.lo \
  	maxloc0_4_i8.lo maxloc0_8_i8.lo maxloc0_16_i8.lo \
-@@ -204,7 +179,7 @@ am__objects_7 = maxloc0_4_i1.lo maxloc0_8_i1.lo maxloc0_16_i1.lo \
+@@ -204,7 +183,7 @@ am__objects_7 = maxloc0_4_i1.lo maxloc0_8_i1.lo maxloc0_16_i1.lo \
  	maxloc0_4_r8.lo maxloc0_8_r8.lo maxloc0_16_r8.lo \
  	maxloc0_4_r10.lo maxloc0_8_r10.lo maxloc0_16_r10.lo \
  	maxloc0_4_r16.lo maxloc0_8_r16.lo maxloc0_16_r16.lo
@@ -6228,7 +6248,7 @@ index 03c396873..ab0eb5e5c 100644
  	maxloc1_4_i2.lo maxloc1_8_i2.lo maxloc1_16_i2.lo \
  	maxloc1_4_i4.lo maxloc1_8_i4.lo maxloc1_16_i4.lo \
  	maxloc1_4_i8.lo maxloc1_8_i8.lo maxloc1_16_i8.lo \
-@@ -213,10 +188,10 @@ am__objects_8 = maxloc1_4_i1.lo maxloc1_8_i1.lo maxloc1_16_i1.lo \
+@@ -213,10 +192,10 @@ am__objects_8 = maxloc1_4_i1.lo maxloc1_8_i1.lo maxloc1_16_i1.lo \
  	maxloc1_4_r8.lo maxloc1_8_r8.lo maxloc1_16_r8.lo \
  	maxloc1_4_r10.lo maxloc1_8_r10.lo maxloc1_16_r10.lo \
  	maxloc1_4_r16.lo maxloc1_8_r16.lo maxloc1_16_r16.lo
@@ -6241,7 +6261,7 @@ index 03c396873..ab0eb5e5c 100644
  	minloc0_4_i2.lo minloc0_8_i2.lo minloc0_16_i2.lo \
  	minloc0_4_i4.lo minloc0_8_i4.lo minloc0_16_i4.lo \
  	minloc0_4_i8.lo minloc0_8_i8.lo minloc0_16_i8.lo \
-@@ -225,7 +200,7 @@ am__objects_10 = minloc0_4_i1.lo minloc0_8_i1.lo minloc0_16_i1.lo \
+@@ -225,7 +204,7 @@ am__objects_10 = minloc0_4_i1.lo minloc0_8_i1.lo minloc0_16_i1.lo \
  	minloc0_4_r8.lo minloc0_8_r8.lo minloc0_16_r8.lo \
  	minloc0_4_r10.lo minloc0_8_r10.lo minloc0_16_r10.lo \
  	minloc0_4_r16.lo minloc0_8_r16.lo minloc0_16_r16.lo
@@ -6250,7 +6270,7 @@ index 03c396873..ab0eb5e5c 100644
  	minloc1_4_i2.lo minloc1_8_i2.lo minloc1_16_i2.lo \
  	minloc1_4_i4.lo minloc1_8_i4.lo minloc1_16_i4.lo \
  	minloc1_4_i8.lo minloc1_8_i8.lo minloc1_16_i8.lo \
-@@ -234,49 +209,49 @@ am__objects_11 = minloc1_4_i1.lo minloc1_8_i1.lo minloc1_16_i1.lo \
+@@ -234,49 +213,49 @@ am__objects_11 = minloc1_4_i1.lo minloc1_8_i1.lo minloc1_16_i1.lo \
  	minloc1_4_r8.lo minloc1_8_r8.lo minloc1_16_r8.lo \
  	minloc1_4_r10.lo minloc1_8_r10.lo minloc1_16_r10.lo \
  	minloc1_4_r16.lo minloc1_8_r16.lo minloc1_16_r16.lo
@@ -6319,7 +6339,7 @@ index 03c396873..ab0eb5e5c 100644
  	pow_c4_i4.lo pow_c8_i4.lo pow_c10_i4.lo pow_c16_i4.lo \
  	pow_i4_i8.lo pow_i8_i8.lo pow_i16_i8.lo pow_r4_i8.lo \
  	pow_r8_i8.lo pow_r10_i8.lo pow_r16_i8.lo pow_c4_i8.lo \
-@@ -284,27 +259,27 @@ am__objects_30 = pow_i4_i4.lo pow_i8_i4.lo pow_i16_i4.lo pow_r16_i4.lo \
+@@ -284,27 +263,27 @@ am__objects_30 = pow_i4_i4.lo pow_i8_i4.lo pow_i16_i4.lo pow_r16_i4.lo \
  	pow_i8_i16.lo pow_i16_i16.lo pow_r4_i16.lo pow_r8_i16.lo \
  	pow_r10_i16.lo pow_r16_i16.lo pow_c4_i16.lo pow_c8_i16.lo \
  	pow_c10_i16.lo pow_c16_i16.lo
@@ -6353,7 +6373,7 @@ index 03c396873..ab0eb5e5c 100644
  	cshift1_4_i8.lo cshift1_4_i16.lo cshift1_4_r4.lo \
  	cshift1_4_r8.lo cshift1_4_r10.lo cshift1_4_r16.lo \
  	cshift1_4_c4.lo cshift1_4_c8.lo cshift1_4_c10.lo \
-@@ -317,44 +292,43 @@ am__objects_36 = cshift1_4_i1.lo cshift1_4_i2.lo cshift1_4_i4.lo \
+@@ -317,44 +296,43 @@ am__objects_36 = cshift1_4_i1.lo cshift1_4_i2.lo cshift1_4_i4.lo \
  	cshift1_16_i16.lo cshift1_16_r4.lo cshift1_16_r8.lo \
  	cshift1_16_r10.lo cshift1_16_r16.lo cshift1_16_c4.lo \
  	cshift1_16_c8.lo cshift1_16_c10.lo cshift1_16_c16.lo
@@ -6427,7 +6447,7 @@ index 03c396873..ab0eb5e5c 100644
  @LIBGFOR_MINIMAL_FALSE@	chdir.lo chmod.lo clock.lo cpu_time.lo \
  @LIBGFOR_MINIMAL_FALSE@	ctime.lo date_and_time.lo dtime.lo \
  @LIBGFOR_MINIMAL_FALSE@	env.lo etime.lo execute_command_line.lo \
-@@ -364,19 +338,19 @@ am__objects_49 = size_from_kind.lo $(am__objects_48)
+@@ -364,19 +342,19 @@ am__objects_49 = size_from_kind.lo $(am__objects_48)
  @LIBGFOR_MINIMAL_FALSE@	rename.lo stat.lo symlnk.lo \
  @LIBGFOR_MINIMAL_FALSE@	system_clock.lo time.lo umask.lo \
  @LIBGFOR_MINIMAL_FALSE@	unlink.lo
@@ -6453,7 +6473,7 @@ index 03c396873..ab0eb5e5c 100644
  	_abs_i4.lo _abs_i8.lo _abs_i16.lo _abs_r4.lo _abs_r8.lo \
  	_abs_r10.lo _abs_r16.lo _aimag_c4.lo _aimag_c8.lo \
  	_aimag_c10.lo _aimag_c16.lo _exp_r4.lo _exp_r8.lo _exp_r10.lo \
-@@ -400,63 +374,59 @@ am__objects_55 = _abs_c4.lo _abs_c8.lo _abs_c10.lo _abs_c16.lo \
+@@ -400,63 +378,59 @@ am__objects_55 = _abs_c4.lo _abs_c8.lo _abs_c10.lo _abs_c16.lo \
  	_conjg_c4.lo _conjg_c8.lo _conjg_c10.lo _conjg_c16.lo \
  	_aint_r4.lo _aint_r8.lo _aint_r10.lo _aint_r16.lo _anint_r4.lo \
  	_anint_r8.lo _anint_r10.lo _anint_r16.lo
@@ -6542,7 +6562,15 @@ index 03c396873..ab0eb5e5c 100644
  AMTAR = @AMTAR@
  
  # Fortran rules for complex multiplication and division
-@@ -493,16 +463,31 @@ FCFLAGS = @FCFLAGS@
+@@ -481,6 +455,7 @@ CPPFLAGS = @CPPFLAGS@
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
++DLLTOOL = @DLLTOOL@
+ DSYMUTIL = @DSYMUTIL@
+ DUMPBIN = @DUMPBIN@
+ ECHO_C = @ECHO_C@
+@@ -493,16 +468,31 @@ FCFLAGS = @FCFLAGS@
  FGREP = @FGREP@
  FPU_HOST_HEADER = @FPU_HOST_HEADER@
  GREP = @GREP@
@@ -6575,18 +6603,21 @@ index 03c396873..ab0eb5e5c 100644
  LIBOBJS = @LIBOBJS@
  LIBQUADINCLUDE = @LIBQUADINCLUDE@
  LIBQUADLIB = @LIBQUADLIB@
-@@ -514,8 +499,9 @@ LIPO = @LIPO@
+@@ -513,9 +503,12 @@ LIBTOOL = @LIBTOOL@
+ LIPO = @LIPO@
  LN_S = @LN_S@
  LTLIBOBJS = @LTLIBOBJS@
++LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
  MAINT = @MAINT@
 +MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 +MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
  MAKEINFO = @MAKEINFO@
 -MKDIR_P = @MKDIR_P@
++MANIFEST_TOOL = @MANIFEST_TOOL@
  NM = @NM@
  NMEDIT = @NMEDIT@
  OBJDUMP = @OBJDUMP@
-@@ -537,13 +523,11 @@ SET_MAKE = @SET_MAKE@
+@@ -537,13 +530,12 @@ SET_MAKE = @SET_MAKE@
  SHELL = @SHELL@
  STRIP = @STRIP@
  VERSION = @VERSION@
@@ -6594,6 +6625,7 @@ index 03c396873..ab0eb5e5c 100644
 -abs_srcdir = @abs_srcdir@
 -abs_top_builddir = @abs_top_builddir@
 -abs_top_srcdir = @abs_top_srcdir@
++ac_ct_AR = @ac_ct_AR@
  ac_ct_CC = @ac_ct_CC@
  ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
  ac_ct_FC = @ac_ct_FC@
@@ -6602,7 +6634,7 @@ index 03c396873..ab0eb5e5c 100644
  am__include = @am__include@
  am__leading_dot = @am__leading_dot@
  am__quote = @am__quote@
-@@ -557,7 +541,6 @@ build_libsubdir = @build_libsubdir@
+@@ -557,7 +549,6 @@ build_libsubdir = @build_libsubdir@
  build_os = @build_os@
  build_subdir = @build_subdir@
  build_vendor = @build_vendor@
@@ -6610,7 +6642,7 @@ index 03c396873..ab0eb5e5c 100644
  datadir = @datadir@
  datarootdir = @datarootdir@
  docdir = @docdir@
-@@ -587,13 +570,14 @@ mkdir_p = @mkdir_p@
+@@ -587,13 +578,14 @@ mkdir_p = @mkdir_p@
  multi_basedir = @multi_basedir@
  oldincludedir = @oldincludedir@
  onestep = @onestep@
@@ -6626,7 +6658,7 @@ index 03c396873..ab0eb5e5c 100644
  sysconfdir = @sysconfdir@
  target = @target@
  target_alias = @target_alias@
-@@ -604,9 +588,6 @@ target_subdir = @target_subdir@
+@@ -604,9 +596,6 @@ target_subdir = @target_subdir@
  target_vendor = @target_vendor@
  toolexecdir = @toolexecdir@
  toolexeclibdir = @toolexeclibdir@
@@ -6636,7 +6668,23 @@ index 03c396873..ab0eb5e5c 100644
  ACLOCAL_AMFLAGS = -I .. -I ../config
  gcc_version := $(shell @get_gcc_base_ver@ $(top_srcdir)/../gcc/BASE-VER)
  @LIBGFOR_USE_SYMVER_FALSE@version_arg = 
-@@ -645,6 +626,14 @@ AM_CPPFLAGS = -iquote$(srcdir)/io -I$(srcdir)/$(MULTISRCTOP)../gcc \
+@@ -621,11 +610,13 @@ LTLDFLAGS = $(shell $(SHELL) $(top_srcdir)/../libtool-ldflags $(LDFLAGS)) \
+ toolexeclib_LTLIBRARIES = libgfortran.la
+ toolexeclib_DATA = libgfortran.spec
+ libgfortran_la_LINK = $(LINK) $(libgfortran_la_LDFLAGS)
++# MPC HAD A CONFLICT IN FLAGS BELOW
++# DID REMOVE: ../libbacktrace/libbacktrace.la $(version_arg) 
+ libgfortran_la_LDFLAGS = -version-info `grep -v '^\#' $(srcdir)/libtool-version` \
+-	$(LTLDFLAGS) $(LIBQUADLIB) ../libbacktrace/libbacktrace.la \
++	$(LTLDFLAGS) $(LIBQUADLIB)  \
+ 	$(HWCAP_LDFLAGS) \
+ 	-lm $(extra_ldflags_libgfortran) \
+-	$(version_arg) -Wc,-shared-libgcc
++	-Wc,-shared-libgcc
+ 
+ libgfortran_la_DEPENDENCIES = $(version_dep) libgfortran.spec $(LIBQUADLIB_DEP)
+ cafexeclib_LTLIBRARIES = libcaf_single.la
+@@ -645,6 +636,14 @@ AM_CPPFLAGS = -iquote$(srcdir)/io -I$(srcdir)/$(MULTISRCTOP)../gcc \
  	      -I$(MULTIBUILDTOP)../libbacktrace \
  	      -I../libbacktrace
  
@@ -6651,7 +6699,7 @@ index 03c396873..ab0eb5e5c 100644
  gfor_io_src = io/size_from_kind.c $(am__append_2)
  gfor_io_headers = \
  io/io.h \
-@@ -1382,6 +1371,20 @@ BUILT_SOURCES = $(gfor_built_src) $(gfor_built_specific_src) \
+@@ -1382,6 +1381,20 @@ BUILT_SOURCES = $(gfor_built_src) $(gfor_built_specific_src) \
  prereq_SRC = $(gfor_src) $(gfor_built_src) $(gfor_io_src) \
      $(gfor_helper_src) $(gfor_ieee_src) $(gfor_io_headers) $(gfor_specific_src)
  
@@ -6672,7 +6720,7 @@ index 03c396873..ab0eb5e5c 100644
  @onestep_FALSE@libgfortran_la_SOURCES = $(prereq_SRC)
  
  #libgfortran_f.o: $(filter %.f %.f90,$(prereq_SRC))
-@@ -1396,6 +1399,8 @@ prereq_SRC = $(gfor_src) $(gfor_built_src) $(gfor_io_src) \
+@@ -1396,6 +1409,8 @@ prereq_SRC = $(gfor_src) $(gfor_built_src) $(gfor_io_src) \
  #libgfortran_F.lo: 
  #	$(LTPPFCCOMPILE) -c -o $@ $^ -combine
  @onestep_TRUE@libgfortran_la_SOURCES = libgfortran_c.c $(filter-out %.c,$(prereq_SRC))
@@ -6681,7 +6729,7 @@ index 03c396873..ab0eb5e5c 100644
  I_M4_DEPS = m4/iparm.m4
  I_M4_DEPS0 = $(I_M4_DEPS) m4/iforeach.m4
  I_M4_DEPS1 = $(I_M4_DEPS) m4/ifunction.m4
-@@ -1410,21 +1415,21 @@ all: $(BUILT_SOURCES) config.h
+@@ -1410,21 +1425,21 @@ all: $(BUILT_SOURCES) config.h
  
  .SUFFIXES:
  .SUFFIXES: .F90 .c .f90 .lo .o .obj
@@ -6709,7 +6757,7 @@ index 03c396873..ab0eb5e5c 100644
  .PRECIOUS: Makefile
  Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
  	@case '$?' in \
-@@ -1440,20 +1445,21 @@ $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENC
+@@ -1440,20 +1455,21 @@ $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENC
  	$(SHELL) ./config.status --recheck
  
  $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
@@ -6737,7 +6785,7 @@ index 03c396873..ab0eb5e5c 100644
  	rm -f stamp-h1
  	touch $@
  
-@@ -1461,28 +1467,30 @@ distclean-hdr:
+@@ -1461,28 +1477,30 @@ distclean-hdr:
  	-rm -f config.h stamp-h1
  libgfortran.spec: $(top_builddir)/config.status $(srcdir)/libgfortran.spec.in
  	cd $(top_builddir) && $(SHELL) ./config.status $@
@@ -6783,7 +6831,7 @@ index 03c396873..ab0eb5e5c 100644
  	done
  
  clean-cafexeclibLTLIBRARIES:
-@@ -1495,26 +1503,21 @@ clean-cafexeclibLTLIBRARIES:
+@@ -1495,26 +1513,21 @@ clean-cafexeclibLTLIBRARIES:
  	done
  install-toolexeclibLTLIBRARIES: $(toolexeclib_LTLIBRARIES)
  	@$(NORMAL_INSTALL)
@@ -6820,7 +6868,7 @@ index 03c396873..ab0eb5e5c 100644
  	done
  
  clean-toolexeclibLTLIBRARIES:
-@@ -1525,10 +1528,10 @@ clean-toolexeclibLTLIBRARIES:
+@@ -1525,10 +1538,10 @@ clean-toolexeclibLTLIBRARIES:
  	  echo "rm -f \"$${dir}/so_locations\""; \
  	  rm -f "$${dir}/so_locations"; \
  	done
@@ -6835,7 +6883,7 @@ index 03c396873..ab0eb5e5c 100644
  
  mostlyclean-compile:
  	-rm -f *.$(OBJEXT)
-@@ -1704,6 +1707,10 @@ distclean-compile:
+@@ -1704,6 +1717,10 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ishftc.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kill.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgfortran_c.Plo@am__quote@
@@ -6846,7 +6894,7 @@ index 03c396873..ab0eb5e5c 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/link.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list_read.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lock.Plo@am__quote@
-@@ -1915,7 +1922,6 @@ distclean-compile:
+@@ -1915,7 +1932,6 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/norm2_r16.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/norm2_r4.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/norm2_r8.Plo@am__quote@
@@ -6854,7 +6902,7 @@ index 03c396873..ab0eb5e5c 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pack_c10.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pack_c16.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pack_c4.Plo@am__quote@
-@@ -2044,11 +2050,8 @@ distclean-compile:
+@@ -2044,11 +2060,8 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/system.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/system_clock.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/time.Plo@am__quote@
@@ -6866,7 +6914,7 @@ index 03c396873..ab0eb5e5c 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unlink.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unpack_c10.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unpack_c16.Plo@am__quote@
-@@ -2076,4141 +2079,4169 @@ distclean-compile:
+@@ -2076,4141 +2089,4169 @@ distclean-compile:
  	$(LTPPFCCOMPILE) -c -o $@ $<
  
  ieee_exceptions.lo: ieee/ieee_exceptions.F90
@@ -12782,7 +12830,7 @@ index 03c396873..ab0eb5e5c 100644
  
  .f90.o:
  	$(FCCOMPILE) -c -o $@ $<
-@@ -6222,13 +6253,13 @@ ieee_helper.lo: ieee/ieee_helper.c
+@@ -6222,13 +6263,13 @@ ieee_helper.lo: ieee/ieee_helper.c
  	$(LTFCCOMPILE) -c -o $@ $<
  
  selected_int_kind.lo: intrinsics/selected_int_kind.f90
@@ -12799,7 +12847,7 @@ index 03c396873..ab0eb5e5c 100644
  
  mostlyclean-libtool:
  	-rm -f *.lo
-@@ -6237,7 +6268,7 @@ clean-libtool:
+@@ -6237,7 +6278,7 @@ clean-libtool:
  	-rm -rf .libs _libs
  
  distclean-libtool:
@@ -12808,7 +12856,7 @@ index 03c396873..ab0eb5e5c 100644
  
  # GNU Make needs to see an explicit $(MAKE) variable in the command it
  # runs to enable its job server during parallel builds.  Hence the
-@@ -6255,107 +6286,97 @@ distclean-multi:
+@@ -6255,107 +6296,97 @@ distclean-multi:
  	$(MULTICLEAN) $(AM_MAKEFLAGS) DO=distclean multi-clean # $(MAKE)
  maintainer-clean-multi:
  	$(MULTICLEAN) $(AM_MAKEFLAGS) DO=maintainer-clean multi-clean # $(MAKE)
@@ -12956,7 +13004,7 @@ index 03c396873..ab0eb5e5c 100644
  	done
  install: $(BUILT_SOURCES)
  	$(MAKE) $(AM_MAKEFLAGS) install-am
-@@ -6368,22 +6389,16 @@ install-am: all-am
+@@ -6368,22 +6399,16 @@ install-am: all-am
  
  installcheck: installcheck-am
  install-strip:
@@ -12983,7 +13031,7 @@ index 03c396873..ab0eb5e5c 100644
  
  maintainer-clean-generic:
  	@echo "This command is intended for maintainers to use"
-@@ -6392,7 +6407,8 @@ maintainer-clean-generic:
+@@ -6392,7 +6417,8 @@ maintainer-clean-generic:
  clean: clean-am clean-multi
  
  clean-am: clean-cafexeclibLTLIBRARIES clean-generic clean-libtool \
@@ -12993,7 +13041,7 @@ index 03c396873..ab0eb5e5c 100644
  
  distclean: distclean-am distclean-multi
  	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-@@ -6407,39 +6423,19 @@ dvi-am:
+@@ -6407,39 +6433,19 @@ dvi-am:
  
  html: html-am
  
@@ -13033,7 +13081,7 @@ index 03c396873..ab0eb5e5c 100644
  installcheck-am:
  
  maintainer-clean: maintainer-clean-am maintainer-clean-multi
-@@ -6462,32 +6458,26 @@ ps: ps-am
+@@ -6462,32 +6468,26 @@ ps: ps-am
  
  ps-am:
  
@@ -13073,7 +13121,7 @@ index 03c396873..ab0eb5e5c 100644
  	uninstall-nodist_fincludeHEADERS uninstall-toolexeclibDATA \
  	uninstall-toolexeclibLTLIBRARIES
  
-@@ -6694,7 +6684,6 @@ fpu-target.inc: fpu-target.h $(srcdir)/libgfortran.h
+@@ -6694,7 +6694,6 @@ fpu-target.inc: fpu-target.h $(srcdir)/libgfortran.h
  
  @MAINTAINER_MODE_TRUE@$(gfor_misc_specifics): m4/misc_specifics.m4 m4/head.m4
  @MAINTAINER_MODE_TRUE@	$(M4) -Dfile=$@ -I$(srcdir)/m4 misc_specifics.m4 > $@
