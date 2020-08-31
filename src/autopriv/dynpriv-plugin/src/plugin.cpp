@@ -1063,8 +1063,14 @@ void extract_var_ref( struct var_to_push ** vars , tree  decl, int print )
 		case VECTOR_CST:
 		{
 			unsigned int cnt;
+			unsigned int len = 0;
 
-			for (cnt = 0; cnt < VECTOR_CST_NELTS (decl); ++cnt)
+#if __GNUC__ >= 8
+			len = VECTOR_CST_NELTS (decl).to_constant();
+#else
+			len = VECTOR_CST_NELTS (decl);
+#endif
+			for (cnt = 0; cnt < len; ++cnt)
 			{
 				extract_var_ref( vars, VECTOR_CST_ELT (decl, cnt), print );
 			}
