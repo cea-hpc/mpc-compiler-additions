@@ -175,8 +175,7 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/config-aux/missing AUTHORS COPYING ChangeLog \
 	INSTALL NEWS README config-aux/ar-lib config-aux/compile \
 	config-aux/config.guess config-aux/config.sub \
-	config-aux/depcomp config-aux/install-sh config-aux/ltmain.sh \
-	config-aux/missing
+	config-aux/install-sh config-aux/ltmain.sh config-aux/missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
