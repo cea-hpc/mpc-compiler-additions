@@ -518,6 +518,9 @@ download_dep()
 	elif test -f "${SCRIPTPATH}/${FNAME}"; then
 		echo "# ${FNAME} found in project, skipping download."
 		TARBALL_PATH="${SCRIPTPATH}/${FNAME}"
+	elif test -f "${HOME}/.autopriv/${FNAME}"; then
+		echo "# ${FNAME} found in user's HOME, skipping download."
+		TARBALL_PATH="${HOME}/.autopriv/${FNAME}"
 	else
 		echo "# Downloading $1 ..."
 		if have_cmd "wget"; then
