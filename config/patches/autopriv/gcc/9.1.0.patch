@@ -2397,7 +2397,7 @@ index 01c89cd572..890cc5c561 100644
        if (DECL_EXTERNAL (decl) || TREE_STATIC (decl))
  	{
 diff --git c/gcc/cp/decl2.c w/gcc/cp/decl2.c
-index 6f23ee1cd3..30c2ffc984 100644
+index 6f23ee1cd3..565722609f 100644
 --- c/gcc/cp/decl2.c
 +++ w/gcc/cp/decl2.c
 @@ -54,6 +54,8 @@ int raw_dump_id;
@@ -2600,8 +2600,7 @@ index 6f23ee1cd3..30c2ffc984 100644
 -  set_decl_tls_model (guard, decl_default_tls_model (guard));
 -  pushdecl_top_level_and_finish (guard, NULL_TREE);
 -
--  tree fn = get_local_tls_init_fn (loc);
-+  tree fn = get_local_tls_init_fn ();
+   tree fn = get_local_tls_init_fn (loc);
    start_preparsed_function (fn, NULL_TREE, SF_PRE_PARSED);
    tree body = begin_function_body ();
 -  tree if_stmt = begin_if_stmt ();
@@ -2729,7 +2728,7 @@ index 6f23ee1cd3..30c2ffc984 100644
  	  /* Does it need synthesizing?  */
  	  if (DECL_DEFAULTED_FN (decl) && ! DECL_INITIAL (decl)
 diff --git c/gcc/cp/parser.c w/gcc/cp/parser.c
-index 3d908916ae..b28de57c47 100644
+index 3d908916ae..a30f4173e0 100644
 --- c/gcc/cp/parser.c
 +++ w/gcc/cp/parser.c
 @@ -942,6 +942,11 @@ cp_keyword_starts_decl_specifier_p (enum rid keyword)
@@ -2785,7 +2784,7 @@ index 3d908916ae..b28de57c47 100644
      }
    else
      {
-@@ -40425,7 +40446,273 @@ cp_parser_omp_construct (cp_parser *parser, cp_token *pragma_tok, bool *if_p)
+@@ -40425,7 +40446,268 @@ cp_parser_omp_construct (cp_parser *parser, cp_token *pragma_tok, bool *if_p)
  
    protected_set_expr_location (stmt, pragma_tok->location);
  }
@@ -2922,11 +2921,6 @@ index 3d908916ae..b28de57c47 100644
 +		  if (DECL_LANG_SPECIFIC (v) == NULL)
 +		  {
 +			  retrofit_lang_decl (v);
-+
-+			  /* Make sure that DECL_DISCRIMINATOR_P continues to be true
-+				 after the allocation of the lang_decl structure.  */
-+			  if (DECL_DISCRIMINATOR_P (v))
-+				  DECL_LANG_SPECIFIC (v)->u.base.u2sel = 1;
 +		  }
 +
 +		  set_decl_tls_model (v, tls_type);
@@ -3060,7 +3054,7 @@ index 3d908916ae..b28de57c47 100644
  /* Transactional Memory parsing routines.  */
  
  /* Parse a transaction attribute.
-@@ -41054,7 +41341,6 @@ cp_parser_pragma (cp_parser *parser, enum pragma_context context, bool *if_p)
+@@ -41054,7 +41336,6 @@ cp_parser_pragma (cp_parser *parser, enum pragma_context context, bool *if_p)
  		"%<#pragma omp section%> may only be used in "
  		"%<#pragma omp sections%> construct");
        break;
@@ -3068,7 +3062,7 @@ index 3d908916ae..b28de57c47 100644
      case PRAGMA_IVDEP:
        {
  	if (context == pragma_external)
-@@ -41086,8 +41372,28 @@ cp_parser_pragma (cp_parser *parser, enum pragma_context context, bool *if_p)
+@@ -41086,8 +41367,28 @@ cp_parser_pragma (cp_parser *parser, enum pragma_context context, bool *if_p)
  	cp_parser_iteration_statement (parser, if_p, ivdep, unroll);
  	return true;
        }
@@ -3175,19 +3169,18 @@ index 80016a387e..3b6b6c8b3f 100644
  F95_OBJS = $(F95_PARSER_OBJS) $(FORTRAN_TARGET_OBJS) \
      fortran/convert.o fortran/dependency.o fortran/f95-lang.o \
 diff --git c/gcc/fortran/f95-lang.c w/gcc/fortran/f95-lang.c
-index 3e3d3046bd..1cd8de93c9 100644
+index 3e3d3046bd..8980f612f0 100644
 --- c/gcc/fortran/f95-lang.c
 +++ w/gcc/fortran/f95-lang.c
-@@ -1204,6 +1204,8 @@ gfc_init_builtin_functions (void)
-       gfc_define_builtin (name, builtin_types[type], code, name, attr);
- #undef DEF_GOACC_BUILTIN_ONLY
+@@ -1206,14 +1206,30 @@ gfc_init_builtin_functions (void)
  #define DEF_GOACC_BUILTIN_ONLY(code, name, type, attr) \
-+#undef DEF_MPC_BUILTIN
-+#define DEF_MPC_BUILTIN(code, name, type, attr) /* ignore */
        gfc_define_builtin ("__builtin_" name, builtin_types[type], code, NULL, \
  			  attr);
++#undef DEF_MPC_BUILTIN
++#define DEF_MPC_BUILTIN(code, name, type, attr) /* ignore */
  #undef DEF_GOMP_BUILTIN
-@@ -1212,8 +1214,22 @@ gfc_init_builtin_functions (void)
+ #define DEF_GOMP_BUILTIN(code, name, type, attr) /* ignore */
+ #include "../omp-builtins.def"
  #undef DEF_GOACC_BUILTIN
  #undef DEF_GOACC_BUILTIN_COMPILER
  #undef DEF_GOMP_BUILTIN
@@ -6082,7 +6075,7 @@ index ef9c23d54d..4ab9f5b5c0 100644
  
  I_M4_DEPS=m4/iparm.m4
 diff --git c/libgfortran/Makefile.in w/libgfortran/Makefile.in
-index eb519a39f3..311228a737 100644
+index eb519a39f3..32086c1f76 100644
 --- c/libgfortran/Makefile.in
 +++ w/libgfortran/Makefile.in
 @@ -1,8 +1,8 @@
@@ -6766,7 +6759,12 @@ index eb519a39f3..311228a737 100644
  datadir = @datadir@
  datarootdir = @datarootdir@
  docdir = @docdir@
-@@ -688,13 +587,14 @@ mkdir_p = @mkdir_p@
+@@ -684,17 +583,18 @@ localedir = @localedir@
+ localstatedir = @localstatedir@
+ lt_host_flags = @lt_host_flags@
+ mandir = @mandir@
+-mkdir_p = @mkdir_p@
++mkdir_p = mkdir -p
  multi_basedir = @multi_basedir@
  oldincludedir = @oldincludedir@
  onestep = @onestep@
