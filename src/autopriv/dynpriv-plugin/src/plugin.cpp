@@ -46,8 +46,6 @@ void rest_of_decl_compilation (tree decl,  int top_level,   int at_end);
 tree create_tmp_var (tree type, const char *prefix);
 tree build_stmt (location_t loc, enum tree_code code, ...);
 
-void for_each_global_decl (void (*callback) (tree decl));
-
 /* Define plugin informations */
 static struct plugin_info TLS_dyn_plugin_infos =
 {
