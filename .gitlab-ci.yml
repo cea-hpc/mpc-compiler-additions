@@ -11,6 +11,7 @@ stages:
   - Privatization Tests 8.4.0
   - Privatization Tests 9.1.0
   - Privatization Tests 9.2.0
+  - Privatization Tests 9.3.0
   - Workshare Tests
   - Finalization
 
@@ -20,13 +21,6 @@ stages:
   - master
   - merge_requests
   - web
-
-.source_env: &source_env
-  variables:
-    PATH: "$HOME/GL_$CI_PIPELINE_ID/install_730/bin:$PATH"
-    INCLUDE_PATH: "$HOME/GL_$CI_PIPELINE_ID/install_730/include:$INCLUDE_PATH"
-    CPATH: "$HOME/GL_$CI_PIPELINE_ID/install_730/include:$CPATH"
-    LD_LIBRARY_PATH: "$HOME/GL_$CI_PIPELINE_ID/install_730/lib:$HOME/GL_$CI_PIPELINE_ID/install_730/lib64:$LD_LIBRARY_PATH"
 
 ############################
 ##### EXTRA ACTIONS ########
@@ -42,7 +36,7 @@ Env Sanitize:
   <<: *run_by_main
   stage: Initialization
   script:
-    - mkdir -p $HOME/GL_$CI_PIPELINE_ID/{build_730,build_750,build_810,build_820,build_830,build_840,build_910,build_920,build_730-nogcc}
+    - mkdir -p $HOME/GL_$CI_PIPELINE_ID/{build_730,build_750,build_810,build_820,build_830,build_840,build_910,build_920,build_930,build_730-nogcc}
     - echo "Environment Cleaned !"
 
 # post-actions to cleanup the machine after the run
@@ -70,12 +64,12 @@ Build-nogcc:
   - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_730-nogcc --enable-debug --enable-color --disable-gcc
   - make -j8
 
-Build:
+Build 7.3.0 priv:
   <<: *run_by_main
   stage: Setup
   script:
   - cd $HOME/GL_$CI_PIPELINE_ID/build_730
-  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_730 --enable-debug --enable-color
+  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_730 --enable-debug --enable-color --gcc-version=7.3.0
   - make -j8
 
 Build 7.5.0 priv:
@@ -133,6 +127,14 @@ Build 9.2.0 priv:
   script:
   - cd $HOME/GL_$CI_PIPELINE_ID/build_920
   - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_920 --enable-debug --enable-color --disable-workshare --gcc-version=9.2.0
+  - make -j8
+
+Build 9.3.0 priv:
+  <<: *run_by_main
+  stage: Setup
+  script:
+  - cd $HOME/GL_$CI_PIPELINE_ID/build_930
+  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_930 --enable-debug --enable-color --disable-workshare --gcc-version=9.3.0
   - make -j8
 
 #################################
@@ -267,7 +269,6 @@ Compil Wrappers 820:
 Not supported 820:
   <<: *run_by_main
   stage: Privatization Tests 8.2.0
-  allow_failure: true
   script: 
   - cd $HOME/GL_$CI_PIPELINE_ID/build_820/BUILD_autopriv
   - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
@@ -407,6 +408,38 @@ Not supported 920:
   - cd $HOME/GL_$CI_PIPELINE_ID/build_920/BUILD_autopriv
   - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
 
+#################################
+####### PRIV TESTS 9.3.0 ########
+#################################
+
+No-privatization 930:
+  <<: *run_by_main
+  stage: Privatization Tests 9.3.0
+  script:
+  - cd $HOME/GL_$CI_PIPELINE_ID/build_930/BUILD_autopriv
+  - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
+
+With-privatization 930:
+  <<: *run_by_main
+  stage: Privatization Tests 9.3.0
+  script:
+  - cd $HOME/GL_$CI_PIPELINE_ID/build_930/BUILD_autopriv
+  - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
+
+Compil Wrappers 930:
+  <<: *run_by_main
+  stage: Privatization Tests 9.3.0
+  script: 
+  - cd $HOME/GL_$CI_PIPELINE_ID/build_930/BUILD_autopriv
+  - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
+
+Not supported 930:
+  <<: *run_by_main
+  stage: Privatization Tests 9.3.0
+  allow_failure: true
+  script: 
+  - cd $HOME/GL_$CI_PIPELINE_ID/build_930/BUILD_autopriv
+  - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
 
 #################################
 ####### WORKSHARE TESTS  ########
