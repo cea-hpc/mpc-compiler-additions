@@ -18,7 +18,11 @@
 #include "cgraph.h"
 #include "diagnostic.h"
 #include "timevar.h"
+
+#if __GNUC__ < 10
 #include "params.h"
+#endif
+
 #include "intl.h"
 #include "tree-pass.h"
 #include "hashtab.h"
