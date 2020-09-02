@@ -5993,15 +5993,18 @@ index e506200627..cec787dd42 100644
  
    if (d->ndeps == d->deps_size)
 diff --git c/libgfortran/Makefile.am w/libgfortran/Makefile.am
-index 295a2d4356..c9f4977b6e 100644
+index 295a2d4356..5a9f537582 100644
 --- c/libgfortran/Makefile.am
 +++ w/libgfortran/Makefile.am
-@@ -39,11 +39,13 @@ LTLDFLAGS = $(shell $(SHELL) $(top_srcdir)/../libtool-ldflags $(LDFLAGS)) \
+@@ -38,12 +38,15 @@ LTLDFLAGS = $(shell $(SHELL) $(top_srcdir)/../libtool-ldflags $(LDFLAGS)) \
+ 
  toolexeclib_LTLIBRARIES = libgfortran.la
  toolexeclib_DATA = libgfortran.spec
- libgfortran_la_LINK = $(LINK) $(libgfortran_la_LDFLAGS)
+-libgfortran_la_LINK = $(LINK) $(libgfortran_la_LDFLAGS)
++# MPC $(version_arg) moved to LINK from LDFLAGS
++libgfortran_la_LINK = $(LINK) $(libgfortran_la_LDFLAGS) $(version_arg)
 +# MPC HAD A CONFLICT IN FLAGS BELOW
-+# DID REMOVE: ../libbacktrace/libbacktrace.la $(version_arg) 
++# DID REMOVE: ../libbacktrace/libbacktrace.la) and put it in LDADD 
  libgfortran_la_LDFLAGS = -version-info `grep -v '^\#' $(srcdir)/libtool-version` \
 -	$(LTLDFLAGS) $(LIBQUADLIB) ../libbacktrace/libbacktrace.la \
 +	$(LTLDFLAGS) $(LIBQUADLIB)  \
@@ -6012,7 +6015,7 @@ index 295a2d4356..c9f4977b6e 100644
  libgfortran_la_DEPENDENCIES = $(version_dep) libgfortran.spec $(LIBQUADLIB_DEP)
  
  cafexeclib_LTLIBRARIES = libcaf_single.la
-@@ -83,6 +85,13 @@ if LIBGFOR_MINIMAL
+@@ -83,6 +86,13 @@ if LIBGFOR_MINIMAL
  AM_CFLAGS += -DLIBGFOR_MINIMAL
  endif
  
@@ -6026,7 +6029,7 @@ index 295a2d4356..c9f4977b6e 100644
  gfor_io_src= \
  io/size_from_kind.c
  
-@@ -96,12 +105,8 @@ io/inquire.c \
+@@ -96,12 +106,8 @@ io/inquire.c \
  io/intrinsics.c \
  io/list_read.c \
  io/lock.c \
@@ -6039,14 +6042,14 @@ index 295a2d4356..c9f4977b6e 100644
  io/write.c \
  io/fbuf.c \
  io/async.c
-@@ -1007,6 +1012,21 @@ BUILT_SOURCES=$(gfor_built_src) $(gfor_built_specific_src) \
+@@ -1007,6 +1013,21 @@ BUILT_SOURCES=$(gfor_built_src) $(gfor_built_specific_src) \
  prereq_SRC = $(gfor_src) $(gfor_built_src) $(gfor_io_src) \
      $(gfor_helper_src) $(gfor_ieee_src) $(gfor_io_headers) $(gfor_specific_src)
  
-+libgfortranunit_a_SOURCES = $(gfor_unit_src)
++libgfortranunit_la_SOURCES = $(gfor_unit_src)
 +
 +# Add libgfortran dirs to system includes in order to avoid auto privatization during build...
-+libgfortranunit_a_CFLAGS = \
++libgfortranunit_la_CFLAGS = \
 +-fPIC \
 +-fmpc-privatize \
 +-isystem $(srcdir) \
@@ -6056,26 +6059,26 @@ index 295a2d4356..c9f4977b6e 100644
 +-isystem $(srcdir)/caf/ \
 +$(AM_CFLAGS)
 +
-+noinst_LIBRARIES = libgfortranunit.a
++noinst_LTLIBRARIES = libgfortranunit.la
 +
  if onestep
  # dummy sources for libtool
  BUILT_SOURCES+=libgfortran_c.c libgfortran_f.f90
-@@ -1032,10 +1052,10 @@ libgfortran_c.lo: $(filter %.c,$(prereq_SRC))
+@@ -1032,10 +1053,10 @@ libgfortran_c.lo: $(filter %.c,$(prereq_SRC))
  #	$(LTPPFCCOMPILE) -c -o $@ $^ -combine
  
  libgfortran_la_SOURCES = libgfortran_c.c $(filter-out %.c,$(prereq_SRC))
 -
-+libgfortran_la_LIBADD = libgfortranunit.a
++libgfortran_la_LIBADD = libgfortranunit.la ../libbacktrace/libbacktrace.la 
  else
  libgfortran_la_SOURCES = $(prereq_SRC)
 -
-+libgfortran_la_LIBADD = libgfortranunit.a
++libgfortran_la_LIBADD = libgfortranunit.la ../libbacktrace/libbacktrace.la 
  endif
  
  I_M4_DEPS=m4/iparm.m4
 diff --git c/libgfortran/Makefile.in w/libgfortran/Makefile.in
-index 6e9612df8b..ac1fac1f43 100644
+index 6e9612df8b..49c0ea8310 100644
 --- c/libgfortran/Makefile.in
 +++ w/libgfortran/Makefile.in
 @@ -1,8 +1,8 @@
@@ -6090,11 +6093,10 @@ index 6e9612df8b..ac1fac1f43 100644
  # This Makefile.in is free software; the Free Software Foundation
  # gives unlimited permission to copy and/or distribute it,
  # with or without modifications, as long as this notice is preserved.
-@@ -16,67 +16,16 @@
+@@ -16,67 +16,15 @@
  
  
  
-+
 +srcdir = @srcdir@
 +top_srcdir = @top_srcdir@
  VPATH = @srcdir@
@@ -6164,7 +6166,7 @@ index 6e9612df8b..ac1fac1f43 100644
  install_sh_DATA = $(install_sh) -c -m 644
  install_sh_PROGRAM = $(install_sh) -c
  install_sh_SCRIPT = $(install_sh) -c
-@@ -100,12 +49,8 @@ target_triplet = @target@
+@@ -100,12 +48,8 @@ target_triplet = @target@
  @LIBGFOR_MINIMAL_FALSE@io/intrinsics.c \
  @LIBGFOR_MINIMAL_FALSE@io/list_read.c \
  @LIBGFOR_MINIMAL_FALSE@io/lock.c \
@@ -6177,7 +6179,7 @@ index 6e9612df8b..ac1fac1f43 100644
  @LIBGFOR_MINIMAL_FALSE@io/write.c \
  @LIBGFOR_MINIMAL_FALSE@io/fbuf.c \
  @LIBGFOR_MINIMAL_FALSE@io/async.c
-@@ -158,6 +103,15 @@ target_triplet = @target@
+@@ -158,6 +102,15 @@ target_triplet = @target@
  
  # dummy sources for libtool
  @onestep_TRUE@am__append_7 = libgfortran_c.c libgfortran_f.f90
@@ -6193,7 +6195,7 @@ index 6e9612df8b..ac1fac1f43 100644
  subdir = .
  ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
  am__aclocal_m4_deps = $(top_srcdir)/../config/depstand.m4 \
-@@ -178,60 +132,47 @@ am__aclocal_m4_deps = $(top_srcdir)/../config/depstand.m4 \
+@@ -178,49 +131,27 @@ am__aclocal_m4_deps = $(top_srcdir)/../config/depstand.m4 \
  	$(top_srcdir)/configure.ac
  am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
  	$(ACLOCAL_M4)
@@ -6206,16 +6208,6 @@ index 6e9612df8b..ac1fac1f43 100644
  CONFIG_HEADER = config.h
  CONFIG_CLEAN_FILES = libgfortran.spec
 -CONFIG_CLEAN_VPATH_FILES =
-+LIBRARIES = $(noinst_LIBRARIES)
-+ARFLAGS = cru
-+libgfortranunit_a_AR = $(AR) $(ARFLAGS)
-+libgfortranunit_a_LIBADD =
-+am__objects_1 = libgfortranunit_a-open.$(OBJEXT) \
-+	libgfortranunit_a-unix.$(OBJEXT) \
-+	libgfortranunit_a-transfer.$(OBJEXT) \
-+	libgfortranunit_a-unit.$(OBJEXT)
-+am_libgfortranunit_a_OBJECTS = $(am__objects_1)
-+libgfortranunit_a_OBJECTS = $(am_libgfortranunit_a_OBJECTS)
  am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
  am__vpath_adj = case $$p in \
      $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -6247,315 +6239,30 @@ index 6e9612df8b..ac1fac1f43 100644
  am__installdirs = "$(DESTDIR)$(cafexeclibdir)" \
  	"$(DESTDIR)$(toolexeclibdir)" "$(DESTDIR)$(toolexeclibdir)" \
  	"$(DESTDIR)$(gfor_cdir)" "$(DESTDIR)$(fincludedir)"
+-LTLIBRARIES = $(cafexeclib_LTLIBRARIES) $(toolexeclib_LTLIBRARIES)
 +cafexeclibLTLIBRARIES_INSTALL = $(INSTALL)
 +toolexeclibLTLIBRARIES_INSTALL = $(INSTALL)
- LTLIBRARIES = $(cafexeclib_LTLIBRARIES) $(toolexeclib_LTLIBRARIES)
++LTLIBRARIES = $(cafexeclib_LTLIBRARIES) $(noinst_LTLIBRARIES) \
++	$(toolexeclib_LTLIBRARIES)
  libcaf_single_la_LIBADD =
  am_libcaf_single_la_OBJECTS = single.lo
  libcaf_single_la_OBJECTS = $(am_libcaf_single_la_OBJECTS)
 -libgfortran_la_LIBADD =
--@LIBGFOR_MINIMAL_TRUE@am__objects_1 = minimal.lo
--@LIBGFOR_MINIMAL_FALSE@am__objects_2 = backtrace.lo convert_char.lo \
-+@LIBGFOR_MINIMAL_TRUE@am__objects_2 = minimal.lo
-+@LIBGFOR_MINIMAL_FALSE@am__objects_3 = backtrace.lo convert_char.lo \
+ @LIBGFOR_MINIMAL_TRUE@am__objects_1 = minimal.lo
+ @LIBGFOR_MINIMAL_FALSE@am__objects_2 = backtrace.lo convert_char.lo \
  @LIBGFOR_MINIMAL_FALSE@	environ.lo error.lo fpu.lo main.lo \
- @LIBGFOR_MINIMAL_FALSE@	pause.lo stop.lo
--am__objects_3 = bounds.lo compile_options.lo memory.lo string.lo \
--	select.lo $(am__objects_1) $(am__objects_2)
--am__objects_4 = all_l1.lo all_l2.lo all_l4.lo all_l8.lo all_l16.lo
--am__objects_5 = any_l1.lo any_l2.lo any_l4.lo any_l8.lo any_l16.lo
--am__objects_6 = count_1_l.lo count_2_l.lo count_4_l.lo count_8_l.lo \
-+am__objects_4 = bounds.lo compile_options.lo memory.lo string.lo \
-+	select.lo $(am__objects_2) $(am__objects_3)
-+am__objects_5 = all_l1.lo all_l2.lo all_l4.lo all_l8.lo all_l16.lo
-+am__objects_6 = any_l1.lo any_l2.lo any_l4.lo any_l8.lo any_l16.lo
-+am__objects_7 = count_1_l.lo count_2_l.lo count_4_l.lo count_8_l.lo \
- 	count_16_l.lo
--am__objects_7 = maxloc0_4_i1.lo maxloc0_8_i1.lo maxloc0_16_i1.lo \
-+am__objects_8 = maxloc0_4_i1.lo maxloc0_8_i1.lo maxloc0_16_i1.lo \
- 	maxloc0_4_i2.lo maxloc0_8_i2.lo maxloc0_16_i2.lo \
- 	maxloc0_4_i4.lo maxloc0_8_i4.lo maxloc0_16_i4.lo \
- 	maxloc0_4_i8.lo maxloc0_8_i8.lo maxloc0_16_i8.lo \
-@@ -240,7 +181,7 @@ am__objects_7 = maxloc0_4_i1.lo maxloc0_8_i1.lo maxloc0_16_i1.lo \
- 	maxloc0_4_r8.lo maxloc0_8_r8.lo maxloc0_16_r8.lo \
- 	maxloc0_4_r10.lo maxloc0_8_r10.lo maxloc0_16_r10.lo \
- 	maxloc0_4_r16.lo maxloc0_8_r16.lo maxloc0_16_r16.lo
--am__objects_8 = maxloc1_4_i1.lo maxloc1_8_i1.lo maxloc1_16_i1.lo \
-+am__objects_9 = maxloc1_4_i1.lo maxloc1_8_i1.lo maxloc1_16_i1.lo \
- 	maxloc1_4_i2.lo maxloc1_8_i2.lo maxloc1_16_i2.lo \
- 	maxloc1_4_i4.lo maxloc1_8_i4.lo maxloc1_16_i4.lo \
- 	maxloc1_4_i8.lo maxloc1_8_i8.lo maxloc1_16_i8.lo \
-@@ -249,10 +190,10 @@ am__objects_8 = maxloc1_4_i1.lo maxloc1_8_i1.lo maxloc1_16_i1.lo \
- 	maxloc1_4_r8.lo maxloc1_8_r8.lo maxloc1_16_r8.lo \
- 	maxloc1_4_r10.lo maxloc1_8_r10.lo maxloc1_16_r10.lo \
- 	maxloc1_4_r16.lo maxloc1_8_r16.lo maxloc1_16_r16.lo
--am__objects_9 = maxval_i1.lo maxval_i2.lo maxval_i4.lo maxval_i8.lo \
-+am__objects_10 = maxval_i1.lo maxval_i2.lo maxval_i4.lo maxval_i8.lo \
- 	maxval_i16.lo maxval_r4.lo maxval_r8.lo maxval_r10.lo \
- 	maxval_r16.lo
--am__objects_10 = minloc0_4_i1.lo minloc0_8_i1.lo minloc0_16_i1.lo \
-+am__objects_11 = minloc0_4_i1.lo minloc0_8_i1.lo minloc0_16_i1.lo \
- 	minloc0_4_i2.lo minloc0_8_i2.lo minloc0_16_i2.lo \
- 	minloc0_4_i4.lo minloc0_8_i4.lo minloc0_16_i4.lo \
- 	minloc0_4_i8.lo minloc0_8_i8.lo minloc0_16_i8.lo \
-@@ -261,7 +202,7 @@ am__objects_10 = minloc0_4_i1.lo minloc0_8_i1.lo minloc0_16_i1.lo \
- 	minloc0_4_r8.lo minloc0_8_r8.lo minloc0_16_r8.lo \
- 	minloc0_4_r10.lo minloc0_8_r10.lo minloc0_16_r10.lo \
- 	minloc0_4_r16.lo minloc0_8_r16.lo minloc0_16_r16.lo
--am__objects_11 = minloc1_4_i1.lo minloc1_8_i1.lo minloc1_16_i1.lo \
-+am__objects_12 = minloc1_4_i1.lo minloc1_8_i1.lo minloc1_16_i1.lo \
- 	minloc1_4_i2.lo minloc1_8_i2.lo minloc1_16_i2.lo \
- 	minloc1_4_i4.lo minloc1_8_i4.lo minloc1_16_i4.lo \
- 	minloc1_4_i8.lo minloc1_8_i8.lo minloc1_16_i8.lo \
-@@ -270,49 +211,49 @@ am__objects_11 = minloc1_4_i1.lo minloc1_8_i1.lo minloc1_16_i1.lo \
- 	minloc1_4_r8.lo minloc1_8_r8.lo minloc1_16_r8.lo \
- 	minloc1_4_r10.lo minloc1_8_r10.lo minloc1_16_r10.lo \
- 	minloc1_4_r16.lo minloc1_8_r16.lo minloc1_16_r16.lo
--am__objects_12 = minval_i1.lo minval_i2.lo minval_i4.lo minval_i8.lo \
-+am__objects_13 = minval_i1.lo minval_i2.lo minval_i4.lo minval_i8.lo \
- 	minval_i16.lo minval_r4.lo minval_r8.lo minval_r10.lo \
- 	minval_r16.lo
--am__objects_13 = product_i1.lo product_i2.lo product_i4.lo \
-+am__objects_14 = product_i1.lo product_i2.lo product_i4.lo \
- 	product_i8.lo product_i16.lo product_r4.lo product_r8.lo \
- 	product_r10.lo product_r16.lo product_c4.lo product_c8.lo \
- 	product_c10.lo product_c16.lo
--am__objects_14 = sum_i1.lo sum_i2.lo sum_i4.lo sum_i8.lo sum_i16.lo \
-+am__objects_15 = sum_i1.lo sum_i2.lo sum_i4.lo sum_i8.lo sum_i16.lo \
- 	sum_r4.lo sum_r8.lo sum_r10.lo sum_r16.lo sum_c4.lo sum_c8.lo \
- 	sum_c10.lo sum_c16.lo
--am__objects_15 = bessel_r4.lo bessel_r8.lo bessel_r10.lo bessel_r16.lo
--am__objects_16 = iall_i1.lo iall_i2.lo iall_i4.lo iall_i8.lo \
-+am__objects_16 = bessel_r4.lo bessel_r8.lo bessel_r10.lo bessel_r16.lo
-+am__objects_17 = iall_i1.lo iall_i2.lo iall_i4.lo iall_i8.lo \
- 	iall_i16.lo
--am__objects_17 = iany_i1.lo iany_i2.lo iany_i4.lo iany_i8.lo \
-+am__objects_18 = iany_i1.lo iany_i2.lo iany_i4.lo iany_i8.lo \
- 	iany_i16.lo
--am__objects_18 = iparity_i1.lo iparity_i2.lo iparity_i4.lo \
-+am__objects_19 = iparity_i1.lo iparity_i2.lo iparity_i4.lo \
- 	iparity_i8.lo iparity_i16.lo
--am__objects_19 = norm2_r4.lo norm2_r8.lo norm2_r10.lo norm2_r16.lo
--am__objects_20 = parity_l1.lo parity_l2.lo parity_l4.lo parity_l8.lo \
-+am__objects_20 = norm2_r4.lo norm2_r8.lo norm2_r10.lo norm2_r16.lo
-+am__objects_21 = parity_l1.lo parity_l2.lo parity_l4.lo parity_l8.lo \
- 	parity_l16.lo
--am__objects_21 = matmul_i1.lo matmul_i2.lo matmul_i4.lo matmul_i8.lo \
-+am__objects_22 = matmul_i1.lo matmul_i2.lo matmul_i4.lo matmul_i8.lo \
- 	matmul_i16.lo matmul_r4.lo matmul_r8.lo matmul_r10.lo \
- 	matmul_r16.lo matmul_c4.lo matmul_c8.lo matmul_c10.lo \
- 	matmul_c16.lo
--am__objects_22 = matmul_l4.lo matmul_l8.lo matmul_l16.lo
--am__objects_23 = shape_i1.lo shape_i2.lo shape_i4.lo shape_i8.lo \
-+am__objects_23 = matmul_l4.lo matmul_l8.lo matmul_l16.lo
-+am__objects_24 = shape_i1.lo shape_i2.lo shape_i4.lo shape_i8.lo \
- 	shape_i16.lo
--am__objects_24 = eoshift1_4.lo eoshift1_8.lo eoshift1_16.lo
--am__objects_25 = eoshift3_4.lo eoshift3_8.lo eoshift3_16.lo
--am__objects_26 = cshift1_4.lo cshift1_8.lo cshift1_16.lo
--am__objects_27 = reshape_i4.lo reshape_i8.lo reshape_i16.lo \
-+am__objects_25 = eoshift1_4.lo eoshift1_8.lo eoshift1_16.lo
-+am__objects_26 = eoshift3_4.lo eoshift3_8.lo eoshift3_16.lo
-+am__objects_27 = cshift1_4.lo cshift1_8.lo cshift1_16.lo
-+am__objects_28 = reshape_i4.lo reshape_i8.lo reshape_i16.lo \
- 	reshape_r4.lo reshape_r8.lo reshape_r10.lo reshape_r16.lo \
- 	reshape_c4.lo reshape_c8.lo reshape_c10.lo reshape_c16.lo
--am__objects_28 = in_pack_i1.lo in_pack_i2.lo in_pack_i4.lo \
-+am__objects_29 = in_pack_i1.lo in_pack_i2.lo in_pack_i4.lo \
- 	in_pack_i8.lo in_pack_i16.lo in_pack_r4.lo in_pack_r8.lo \
- 	in_pack_r10.lo in_pack_r16.lo in_pack_c4.lo in_pack_c8.lo \
- 	in_pack_c10.lo in_pack_c16.lo
--am__objects_29 = in_unpack_i1.lo in_unpack_i2.lo in_unpack_i4.lo \
-+am__objects_30 = in_unpack_i1.lo in_unpack_i2.lo in_unpack_i4.lo \
- 	in_unpack_i8.lo in_unpack_i16.lo in_unpack_r4.lo \
- 	in_unpack_r8.lo in_unpack_r10.lo in_unpack_r16.lo \
- 	in_unpack_c4.lo in_unpack_c8.lo in_unpack_c10.lo \
- 	in_unpack_c16.lo
--am__objects_30 = pow_i4_i4.lo pow_i8_i4.lo pow_i16_i4.lo pow_r16_i4.lo \
-+am__objects_31 = pow_i4_i4.lo pow_i8_i4.lo pow_i16_i4.lo pow_r16_i4.lo \
- 	pow_c4_i4.lo pow_c8_i4.lo pow_c10_i4.lo pow_c16_i4.lo \
- 	pow_i4_i8.lo pow_i8_i8.lo pow_i16_i8.lo pow_r4_i8.lo \
- 	pow_r8_i8.lo pow_r10_i8.lo pow_r16_i8.lo pow_c4_i8.lo \
-@@ -320,27 +261,27 @@ am__objects_30 = pow_i4_i4.lo pow_i8_i4.lo pow_i16_i4.lo pow_r16_i4.lo \
- 	pow_i8_i16.lo pow_i16_i16.lo pow_r4_i16.lo pow_r8_i16.lo \
- 	pow_r10_i16.lo pow_r16_i16.lo pow_c4_i16.lo pow_c8_i16.lo \
- 	pow_c10_i16.lo pow_c16_i16.lo
--am__objects_31 = pack_i1.lo pack_i2.lo pack_i4.lo pack_i8.lo \
-+am__objects_32 = pack_i1.lo pack_i2.lo pack_i4.lo pack_i8.lo \
- 	pack_i16.lo pack_r4.lo pack_r8.lo pack_r10.lo pack_r16.lo \
- 	pack_c4.lo pack_c8.lo pack_c10.lo pack_c16.lo
--am__objects_32 = unpack_i1.lo unpack_i2.lo unpack_i4.lo unpack_i8.lo \
-+am__objects_33 = unpack_i1.lo unpack_i2.lo unpack_i4.lo unpack_i8.lo \
- 	unpack_i16.lo unpack_r4.lo unpack_r8.lo unpack_r10.lo \
- 	unpack_r16.lo unpack_c4.lo unpack_c8.lo unpack_c10.lo \
- 	unpack_c16.lo
--am__objects_33 = matmulavx128_i1.lo matmulavx128_i2.lo \
-+am__objects_34 = matmulavx128_i1.lo matmulavx128_i2.lo \
- 	matmulavx128_i4.lo matmulavx128_i8.lo matmulavx128_i16.lo \
- 	matmulavx128_r4.lo matmulavx128_r8.lo matmulavx128_r10.lo \
- 	matmulavx128_r16.lo matmulavx128_c4.lo matmulavx128_c8.lo \
- 	matmulavx128_c10.lo matmulavx128_c16.lo
--am__objects_34 = spread_i1.lo spread_i2.lo spread_i4.lo spread_i8.lo \
-+am__objects_35 = spread_i1.lo spread_i2.lo spread_i4.lo spread_i8.lo \
- 	spread_i16.lo spread_r4.lo spread_r8.lo spread_r10.lo \
- 	spread_r16.lo spread_c4.lo spread_c8.lo spread_c10.lo \
- 	spread_c16.lo
--am__objects_35 = cshift0_i1.lo cshift0_i2.lo cshift0_i4.lo \
-+am__objects_36 = cshift0_i1.lo cshift0_i2.lo cshift0_i4.lo \
- 	cshift0_i8.lo cshift0_i16.lo cshift0_r4.lo cshift0_r8.lo \
- 	cshift0_r10.lo cshift0_r16.lo cshift0_c4.lo cshift0_c8.lo \
- 	cshift0_c10.lo cshift0_c16.lo
--am__objects_36 = cshift1_4_i1.lo cshift1_4_i2.lo cshift1_4_i4.lo \
-+am__objects_37 = cshift1_4_i1.lo cshift1_4_i2.lo cshift1_4_i4.lo \
- 	cshift1_4_i8.lo cshift1_4_i16.lo cshift1_4_r4.lo \
- 	cshift1_4_r8.lo cshift1_4_r10.lo cshift1_4_r16.lo \
- 	cshift1_4_c4.lo cshift1_4_c8.lo cshift1_4_c10.lo \
-@@ -353,58 +294,57 @@ am__objects_36 = cshift1_4_i1.lo cshift1_4_i2.lo cshift1_4_i4.lo \
- 	cshift1_16_i16.lo cshift1_16_r4.lo cshift1_16_r8.lo \
- 	cshift1_16_r10.lo cshift1_16_r16.lo cshift1_16_c4.lo \
- 	cshift1_16_c8.lo cshift1_16_c10.lo cshift1_16_c16.lo
--am__objects_37 = maxloc0_4_s1.lo maxloc0_4_s4.lo maxloc0_8_s1.lo \
-+am__objects_38 = maxloc0_4_s1.lo maxloc0_4_s4.lo maxloc0_8_s1.lo \
- 	maxloc0_8_s4.lo maxloc0_16_s1.lo maxloc0_16_s4.lo
--am__objects_38 = minloc0_4_s1.lo minloc0_4_s4.lo minloc0_8_s1.lo \
-+am__objects_39 = minloc0_4_s1.lo minloc0_4_s4.lo minloc0_8_s1.lo \
- 	minloc0_8_s4.lo minloc0_16_s1.lo minloc0_16_s4.lo
--am__objects_39 = maxloc1_4_s1.lo maxloc1_4_s4.lo maxloc1_8_s1.lo \
-+am__objects_40 = maxloc1_4_s1.lo maxloc1_4_s4.lo maxloc1_8_s1.lo \
- 	maxloc1_8_s4.lo maxloc1_16_s1.lo maxloc1_16_s4.lo
--am__objects_40 = minloc1_4_s1.lo minloc1_4_s4.lo minloc1_8_s1.lo \
-+am__objects_41 = minloc1_4_s1.lo minloc1_4_s4.lo minloc1_8_s1.lo \
- 	minloc1_8_s4.lo minloc1_16_s1.lo minloc1_16_s4.lo
--am__objects_41 = maxloc2_4_s1.lo maxloc2_4_s4.lo maxloc2_8_s1.lo \
-+am__objects_42 = maxloc2_4_s1.lo maxloc2_4_s4.lo maxloc2_8_s1.lo \
- 	maxloc2_8_s4.lo maxloc2_16_s1.lo maxloc2_16_s4.lo
--am__objects_42 = minloc2_4_s1.lo minloc2_4_s4.lo minloc2_8_s1.lo \
-+am__objects_43 = minloc2_4_s1.lo minloc2_4_s4.lo minloc2_8_s1.lo \
- 	minloc2_8_s4.lo minloc2_16_s1.lo minloc2_16_s4.lo
--am__objects_43 = maxval0_s1.lo maxval0_s4.lo
--am__objects_44 = minval0_s1.lo minval0_s4.lo
--am__objects_45 = maxval1_s1.lo maxval1_s4.lo
--am__objects_46 = minval1_s1.lo minval1_s4.lo
--am__objects_47 = findloc0_i1.lo findloc0_i2.lo findloc0_i4.lo \
-+am__objects_44 = maxval0_s1.lo maxval0_s4.lo
-+am__objects_45 = minval0_s1.lo minval0_s4.lo
-+am__objects_46 = maxval1_s1.lo maxval1_s4.lo
-+am__objects_47 = minval1_s1.lo minval1_s4.lo
-+am__objects_48 = findloc0_i1.lo findloc0_i2.lo findloc0_i4.lo \
- 	findloc0_i8.lo findloc0_i16.lo findloc0_r4.lo findloc0_r8.lo \
- 	findloc0_r10.lo findloc0_r16.lo findloc0_c4.lo findloc0_c8.lo \
- 	findloc0_c16.lo
--am__objects_48 = findloc0_s1.lo findloc0_s4.lo
--am__objects_49 = findloc1_i1.lo findloc1_i2.lo findloc1_i4.lo \
-+am__objects_49 = findloc0_s1.lo findloc0_s4.lo
-+am__objects_50 = findloc1_i1.lo findloc1_i2.lo findloc1_i4.lo \
- 	findloc1_i8.lo findloc1_i16.lo findloc1_r4.lo findloc1_r8.lo \
- 	findloc1_r10.lo findloc1_r16.lo findloc1_c4.lo findloc1_c8.lo \
- 	findloc1_c16.lo
--am__objects_50 = findloc1_s1.lo findloc1_s4.lo
--am__objects_51 = findloc2_s1.lo findloc2_s4.lo
--am__objects_52 = ISO_Fortran_binding.lo
--am__objects_53 = $(am__objects_4) $(am__objects_5) $(am__objects_6) \
--	$(am__objects_7) $(am__objects_8) $(am__objects_9) \
--	$(am__objects_10) $(am__objects_11) $(am__objects_12) \
--	$(am__objects_13) $(am__objects_14) $(am__objects_15) \
--	$(am__objects_16) $(am__objects_17) $(am__objects_18) \
--	$(am__objects_19) $(am__objects_20) $(am__objects_21) \
--	$(am__objects_22) $(am__objects_23) $(am__objects_24) \
--	$(am__objects_25) $(am__objects_26) $(am__objects_27) \
--	$(am__objects_28) $(am__objects_29) $(am__objects_30) \
--	$(am__objects_31) $(am__objects_32) $(am__objects_33) \
--	$(am__objects_34) $(am__objects_35) $(am__objects_36) \
--	$(am__objects_37) $(am__objects_38) $(am__objects_39) \
--	$(am__objects_40) $(am__objects_41) $(am__objects_42) \
--	$(am__objects_43) $(am__objects_44) $(am__objects_45) \
--	$(am__objects_46) $(am__objects_47) $(am__objects_48) \
--	$(am__objects_49) $(am__objects_50) $(am__objects_51) \
--	$(am__objects_52)
--@LIBGFOR_MINIMAL_FALSE@am__objects_54 = close.lo file_pos.lo format.lo \
-+am__objects_51 = findloc1_s1.lo findloc1_s4.lo
-+am__objects_52 = findloc2_s1.lo findloc2_s4.lo
-+am__objects_53 = ISO_Fortran_binding.lo
-+am__objects_54 = $(am__objects_5) $(am__objects_6) $(am__objects_7) \
-+	$(am__objects_8) $(am__objects_9) $(am__objects_10) \
-+	$(am__objects_11) $(am__objects_12) $(am__objects_13) \
-+	$(am__objects_14) $(am__objects_15) $(am__objects_16) \
-+	$(am__objects_17) $(am__objects_18) $(am__objects_19) \
-+	$(am__objects_20) $(am__objects_21) $(am__objects_22) \
-+	$(am__objects_23) $(am__objects_24) $(am__objects_25) \
-+	$(am__objects_26) $(am__objects_27) $(am__objects_28) \
-+	$(am__objects_29) $(am__objects_30) $(am__objects_31) \
-+	$(am__objects_32) $(am__objects_33) $(am__objects_34) \
-+	$(am__objects_35) $(am__objects_36) $(am__objects_37) \
-+	$(am__objects_38) $(am__objects_39) $(am__objects_40) \
-+	$(am__objects_41) $(am__objects_42) $(am__objects_43) \
-+	$(am__objects_44) $(am__objects_45) $(am__objects_46) \
-+	$(am__objects_47) $(am__objects_48) $(am__objects_49) \
-+	$(am__objects_50) $(am__objects_51) $(am__objects_52) \
-+	$(am__objects_53)
-+@LIBGFOR_MINIMAL_FALSE@am__objects_55 = close.lo file_pos.lo format.lo \
+@@ -400,8 +331,7 @@ am__objects_53 = $(am__objects_4) $(am__objects_5) $(am__objects_6) \
+ 	$(am__objects_52)
+ @LIBGFOR_MINIMAL_FALSE@am__objects_54 = close.lo file_pos.lo format.lo \
  @LIBGFOR_MINIMAL_FALSE@	inquire.lo intrinsics.lo list_read.lo \
 -@LIBGFOR_MINIMAL_FALSE@	lock.lo open.lo read.lo transfer.lo \
 -@LIBGFOR_MINIMAL_FALSE@	transfer128.lo unit.lo unix.lo write.lo \
 +@LIBGFOR_MINIMAL_FALSE@	lock.lo read.lo transfer128.lo write.lo \
  @LIBGFOR_MINIMAL_FALSE@	fbuf.lo async.lo
--am__objects_55 = size_from_kind.lo $(am__objects_54)
--@LIBGFOR_MINIMAL_FALSE@am__objects_56 = access.lo c99_functions.lo \
-+am__objects_56 = size_from_kind.lo $(am__objects_55)
-+@LIBGFOR_MINIMAL_FALSE@am__objects_57 = access.lo c99_functions.lo \
- @LIBGFOR_MINIMAL_FALSE@	chdir.lo chmod.lo clock.lo cpu_time.lo \
- @LIBGFOR_MINIMAL_FALSE@	ctime.lo date_and_time.lo dtime.lo \
- @LIBGFOR_MINIMAL_FALSE@	env.lo etime.lo execute_command_line.lo \
-@@ -414,19 +354,19 @@ am__objects_55 = size_from_kind.lo $(am__objects_54)
- @LIBGFOR_MINIMAL_FALSE@	rename.lo stat.lo symlnk.lo \
- @LIBGFOR_MINIMAL_FALSE@	system_clock.lo time.lo umask.lo \
- @LIBGFOR_MINIMAL_FALSE@	unlink.lo
--@IEEE_SUPPORT_TRUE@am__objects_57 = ieee_helper.lo
--am__objects_58 = associated.lo abort.lo args.lo cshift0.lo eoshift0.lo \
-+@IEEE_SUPPORT_TRUE@am__objects_58 = ieee_helper.lo
-+am__objects_59 = associated.lo abort.lo args.lo cshift0.lo eoshift0.lo \
- 	eoshift2.lo erfc_scaled.lo extends_type_of.lo fnum.lo \
- 	ierrno.lo ishftc.lo is_contiguous.lo mvbits.lo move_alloc.lo \
- 	pack_generic.lo selected_char_kind.lo size.lo \
- 	spread_generic.lo string_intrinsics.lo rand.lo random.lo \
- 	reshape_generic.lo reshape_packed.lo selected_int_kind.lo \
- 	selected_real_kind.lo unpack_generic.lo in_pack_generic.lo \
--	in_unpack_generic.lo $(am__objects_56) $(am__objects_57)
--@IEEE_SUPPORT_TRUE@am__objects_59 = ieee_arithmetic.lo \
-+	in_unpack_generic.lo $(am__objects_57) $(am__objects_58)
-+@IEEE_SUPPORT_TRUE@am__objects_60 = ieee_arithmetic.lo \
- @IEEE_SUPPORT_TRUE@	ieee_exceptions.lo ieee_features.lo
--am__objects_60 =
--am__objects_61 = _abs_c4.lo _abs_c8.lo _abs_c10.lo _abs_c16.lo \
-+am__objects_61 =
-+am__objects_62 = _abs_c4.lo _abs_c8.lo _abs_c10.lo _abs_c16.lo \
- 	_abs_i4.lo _abs_i8.lo _abs_i16.lo _abs_r4.lo _abs_r8.lo \
- 	_abs_r10.lo _abs_r16.lo _aimag_c4.lo _aimag_c8.lo \
- 	_aimag_c10.lo _aimag_c16.lo _exp_r4.lo _exp_r8.lo _exp_r10.lo \
-@@ -450,115 +390,54 @@ am__objects_61 = _abs_c4.lo _abs_c8.lo _abs_c10.lo _abs_c16.lo \
- 	_conjg_c4.lo _conjg_c8.lo _conjg_c10.lo _conjg_c16.lo \
- 	_aint_r4.lo _aint_r8.lo _aint_r10.lo _aint_r16.lo _anint_r4.lo \
- 	_anint_r8.lo _anint_r10.lo _anint_r16.lo
--am__objects_62 = _sign_i4.lo _sign_i8.lo _sign_i16.lo _sign_r4.lo \
-+am__objects_63 = _sign_i4.lo _sign_i8.lo _sign_i16.lo _sign_r4.lo \
- 	_sign_r8.lo _sign_r10.lo _sign_r16.lo _dim_i4.lo _dim_i8.lo \
- 	_dim_i16.lo _dim_r4.lo _dim_r8.lo _dim_r10.lo _dim_r16.lo \
- 	_atan2_r4.lo _atan2_r8.lo _atan2_r10.lo _atan2_r16.lo \
- 	_mod_i4.lo _mod_i8.lo _mod_i16.lo _mod_r4.lo _mod_r8.lo \
- 	_mod_r10.lo _mod_r16.lo
--am__objects_63 = misc_specifics.lo
--am__objects_64 = $(am__objects_61) $(am__objects_62) $(am__objects_63) \
-+am__objects_64 = misc_specifics.lo
-+am__objects_65 = $(am__objects_62) $(am__objects_63) $(am__objects_64) \
- 	dprod_r8.lo f2c_specifics.lo random_init.lo
--am__objects_65 = $(am__objects_3) $(am__objects_53) $(am__objects_55) \
--	$(am__objects_58) $(am__objects_59) $(am__objects_60) \
--	$(am__objects_64)
--@onestep_FALSE@am_libgfortran_la_OBJECTS = $(am__objects_65)
-+am__objects_66 = $(am__objects_4) $(am__objects_54) $(am__objects_56) \
-+	$(am__objects_59) $(am__objects_60) $(am__objects_61) \
-+	$(am__objects_65)
-+@onestep_FALSE@am_libgfortran_la_OBJECTS = $(am__objects_66)
+ am__objects_55 = size_from_kind.lo $(am__objects_54)
+ @LIBGFOR_MINIMAL_FALSE@am__objects_56 = access.lo c99_functions.lo \
+@@ -465,100 +395,44 @@ am__objects_65 = $(am__objects_3) $(am__objects_53) $(am__objects_55) \
+ @onestep_FALSE@am_libgfortran_la_OBJECTS = $(am__objects_65)
  @onestep_TRUE@am_libgfortran_la_OBJECTS = libgfortran_c.lo
  libgfortran_la_OBJECTS = $(am_libgfortran_la_OBJECTS)
 -AM_V_P = $(am__v_P_@AM_V@)
@@ -6571,6 +6278,11 @@ index 6e9612df8b..ac1fac1f43 100644
 -am__v_at_0 = @
 -am__v_at_1 = 
 -DEFAULT_INCLUDES = -I.@am__isrc@
++libgfortranunit_la_LIBADD =
++am__objects_66 = libgfortranunit_la-open.lo libgfortranunit_la-unix.lo \
++	libgfortranunit_la-transfer.lo libgfortranunit_la-unit.lo
++am_libgfortranunit_la_OBJECTS = $(am__objects_66)
++libgfortranunit_la_OBJECTS = $(am_libgfortranunit_la_OBJECTS)
 +DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
  depcomp = $(SHELL) $(top_srcdir)/../depcomp
  am__depfiles_maybe = depfiles
@@ -6634,8 +6346,8 @@ index 6e9612df8b..ac1fac1f43 100644
 -    *) (install-info --version) >/dev/null 2>&1;; \
 -  esac
 +LTFCCOMPILE = $(LIBTOOL) --mode=compile $(FC) $(AM_FCFLAGS) $(FCFLAGS)
-+SOURCES = $(libgfortranunit_a_SOURCES) $(libcaf_single_la_SOURCES) \
-+	$(libgfortran_la_SOURCES)
++SOURCES = $(libcaf_single_la_SOURCES) $(libgfortran_la_SOURCES) \
++	$(libgfortranunit_la_SOURCES)
 +toolexeclibDATA_INSTALL = $(INSTALL_DATA)
  DATA = $(toolexeclib_DATA)
 +gfor_cHEADERS_INSTALL = $(INSTALL_HEADER)
@@ -6669,7 +6381,7 @@ index 6e9612df8b..ac1fac1f43 100644
  AMTAR = @AMTAR@
  
  # Fortran rules for complex multiplication and division
-@@ -568,7 +447,6 @@ AMTAR = @AMTAR@
+@@ -568,7 +442,6 @@ AMTAR = @AMTAR@
  # Some targets require additional compiler options for IEEE compatibility.
  AM_CFLAGS = @AM_CFLAGS@ -fcx-fortran-rules $(SECTION_FLAGS) \
  	$(IEEE_FLAGS) $(am__append_1)
@@ -6677,7 +6389,7 @@ index 6e9612df8b..ac1fac1f43 100644
  AM_FCFLAGS = @AM_FCFLAGS@ $(IEEE_FLAGS)
  AR = @AR@
  AS = @AS@
-@@ -596,16 +474,31 @@ FCFLAGS = @FCFLAGS@
+@@ -596,16 +469,31 @@ FCFLAGS = @FCFLAGS@
  FGREP = @FGREP@
  FPU_HOST_HEADER = @FPU_HOST_HEADER@
  GREP = @GREP@
@@ -6710,7 +6422,7 @@ index 6e9612df8b..ac1fac1f43 100644
  LIBOBJS = @LIBOBJS@
  LIBQUADINCLUDE = @LIBQUADINCLUDE@
  LIBQUADLIB = @LIBQUADLIB@
-@@ -617,8 +510,9 @@ LIPO = @LIPO@
+@@ -617,8 +505,9 @@ LIPO = @LIPO@
  LN_S = @LN_S@
  LTLIBOBJS = @LTLIBOBJS@
  MAINT = @MAINT@
@@ -6721,7 +6433,7 @@ index 6e9612df8b..ac1fac1f43 100644
  NM = @NM@
  NMEDIT = @NMEDIT@
  OBJDUMP = @OBJDUMP@
-@@ -640,13 +534,11 @@ SET_MAKE = @SET_MAKE@
+@@ -640,13 +529,11 @@ SET_MAKE = @SET_MAKE@
  SHELL = @SHELL@
  STRIP = @STRIP@
  VERSION = @VERSION@
@@ -6737,7 +6449,7 @@ index 6e9612df8b..ac1fac1f43 100644
  am__include = @am__include@
  am__leading_dot = @am__leading_dot@
  am__quote = @am__quote@
-@@ -660,7 +552,6 @@ build_libsubdir = @build_libsubdir@
+@@ -660,7 +547,6 @@ build_libsubdir = @build_libsubdir@
  build_os = @build_os@
  build_subdir = @build_subdir@
  build_vendor = @build_vendor@
@@ -6745,7 +6457,7 @@ index 6e9612df8b..ac1fac1f43 100644
  datadir = @datadir@
  datarootdir = @datarootdir@
  docdir = @docdir@
-@@ -690,14 +581,14 @@ mkdir_p = @mkdir_p@
+@@ -690,14 +576,14 @@ mkdir_p = @mkdir_p@
  multi_basedir = @multi_basedir@
  oldincludedir = @oldincludedir@
  onestep = @onestep@
@@ -6762,7 +6474,7 @@ index 6e9612df8b..ac1fac1f43 100644
  sysconfdir = @sysconfdir@
  target = @target@
  target_alias = @target_alias@
-@@ -708,9 +599,6 @@ target_subdir = @target_subdir@
+@@ -708,9 +594,6 @@ target_subdir = @target_subdir@
  target_vendor = @target_vendor@
  toolexecdir = @toolexecdir@
  toolexeclibdir = @toolexeclibdir@
@@ -6772,12 +6484,15 @@ index 6e9612df8b..ac1fac1f43 100644
  ACLOCAL_AMFLAGS = -I .. -I ../config
  gcc_version := $(shell @get_gcc_base_ver@ $(top_srcdir)/../gcc/BASE-VER)
  @LIBGFOR_USE_SYMVER_FALSE@version_arg = 
-@@ -727,11 +615,13 @@ LTLDFLAGS = $(shell $(SHELL) $(top_srcdir)/../libtool-ldflags $(LDFLAGS)) \
+@@ -726,12 +609,15 @@ LTLDFLAGS = $(shell $(SHELL) $(top_srcdir)/../libtool-ldflags $(LDFLAGS)) \
+ 
  toolexeclib_LTLIBRARIES = libgfortran.la
  toolexeclib_DATA = libgfortran.spec
- libgfortran_la_LINK = $(LINK) $(libgfortran_la_LDFLAGS)
+-libgfortran_la_LINK = $(LINK) $(libgfortran_la_LDFLAGS)
++# MPC $(version_arg) moved to LINK from LDFLAGS
++libgfortran_la_LINK = $(LINK) $(libgfortran_la_LDFLAGS) $(version_arg)
 +# MPC HAD A CONFLICT IN FLAGS BELOW
-+# DID REMOVE: ../libbacktrace/libbacktrace.la $(version_arg) 
++# DID REMOVE: ../libbacktrace/libbacktrace.la) and put it in LDADD 
  libgfortran_la_LDFLAGS = -version-info `grep -v '^\#' $(srcdir)/libtool-version` \
 -	$(LTLDFLAGS) $(LIBQUADLIB) ../libbacktrace/libbacktrace.la \
 +	$(LTLDFLAGS) $(LIBQUADLIB)  \
@@ -6788,7 +6503,7 @@ index 6e9612df8b..ac1fac1f43 100644
  
  libgfortran_la_DEPENDENCIES = $(version_dep) libgfortran.spec $(LIBQUADLIB_DEP)
  cafexeclib_LTLIBRARIES = libcaf_single.la
-@@ -751,6 +641,14 @@ AM_CPPFLAGS = -iquote$(srcdir)/io -I$(srcdir)/$(MULTISRCTOP)../gcc \
+@@ -751,6 +637,14 @@ AM_CPPFLAGS = -iquote$(srcdir)/io -I$(srcdir)/$(MULTISRCTOP)../gcc \
  	      -I$(MULTIBUILDTOP)../libbacktrace \
  	      -I../libbacktrace
  
@@ -6803,14 +6518,14 @@ index 6e9612df8b..ac1fac1f43 100644
  gfor_io_src = io/size_from_kind.c $(am__append_2)
  gfor_io_headers = \
  io/io.h \
-@@ -1538,6 +1436,20 @@ BUILT_SOURCES = $(gfor_built_src) $(gfor_built_specific_src) \
+@@ -1538,6 +1432,20 @@ BUILT_SOURCES = $(gfor_built_src) $(gfor_built_specific_src) \
  prereq_SRC = $(gfor_src) $(gfor_built_src) $(gfor_io_src) \
      $(gfor_helper_src) $(gfor_ieee_src) $(gfor_io_headers) $(gfor_specific_src)
  
-+libgfortranunit_a_SOURCES = $(gfor_unit_src)
++libgfortranunit_la_SOURCES = $(gfor_unit_src)
 +
 +# Add libgfortran dirs to system includes in order to avoid auto privatization during build...
-+libgfortranunit_a_CFLAGS = \
++libgfortranunit_la_CFLAGS = \
 +-fPIC \
 +-fmpc-privatize \
 +-isystem $(srcdir) \
@@ -6820,20 +6535,20 @@ index 6e9612df8b..ac1fac1f43 100644
 +-isystem $(srcdir)/caf/ \
 +$(AM_CFLAGS)
 +
-+noinst_LIBRARIES = libgfortranunit.a
++noinst_LTLIBRARIES = libgfortranunit.la
  @onestep_FALSE@libgfortran_la_SOURCES = $(prereq_SRC)
  
  #libgfortran_f.o: $(filter %.f %.f90,$(prereq_SRC))
-@@ -1552,6 +1464,8 @@ prereq_SRC = $(gfor_src) $(gfor_built_src) $(gfor_io_src) \
+@@ -1552,6 +1460,8 @@ prereq_SRC = $(gfor_src) $(gfor_built_src) $(gfor_io_src) \
  #libgfortran_F.lo: 
  #	$(LTPPFCCOMPILE) -c -o $@ $^ -combine
  @onestep_TRUE@libgfortran_la_SOURCES = libgfortran_c.c $(filter-out %.c,$(prereq_SRC))
-+@onestep_FALSE@libgfortran_la_LIBADD = libgfortranunit.a
-+@onestep_TRUE@libgfortran_la_LIBADD = libgfortranunit.a
++@onestep_FALSE@libgfortran_la_LIBADD = libgfortranunit.la ../libbacktrace/libbacktrace.la 
++@onestep_TRUE@libgfortran_la_LIBADD = libgfortranunit.la ../libbacktrace/libbacktrace.la 
  I_M4_DEPS = m4/iparm.m4
  I_M4_DEPS0 = $(I_M4_DEPS) m4/iforeach.m4
  I_M4_DEPS1 = $(I_M4_DEPS) m4/ifunction.m4
-@@ -1575,21 +1489,22 @@ all: $(BUILT_SOURCES) config.h
+@@ -1575,21 +1485,22 @@ all: $(BUILT_SOURCES) config.h
  
  .SUFFIXES:
  .SUFFIXES: .F90 .c .f90 .lo .o .obj
@@ -6862,7 +6577,7 @@ index 6e9612df8b..ac1fac1f43 100644
  Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
  	@case '$?' in \
  	  *config.status*) \
-@@ -1599,26 +1514,26 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
+@@ -1599,26 +1510,26 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
  	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe)'; \
  	    cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe);; \
  	esac;
@@ -6896,16 +6611,11 @@ index 6e9612df8b..ac1fac1f43 100644
  	rm -f stamp-h1
  	touch $@
  
-@@ -1627,81 +1542,70 @@ distclean-hdr:
+@@ -1626,82 +1537,75 @@ distclean-hdr:
+ 	-rm -f config.h stamp-h1
  libgfortran.spec: $(top_builddir)/config.status $(srcdir)/libgfortran.spec.in
  	cd $(top_builddir) && $(SHELL) ./config.status $@
- 
-+clean-noinstLIBRARIES:
-+	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
-+libgfortranunit.a: $(libgfortranunit_a_OBJECTS) $(libgfortranunit_a_DEPENDENCIES) 
-+	-rm -f libgfortranunit.a
-+	$(libgfortranunit_a_AR) libgfortranunit.a $(libgfortranunit_a_OBJECTS) $(libgfortranunit_a_LIBADD)
-+	$(RANLIB) libgfortranunit.a
+-
  install-cafexeclibLTLIBRARIES: $(cafexeclib_LTLIBRARIES)
  	@$(NORMAL_INSTALL)
 -	@list='$(cafexeclib_LTLIBRARIES)'; test -n "$(cafexeclibdir)" || list=; \
@@ -6950,8 +6660,16 @@ index 6e9612df8b..ac1fac1f43 100644
 -	  echo rm -f $${locs}; \
 -	  rm -f $${locs}; \
 -	}
--
 +	@list='$(cafexeclib_LTLIBRARIES)'; for p in $$list; do \
++	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
++	  test "$$dir" != "$$p" || dir=.; \
++	  echo "rm -f \"$${dir}/so_locations\""; \
++	  rm -f "$${dir}/so_locations"; \
++	done
+ 
++clean-noinstLTLIBRARIES:
++	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
++	@list='$(noinst_LTLIBRARIES)'; for p in $$list; do \
 +	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
 +	  test "$$dir" != "$$p" || dir=.; \
 +	  echo "rm -f \"$${dir}/so_locations\""; \
@@ -7017,6 +6735,8 @@ index 6e9612df8b..ac1fac1f43 100644
 +	$(libcaf_single_la_LINK) -rpath $(cafexeclibdir) $(libcaf_single_la_LDFLAGS) $(libcaf_single_la_OBJECTS) $(libcaf_single_la_LIBADD) $(LIBS)
 +libgfortran.la: $(libgfortran_la_OBJECTS) $(libgfortran_la_DEPENDENCIES) 
 +	$(libgfortran_la_LINK) -rpath $(toolexeclibdir) $(libgfortran_la_LDFLAGS) $(libgfortran_la_OBJECTS) $(libgfortran_la_LIBADD) $(LIBS)
++libgfortranunit.la: $(libgfortranunit_la_OBJECTS) $(libgfortranunit_la_DEPENDENCIES) 
++	$(LINK)  $(libgfortranunit_la_LDFLAGS) $(libgfortranunit_la_OBJECTS) $(libgfortranunit_la_LIBADD) $(LIBS)
  
  mostlyclean-compile:
  	-rm -f *.$(OBJEXT)
@@ -7024,10 +6744,10 @@ index 6e9612df8b..ac1fac1f43 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ishftc.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kill.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgfortran_c.Plo@am__quote@
-+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgfortranunit_a-open.Po@am__quote@
-+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgfortranunit_a-transfer.Po@am__quote@
-+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgfortranunit_a-unit.Po@am__quote@
-+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgfortranunit_a-unix.Po@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgfortranunit_la-open.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgfortranunit_la-transfer.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgfortranunit_la-unit.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgfortranunit_la-unix.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/link.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list_read.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lock.Plo@am__quote@
@@ -7051,7 +6771,7 @@ index 6e9612df8b..ac1fac1f43 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unlink.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unpack_c10.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unpack_c16.Plo@am__quote@
-@@ -2273,4402 +2177,4430 @@ distclean-compile:
+@@ -2273,4402 +2177,4402 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/write.Plo@am__quote@
  
  .F90.o:
@@ -7655,65 +7375,9 @@ index 6e9612df8b..ac1fac1f43 100644
 +@am__fastdepCC_TRUE@	if $(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
 +@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Plo"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
 +@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-+@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
-+
-+libgfortranunit_a-open.o: io/open.c
-+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -MT libgfortranunit_a-open.o -MD -MP -MF "$(DEPDIR)/libgfortranunit_a-open.Tpo" -c -o libgfortranunit_a-open.o `test -f 'io/open.c' || echo '$(srcdir)/'`io/open.c; \
-+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgfortranunit_a-open.Tpo" "$(DEPDIR)/libgfortranunit_a-open.Po"; else rm -f "$(DEPDIR)/libgfortranunit_a-open.Tpo"; exit 1; fi
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/open.c' object='libgfortranunit_a-open.o' libtool=no @AMDEPBACKSLASH@
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -c -o libgfortranunit_a-open.o `test -f 'io/open.c' || echo '$(srcdir)/'`io/open.c
-+
-+libgfortranunit_a-open.obj: io/open.c
-+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -MT libgfortranunit_a-open.obj -MD -MP -MF "$(DEPDIR)/libgfortranunit_a-open.Tpo" -c -o libgfortranunit_a-open.obj `if test -f 'io/open.c'; then $(CYGPATH_W) 'io/open.c'; else $(CYGPATH_W) '$(srcdir)/io/open.c'; fi`; \
-+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgfortranunit_a-open.Tpo" "$(DEPDIR)/libgfortranunit_a-open.Po"; else rm -f "$(DEPDIR)/libgfortranunit_a-open.Tpo"; exit 1; fi
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/open.c' object='libgfortranunit_a-open.obj' libtool=no @AMDEPBACKSLASH@
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -c -o libgfortranunit_a-open.obj `if test -f 'io/open.c'; then $(CYGPATH_W) 'io/open.c'; else $(CYGPATH_W) '$(srcdir)/io/open.c'; fi`
-+
-+libgfortranunit_a-unix.o: io/unix.c
-+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -MT libgfortranunit_a-unix.o -MD -MP -MF "$(DEPDIR)/libgfortranunit_a-unix.Tpo" -c -o libgfortranunit_a-unix.o `test -f 'io/unix.c' || echo '$(srcdir)/'`io/unix.c; \
-+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgfortranunit_a-unix.Tpo" "$(DEPDIR)/libgfortranunit_a-unix.Po"; else rm -f "$(DEPDIR)/libgfortranunit_a-unix.Tpo"; exit 1; fi
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/unix.c' object='libgfortranunit_a-unix.o' libtool=no @AMDEPBACKSLASH@
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -c -o libgfortranunit_a-unix.o `test -f 'io/unix.c' || echo '$(srcdir)/'`io/unix.c
-+
-+libgfortranunit_a-unix.obj: io/unix.c
-+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -MT libgfortranunit_a-unix.obj -MD -MP -MF "$(DEPDIR)/libgfortranunit_a-unix.Tpo" -c -o libgfortranunit_a-unix.obj `if test -f 'io/unix.c'; then $(CYGPATH_W) 'io/unix.c'; else $(CYGPATH_W) '$(srcdir)/io/unix.c'; fi`; \
-+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgfortranunit_a-unix.Tpo" "$(DEPDIR)/libgfortranunit_a-unix.Po"; else rm -f "$(DEPDIR)/libgfortranunit_a-unix.Tpo"; exit 1; fi
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/unix.c' object='libgfortranunit_a-unix.obj' libtool=no @AMDEPBACKSLASH@
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -c -o libgfortranunit_a-unix.obj `if test -f 'io/unix.c'; then $(CYGPATH_W) 'io/unix.c'; else $(CYGPATH_W) '$(srcdir)/io/unix.c'; fi`
-+
-+libgfortranunit_a-transfer.o: io/transfer.c
-+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -MT libgfortranunit_a-transfer.o -MD -MP -MF "$(DEPDIR)/libgfortranunit_a-transfer.Tpo" -c -o libgfortranunit_a-transfer.o `test -f 'io/transfer.c' || echo '$(srcdir)/'`io/transfer.c; \
-+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgfortranunit_a-transfer.Tpo" "$(DEPDIR)/libgfortranunit_a-transfer.Po"; else rm -f "$(DEPDIR)/libgfortranunit_a-transfer.Tpo"; exit 1; fi
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/transfer.c' object='libgfortranunit_a-transfer.o' libtool=no @AMDEPBACKSLASH@
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -c -o libgfortranunit_a-transfer.o `test -f 'io/transfer.c' || echo '$(srcdir)/'`io/transfer.c
-+
-+libgfortranunit_a-transfer.obj: io/transfer.c
-+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -MT libgfortranunit_a-transfer.obj -MD -MP -MF "$(DEPDIR)/libgfortranunit_a-transfer.Tpo" -c -o libgfortranunit_a-transfer.obj `if test -f 'io/transfer.c'; then $(CYGPATH_W) 'io/transfer.c'; else $(CYGPATH_W) '$(srcdir)/io/transfer.c'; fi`; \
-+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgfortranunit_a-transfer.Tpo" "$(DEPDIR)/libgfortranunit_a-transfer.Po"; else rm -f "$(DEPDIR)/libgfortranunit_a-transfer.Tpo"; exit 1; fi
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/transfer.c' object='libgfortranunit_a-transfer.obj' libtool=no @AMDEPBACKSLASH@
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -c -o libgfortranunit_a-transfer.obj `if test -f 'io/transfer.c'; then $(CYGPATH_W) 'io/transfer.c'; else $(CYGPATH_W) '$(srcdir)/io/transfer.c'; fi`
-+
-+libgfortranunit_a-unit.o: io/unit.c
-+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -MT libgfortranunit_a-unit.o -MD -MP -MF "$(DEPDIR)/libgfortranunit_a-unit.Tpo" -c -o libgfortranunit_a-unit.o `test -f 'io/unit.c' || echo '$(srcdir)/'`io/unit.c; \
-+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgfortranunit_a-unit.Tpo" "$(DEPDIR)/libgfortranunit_a-unit.Po"; else rm -f "$(DEPDIR)/libgfortranunit_a-unit.Tpo"; exit 1; fi
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/unit.c' object='libgfortranunit_a-unit.o' libtool=no @AMDEPBACKSLASH@
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -c -o libgfortranunit_a-unit.o `test -f 'io/unit.c' || echo '$(srcdir)/'`io/unit.c
-+
-+libgfortranunit_a-unit.obj: io/unit.c
-+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -MT libgfortranunit_a-unit.obj -MD -MP -MF "$(DEPDIR)/libgfortranunit_a-unit.Tpo" -c -o libgfortranunit_a-unit.obj `if test -f 'io/unit.c'; then $(CYGPATH_W) 'io/unit.c'; else $(CYGPATH_W) '$(srcdir)/io/unit.c'; fi`; \
-+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgfortranunit_a-unit.Tpo" "$(DEPDIR)/libgfortranunit_a-unit.Po"; else rm -f "$(DEPDIR)/libgfortranunit_a-unit.Tpo"; exit 1; fi
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/unit.c' object='libgfortranunit_a-unit.obj' libtool=no @AMDEPBACKSLASH@
  @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 -@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
-+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_a_CFLAGS) $(CFLAGS) -c -o libgfortranunit_a-unit.obj `if test -f 'io/unit.c'; then $(CYGPATH_W) 'io/unit.c'; else $(CYGPATH_W) '$(srcdir)/io/unit.c'; fi`
++@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
  
  single.lo: caf/single.c
 -@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT single.lo -MD -MP -MF $(DEPDIR)/single.Tpo -c -o single.lo `test -f 'caf/single.c' || echo '$(srcdir)/'`caf/single.c
@@ -13142,17 +12806,17 @@ index 6e9612df8b..ac1fac1f43 100644
 -@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT lock.lo -MD -MP -MF $(DEPDIR)/lock.Tpo -c -o lock.lo `test -f 'io/lock.c' || echo '$(srcdir)/'`io/lock.c
 -@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/lock.Tpo $(DEPDIR)/lock.Plo
 -@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='io/lock.c' object='lock.lo' libtool=yes @AMDEPBACKSLASH@
-+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT lock.lo -MD -MP -MF "$(DEPDIR)/lock.Tpo" -c -o lock.lo `test -f 'io/lock.c' || echo '$(srcdir)/'`io/lock.c; \
-+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/lock.Tpo" "$(DEPDIR)/lock.Plo"; else rm -f "$(DEPDIR)/lock.Tpo"; exit 1; fi
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/lock.c' object='lock.lo' libtool=yes @AMDEPBACKSLASH@
- @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 -@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o lock.lo `test -f 'io/lock.c' || echo '$(srcdir)/'`io/lock.c
 -
 -open.lo: io/open.c
 -@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT open.lo -MD -MP -MF $(DEPDIR)/open.Tpo -c -o open.lo `test -f 'io/open.c' || echo '$(srcdir)/'`io/open.c
 -@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/open.Tpo $(DEPDIR)/open.Plo
 -@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='io/open.c' object='open.lo' libtool=yes @AMDEPBACKSLASH@
--@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT lock.lo -MD -MP -MF "$(DEPDIR)/lock.Tpo" -c -o lock.lo `test -f 'io/lock.c' || echo '$(srcdir)/'`io/lock.c; \
++@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/lock.Tpo" "$(DEPDIR)/lock.Plo"; else rm -f "$(DEPDIR)/lock.Tpo"; exit 1; fi
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/lock.c' object='lock.lo' libtool=yes @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 -@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o open.lo `test -f 'io/open.c' || echo '$(srcdir)/'`io/open.c
 +@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o lock.lo `test -f 'io/lock.c' || echo '$(srcdir)/'`io/lock.c
  
@@ -13160,17 +12824,17 @@ index 6e9612df8b..ac1fac1f43 100644
 -@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT read.lo -MD -MP -MF $(DEPDIR)/read.Tpo -c -o read.lo `test -f 'io/read.c' || echo '$(srcdir)/'`io/read.c
 -@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/read.Tpo $(DEPDIR)/read.Plo
 -@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='io/read.c' object='read.lo' libtool=yes @AMDEPBACKSLASH@
-+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT read.lo -MD -MP -MF "$(DEPDIR)/read.Tpo" -c -o read.lo `test -f 'io/read.c' || echo '$(srcdir)/'`io/read.c; \
-+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/read.Tpo" "$(DEPDIR)/read.Plo"; else rm -f "$(DEPDIR)/read.Tpo"; exit 1; fi
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/read.c' object='read.lo' libtool=yes @AMDEPBACKSLASH@
- @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 -@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o read.lo `test -f 'io/read.c' || echo '$(srcdir)/'`io/read.c
 -
 -transfer.lo: io/transfer.c
 -@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT transfer.lo -MD -MP -MF $(DEPDIR)/transfer.Tpo -c -o transfer.lo `test -f 'io/transfer.c' || echo '$(srcdir)/'`io/transfer.c
 -@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/transfer.Tpo $(DEPDIR)/transfer.Plo
 -@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='io/transfer.c' object='transfer.lo' libtool=yes @AMDEPBACKSLASH@
--@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT read.lo -MD -MP -MF "$(DEPDIR)/read.Tpo" -c -o read.lo `test -f 'io/read.c' || echo '$(srcdir)/'`io/read.c; \
++@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/read.Tpo" "$(DEPDIR)/read.Plo"; else rm -f "$(DEPDIR)/read.Tpo"; exit 1; fi
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/read.c' object='read.lo' libtool=yes @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 -@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o transfer.lo `test -f 'io/transfer.c' || echo '$(srcdir)/'`io/transfer.c
 +@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o read.lo `test -f 'io/read.c' || echo '$(srcdir)/'`io/read.c
  
@@ -13178,10 +12842,7 @@ index 6e9612df8b..ac1fac1f43 100644
 -@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT transfer128.lo -MD -MP -MF $(DEPDIR)/transfer128.Tpo -c -o transfer128.lo `test -f 'io/transfer128.c' || echo '$(srcdir)/'`io/transfer128.c
 -@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/transfer128.Tpo $(DEPDIR)/transfer128.Plo
 -@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='io/transfer128.c' object='transfer128.lo' libtool=yes @AMDEPBACKSLASH@
-+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT transfer128.lo -MD -MP -MF "$(DEPDIR)/transfer128.Tpo" -c -o transfer128.lo `test -f 'io/transfer128.c' || echo '$(srcdir)/'`io/transfer128.c; \
-+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/transfer128.Tpo" "$(DEPDIR)/transfer128.Plo"; else rm -f "$(DEPDIR)/transfer128.Tpo"; exit 1; fi
-+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/transfer128.c' object='transfer128.lo' libtool=yes @AMDEPBACKSLASH@
- @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 -@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o transfer128.lo `test -f 'io/transfer128.c' || echo '$(srcdir)/'`io/transfer128.c
 -
 -unit.lo: io/unit.c
@@ -13195,7 +12856,10 @@ index 6e9612df8b..ac1fac1f43 100644
 -@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT unix.lo -MD -MP -MF $(DEPDIR)/unix.Tpo -c -o unix.lo `test -f 'io/unix.c' || echo '$(srcdir)/'`io/unix.c
 -@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/unix.Tpo $(DEPDIR)/unix.Plo
 -@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='io/unix.c' object='unix.lo' libtool=yes @AMDEPBACKSLASH@
--@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT transfer128.lo -MD -MP -MF "$(DEPDIR)/transfer128.Tpo" -c -o transfer128.lo `test -f 'io/transfer128.c' || echo '$(srcdir)/'`io/transfer128.c; \
++@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/transfer128.Tpo" "$(DEPDIR)/transfer128.Plo"; else rm -f "$(DEPDIR)/transfer128.Tpo"; exit 1; fi
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/transfer128.c' object='transfer128.lo' libtool=yes @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 -@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o unix.lo `test -f 'io/unix.c' || echo '$(srcdir)/'`io/unix.c
 +@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o transfer128.lo `test -f 'io/transfer128.c' || echo '$(srcdir)/'`io/transfer128.c
  
@@ -13866,9 +13530,37 @@ index 6e9612df8b..ac1fac1f43 100644
 +@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ieee_helper.lo -MD -MP -MF "$(DEPDIR)/ieee_helper.Tpo" -c -o ieee_helper.lo `test -f 'ieee/ieee_helper.c' || echo '$(srcdir)/'`ieee/ieee_helper.c; \
 +@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/ieee_helper.Tpo" "$(DEPDIR)/ieee_helper.Plo"; else rm -f "$(DEPDIR)/ieee_helper.Tpo"; exit 1; fi
 +@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='ieee/ieee_helper.c' object='ieee_helper.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ieee_helper.lo `test -f 'ieee/ieee_helper.c' || echo '$(srcdir)/'`ieee/ieee_helper.c
++
++libgfortranunit_la-open.lo: io/open.c
++@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_la_CFLAGS) $(CFLAGS) -MT libgfortranunit_la-open.lo -MD -MP -MF "$(DEPDIR)/libgfortranunit_la-open.Tpo" -c -o libgfortranunit_la-open.lo `test -f 'io/open.c' || echo '$(srcdir)/'`io/open.c; \
++@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgfortranunit_la-open.Tpo" "$(DEPDIR)/libgfortranunit_la-open.Plo"; else rm -f "$(DEPDIR)/libgfortranunit_la-open.Tpo"; exit 1; fi
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/open.c' object='libgfortranunit_la-open.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_la_CFLAGS) $(CFLAGS) -c -o libgfortranunit_la-open.lo `test -f 'io/open.c' || echo '$(srcdir)/'`io/open.c
++
++libgfortranunit_la-unix.lo: io/unix.c
++@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_la_CFLAGS) $(CFLAGS) -MT libgfortranunit_la-unix.lo -MD -MP -MF "$(DEPDIR)/libgfortranunit_la-unix.Tpo" -c -o libgfortranunit_la-unix.lo `test -f 'io/unix.c' || echo '$(srcdir)/'`io/unix.c; \
++@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgfortranunit_la-unix.Tpo" "$(DEPDIR)/libgfortranunit_la-unix.Plo"; else rm -f "$(DEPDIR)/libgfortranunit_la-unix.Tpo"; exit 1; fi
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/unix.c' object='libgfortranunit_la-unix.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_la_CFLAGS) $(CFLAGS) -c -o libgfortranunit_la-unix.lo `test -f 'io/unix.c' || echo '$(srcdir)/'`io/unix.c
++
++libgfortranunit_la-transfer.lo: io/transfer.c
++@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_la_CFLAGS) $(CFLAGS) -MT libgfortranunit_la-transfer.lo -MD -MP -MF "$(DEPDIR)/libgfortranunit_la-transfer.Tpo" -c -o libgfortranunit_la-transfer.lo `test -f 'io/transfer.c' || echo '$(srcdir)/'`io/transfer.c; \
++@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgfortranunit_la-transfer.Tpo" "$(DEPDIR)/libgfortranunit_la-transfer.Plo"; else rm -f "$(DEPDIR)/libgfortranunit_la-transfer.Tpo"; exit 1; fi
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/transfer.c' object='libgfortranunit_la-transfer.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_la_CFLAGS) $(CFLAGS) -c -o libgfortranunit_la-transfer.lo `test -f 'io/transfer.c' || echo '$(srcdir)/'`io/transfer.c
++
++libgfortranunit_la-unit.lo: io/unit.c
++@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_la_CFLAGS) $(CFLAGS) -MT libgfortranunit_la-unit.lo -MD -MP -MF "$(DEPDIR)/libgfortranunit_la-unit.Tpo" -c -o libgfortranunit_la-unit.lo `test -f 'io/unit.c' || echo '$(srcdir)/'`io/unit.c; \
++@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libgfortranunit_la-unit.Tpo" "$(DEPDIR)/libgfortranunit_la-unit.Plo"; else rm -f "$(DEPDIR)/libgfortranunit_la-unit.Tpo"; exit 1; fi
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='io/unit.c' object='libgfortranunit_la-unit.lo' libtool=yes @AMDEPBACKSLASH@
  @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 -@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ieee_helper.lo `test -f 'ieee/ieee_helper.c' || echo '$(srcdir)/'`ieee/ieee_helper.c
-+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ieee_helper.lo `test -f 'ieee/ieee_helper.c' || echo '$(srcdir)/'`ieee/ieee_helper.c
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgfortranunit_la_CFLAGS) $(CFLAGS) -c -o libgfortranunit_la-unit.lo `test -f 'io/unit.c' || echo '$(srcdir)/'`io/unit.c
  
  .f90.o:
 -	$(AM_V_FC)$(FCCOMPILE) -c -o $@ $<
@@ -13900,7 +13592,7 @@ index 6e9612df8b..ac1fac1f43 100644
  
  mostlyclean-libtool:
  	-rm -f *.lo
-@@ -6677,136 +6609,115 @@ clean-libtool:
+@@ -6677,136 +6581,115 @@ clean-libtool:
  	-rm -rf .libs _libs
  
  distclean-libtool:
@@ -14100,8 +13792,8 @@ index 6e9612df8b..ac1fac1f43 100644
  check: $(BUILT_SOURCES)
  	$(MAKE) $(AM_MAKEFLAGS) check-am
 -all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS) config.h all-local
-+all-am: Makefile $(LIBRARIES) $(LTLIBRARIES) all-multi $(DATA) \
-+		$(HEADERS) config.h all-local
++all-am: Makefile $(LTLIBRARIES) all-multi $(DATA) $(HEADERS) config.h \
++		all-local
  installdirs:
  	for dir in "$(DESTDIR)$(cafexeclibdir)" "$(DESTDIR)$(toolexeclibdir)" "$(DESTDIR)$(toolexeclibdir)" "$(DESTDIR)$(gfor_cdir)" "$(DESTDIR)$(fincludedir)"; do \
 -	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
@@ -14109,7 +13801,7 @@ index 6e9612df8b..ac1fac1f43 100644
  	done
  install: $(BUILT_SOURCES)
  	$(MAKE) $(AM_MAKEFLAGS) install-am
-@@ -6819,33 +6730,28 @@ install-am: all-am
+@@ -6819,33 +6702,28 @@ install-am: all-am
  
  installcheck: installcheck-am
  install-strip:
@@ -14143,15 +13835,15 @@ index 6e9612df8b..ac1fac1f43 100644
  
  clean-am: clean-cafexeclibLTLIBRARIES clean-generic clean-libtool \
 -	clean-local clean-toolexeclibLTLIBRARIES mostlyclean-am
-+	clean-local clean-noinstLIBRARIES clean-toolexeclibLTLIBRARIES \
-+	mostlyclean-am
++	clean-local clean-noinstLTLIBRARIES \
++	clean-toolexeclibLTLIBRARIES mostlyclean-am
  
 -distclean: distclean-am
 +distclean: distclean-am distclean-multi
  	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
  	-rm -rf ./$(DEPDIR)
  	-rm -f Makefile
-@@ -6858,42 +6764,23 @@ dvi-am:
+@@ -6858,42 +6736,23 @@ dvi-am:
  
  html: html-am
  
@@ -14197,7 +13889,7 @@ index 6e9612df8b..ac1fac1f43 100644
  	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
  	-rm -rf $(top_srcdir)/autom4te.cache
  	-rm -rf ./$(DEPDIR)
-@@ -6901,7 +6788,7 @@ maintainer-clean: maintainer-clean-am
+@@ -6901,7 +6760,7 @@ maintainer-clean: maintainer-clean-am
  maintainer-clean-am: distclean-am maintainer-clean-generic \
  	maintainer-clean-local
  
@@ -14206,7 +13898,7 @@ index 6e9612df8b..ac1fac1f43 100644
  
  mostlyclean-am: mostlyclean-compile mostlyclean-generic \
  	mostlyclean-libtool mostlyclean-local
-@@ -6915,35 +6802,31 @@ ps: ps-am
+@@ -6915,35 +6774,31 @@ ps: ps-am
  ps-am:
  
  uninstall-am: uninstall-cafexeclibLTLIBRARIES uninstall-gfor_cHEADERS \
@@ -14227,7 +13919,7 @@ index 6e9612df8b..ac1fac1f43 100644
 +
 +.PHONY: CTAGS GTAGS all all-am all-local all-multi am--refresh check \
 +	check-am clean clean-cafexeclibLTLIBRARIES clean-generic \
-+	clean-libtool clean-local clean-multi clean-noinstLIBRARIES \
++	clean-libtool clean-local clean-multi clean-noinstLTLIBRARIES \
 +	clean-toolexeclibLTLIBRARIES ctags distclean distclean-compile \
 +	distclean-generic distclean-hdr distclean-libtool \
 +	distclean-local distclean-multi distclean-tags dvi dvi-am html \
@@ -14263,7 +13955,7 @@ index 6e9612df8b..ac1fac1f43 100644
  @LIBGFOR_USE_SYMVER_SUN_TRUE@@LIBGFOR_USE_SYMVER_TRUE@gfortran.map-sun : $(srcdir)/gfortran.map \
  @LIBGFOR_USE_SYMVER_SUN_TRUE@@LIBGFOR_USE_SYMVER_TRUE@		$(top_srcdir)/../contrib/make_sunver.pl \
  @LIBGFOR_USE_SYMVER_SUN_TRUE@@LIBGFOR_USE_SYMVER_TRUE@		$(libgfortran_la_OBJECTS) $(libgfortran_la_LIBADD)
-@@ -7189,7 +7072,6 @@ mostlyclean-local: mostlyclean-multi
+@@ -7189,7 +7044,6 @@ mostlyclean-local: mostlyclean-multi
  clean-local: clean-multi
  distclean-local: distclean-multi
  maintainer-clean-local: maintainer-clean-multi
