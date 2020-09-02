@@ -28,7 +28,7 @@ def _gcc_patch_variants():
 
 
 def _gcc_version():
-    return {"7.4.0", "7.3.0", }
+    return {"4.8.5", "6.2.0", "7.4.0", "7.3.0", "7.5.0", "8.1.0", "8.2.0", "8.3.0", "8.4.0", "9.1.0", "9.2.0", "9.3.0", "10.1.0", "10.2.0", }
 
 
 class Autopriv(AutotoolsPackage):
@@ -38,7 +38,7 @@ class Autopriv(AutotoolsPackage):
     homepage = "http://mpc.hpcframework.com"
     url = "https://france.paratools.com/autopriv/autopriv-0.5.0.tar.gz"
     version('0.6.0',
-            sha256='79571cf780221bb2061d46aaf1247aa541083fa488866983fb7bc552bc11fd65')
+            sha256='d794ce7bae03805b0c4f9af0fde0235654287724fbe2c2974f9b6a5b1fe6e71f')
 
     depends_on("hwloc@1.11.11")
     depends_on("openpa")
@@ -57,8 +57,44 @@ class Autopriv(AutotoolsPackage):
 
     
     conflicts("+workshare",
+              when="gcc_version=10.2.0",
+              msg="gcc_version=10.2.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=10.1.0",
+              msg="gcc_version=10.1.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=9.3.0",
+              msg="gcc_version=9.3.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=9.2.0",
+              msg="gcc_version=9.2.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=9.1.0",
+              msg="gcc_version=9.1.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=8.4.0",
+              msg="gcc_version=8.4.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=8.3.0",
+              msg="gcc_version=8.3.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=8.2.0",
+              msg="gcc_version=8.2.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=8.1.0",
+              msg="gcc_version=8.1.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=7.5.0",
+              msg="gcc_version=7.5.0 is not compatible with variant workshare")
+    conflicts("+workshare",
               when="gcc_version=7.4.0",
               msg="gcc_version=7.4.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=6.2.0",
+              msg="gcc_version=6.2.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=4.8.5",
+              msg="gcc_version=4.8.5 is not compatible with variant workshare")
 
     def configure_args(self):
         spec = self.spec
