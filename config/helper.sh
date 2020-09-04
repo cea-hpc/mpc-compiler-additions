@@ -546,6 +546,10 @@ download_all_deps()
 	for p in $(package_list)
 	do
 		download_dep "$p" "$1"
+		# If files were elsewhere copy them in local dir
+		if test ! -f "$(basename "$TARBALL_PATH")"; then
+			cp "${TARBALL_PATH}" .
+		fi
 	done
 }
 
