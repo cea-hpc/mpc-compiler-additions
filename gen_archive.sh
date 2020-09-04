@@ -1,5 +1,17 @@
 #!/bin/sh
 
+
+set -e
+
+SCRIPTPATH=$(dirname "$(readlink -f "$0")")
+
+if test ! -f "$(basename "$0")"; then
+    echo "==================================================="
+    echo "Please run this script from autopriv root directory"
+    echo "==================================================="
+    exit 1
+fi
+
 set -x
 
 VERSION="`./.autopriv_version`"
@@ -10,7 +22,6 @@ git archive --format=tar.gz --prefix=autopriv-${VERSION}/ HEAD > $FILE
 echo "OK"
 
 
-SCRIPTPATH=$(dirname "$(readlink -f "$0")")
 
 
 TMPDIR=$(mktemp -d)
