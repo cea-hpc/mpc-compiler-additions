@@ -20,5 +20,6 @@ AC_CHECK_HEADERS([stdlib.h])
 
 AC_CONFIG_FILES([Makefile
                  tests/Makefile
-                 tests/simple/Makefile])
+                 tests/simple/Makefile
+                 tests/fortran/Makefile])
 AC_OUTPUT

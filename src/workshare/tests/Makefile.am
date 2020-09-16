@@ -1,1 +1,1 @@
-SUBDIRS=simple
+SUBDIRS=simple fortran
