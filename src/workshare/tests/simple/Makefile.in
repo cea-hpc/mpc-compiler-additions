@@ -86,9 +86,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = simple$(EXEEXT) simple2$(EXEEXT) \
-	test_stealing_collectives$(EXEEXT) \
-	test_stealing_workers$(EXEEXT)
+bin_PROGRAMS = simple$(EXEEXT)
 subdir = tests/simple
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -106,25 +104,6 @@ simple_OBJECTS = $(am_simple_OBJECTS)
 simple_LDADD = $(LDADD)
 simple_LINK = $(CCLD) $(simple_CFLAGS) $(CFLAGS) $(simple_LDFLAGS) \
 	$(LDFLAGS) -o $@
-am_simple2_OBJECTS = simple2-simple2.$(OBJEXT)
-simple2_OBJECTS = $(am_simple2_OBJECTS)
-simple2_LDADD = $(LDADD)
-simple2_LINK = $(CCLD) $(simple2_CFLAGS) $(CFLAGS) $(simple2_LDFLAGS) \
-	$(LDFLAGS) -o $@
-am_test_stealing_collectives_OBJECTS =  \
-	test_stealing_collectives-test_stealing_collectives.$(OBJEXT)
-test_stealing_collectives_OBJECTS =  \
-	$(am_test_stealing_collectives_OBJECTS)
-test_stealing_collectives_LDADD = $(LDADD)
-test_stealing_collectives_LINK = $(CCLD) \
-	$(test_stealing_collectives_CFLAGS) $(CFLAGS) \
-	$(test_stealing_collectives_LDFLAGS) $(LDFLAGS) -o $@
-am_test_stealing_workers_OBJECTS =  \
-	test_stealing_workers-test_stealing_workers.$(OBJEXT)
-test_stealing_workers_OBJECTS = $(am_test_stealing_workers_OBJECTS)
-test_stealing_workers_LDADD = $(LDADD)
-test_stealing_workers_LINK = $(CCLD) $(test_stealing_workers_CFLAGS) \
-	$(CFLAGS) $(test_stealing_workers_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -157,12 +136,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(simple_SOURCES) $(simple2_SOURCES) \
-	$(test_stealing_collectives_SOURCES) \
-	$(test_stealing_workers_SOURCES)
-DIST_SOURCES = $(simple_SOURCES) $(simple2_SOURCES) \
-	$(test_stealing_collectives_SOURCES) \
-	$(test_stealing_workers_SOURCES)
+SOURCES = $(simple_SOURCES)
+DIST_SOURCES = $(simple_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -196,7 +171,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
-CC = mpc_cc
+CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CPP = @CPP@
@@ -209,6 +184,8 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+FC = @FC@
+FCFLAGS = @FCFLAGS@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -239,6 +216,7 @@ abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 ac_ct_CC = @ac_ct_CC@
+ac_ct_FC = @ac_ct_FC@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -277,19 +255,9 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 WSFLAGS = -fws
-OMPFLAGS = -fopenmp
 simple_CFLAGS = -I$(top_srcdir)/tests/include $(WSFLAGS)
 simple_LDFLAGS = 
 simple_SOURCES = simple.c
-simple2_CFLAGS = -I$(top_srcdir)/tests/include $(WSFLAGS)
-simple2_LDFLAGS = 
-simple2_SOURCES = simple2.c
-test_stealing_collectives_CFLAGS = -I$(top_srcdir)/tests/include $(WSFLAGS)
-test_stealing_collectives_LDFLAGS = 
-test_stealing_collectives_SOURCES = test_stealing_collectives.c
-test_stealing_workers_CFLAGS = -I$(top_srcdir)/tests/include $(WSFLAGS) $(OMPFLAGS)
-test_stealing_workers_LDFLAGS = 
-test_stealing_workers_SOURCES = test_stealing_workers.c
 all: all-am
 
 .SUFFIXES:
@@ -370,18 +338,6 @@ simple$(EXEEXT): $(simple_OBJECTS) $(simple_DEPENDENCIES) $(EXTRA_simple_DEPENDE
 	@rm -f simple$(EXEEXT)
 	$(AM_V_CCLD)$(simple_LINK) $(simple_OBJECTS) $(simple_LDADD) $(LIBS)
 
-simple2$(EXEEXT): $(simple2_OBJECTS) $(simple2_DEPENDENCIES) $(EXTRA_simple2_DEPENDENCIES) 
-	@rm -f simple2$(EXEEXT)
-	$(AM_V_CCLD)$(simple2_LINK) $(simple2_OBJECTS) $(simple2_LDADD) $(LIBS)
-
-test_stealing_collectives$(EXEEXT): $(test_stealing_collectives_OBJECTS) $(test_stealing_collectives_DEPENDENCIES) $(EXTRA_test_stealing_collectives_DEPENDENCIES) 
-	@rm -f test_stealing_collectives$(EXEEXT)
-	$(AM_V_CCLD)$(test_stealing_collectives_LINK) $(test_stealing_collectives_OBJECTS) $(test_stealing_collectives_LDADD) $(LIBS)
-
-test_stealing_workers$(EXEEXT): $(test_stealing_workers_OBJECTS) $(test_stealing_workers_DEPENDENCIES) $(EXTRA_test_stealing_workers_DEPENDENCIES) 
-	@rm -f test_stealing_workers$(EXEEXT)
-	$(AM_V_CCLD)$(test_stealing_workers_LINK) $(test_stealing_workers_OBJECTS) $(test_stealing_workers_LDADD) $(LIBS)
-
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -389,9 +345,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simple-simple.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simple2-simple2.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_stealing_collectives-test_stealing_collectives.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_stealing_workers-test_stealing_workers.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -420,48 +373,6 @@ simple-simple.obj: simple.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simple.c' object='simple-simple.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(simple_CFLAGS) $(CFLAGS) -c -o simple-simple.obj `if test -f 'simple.c'; then $(CYGPATH_W) 'simple.c'; else $(CYGPATH_W) '$(srcdir)/simple.c'; fi`
-
-simple2-simple2.o: simple2.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(simple2_CFLAGS) $(CFLAGS) -MT simple2-simple2.o -MD -MP -MF $(DEPDIR)/simple2-simple2.Tpo -c -o simple2-simple2.o `test -f 'simple2.c' || echo '$(srcdir)/'`simple2.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/simple2-simple2.Tpo $(DEPDIR)/simple2-simple2.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simple2.c' object='simple2-simple2.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(simple2_CFLAGS) $(CFLAGS) -c -o simple2-simple2.o `test -f 'simple2.c' || echo '$(srcdir)/'`simple2.c
-
-simple2-simple2.obj: simple2.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(simple2_CFLAGS) $(CFLAGS) -MT simple2-simple2.obj -MD -MP -MF $(DEPDIR)/simple2-simple2.Tpo -c -o simple2-simple2.obj `if test -f 'simple2.c'; then $(CYGPATH_W) 'simple2.c'; else $(CYGPATH_W) '$(srcdir)/simple2.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/simple2-simple2.Tpo $(DEPDIR)/simple2-simple2.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='simple2.c' object='simple2-simple2.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(simple2_CFLAGS) $(CFLAGS) -c -o simple2-simple2.obj `if test -f 'simple2.c'; then $(CYGPATH_W) 'simple2.c'; else $(CYGPATH_W) '$(srcdir)/simple2.c'; fi`
-
-test_stealing_collectives-test_stealing_collectives.o: test_stealing_collectives.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_stealing_collectives_CFLAGS) $(CFLAGS) -MT test_stealing_collectives-test_stealing_collectives.o -MD -MP -MF $(DEPDIR)/test_stealing_collectives-test_stealing_collectives.Tpo -c -o test_stealing_collectives-test_stealing_collectives.o `test -f 'test_stealing_collectives.c' || echo '$(srcdir)/'`test_stealing_collectives.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_stealing_collectives-test_stealing_collectives.Tpo $(DEPDIR)/test_stealing_collectives-test_stealing_collectives.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_stealing_collectives.c' object='test_stealing_collectives-test_stealing_collectives.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_stealing_collectives_CFLAGS) $(CFLAGS) -c -o test_stealing_collectives-test_stealing_collectives.o `test -f 'test_stealing_collectives.c' || echo '$(srcdir)/'`test_stealing_collectives.c
-
-test_stealing_collectives-test_stealing_collectives.obj: test_stealing_collectives.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_stealing_collectives_CFLAGS) $(CFLAGS) -MT test_stealing_collectives-test_stealing_collectives.obj -MD -MP -MF $(DEPDIR)/test_stealing_collectives-test_stealing_collectives.Tpo -c -o test_stealing_collectives-test_stealing_collectives.obj `if test -f 'test_stealing_collectives.c'; then $(CYGPATH_W) 'test_stealing_collectives.c'; else $(CYGPATH_W) '$(srcdir)/test_stealing_collectives.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_stealing_collectives-test_stealing_collectives.Tpo $(DEPDIR)/test_stealing_collectives-test_stealing_collectives.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_stealing_collectives.c' object='test_stealing_collectives-test_stealing_collectives.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_stealing_collectives_CFLAGS) $(CFLAGS) -c -o test_stealing_collectives-test_stealing_collectives.obj `if test -f 'test_stealing_collectives.c'; then $(CYGPATH_W) 'test_stealing_collectives.c'; else $(CYGPATH_W) '$(srcdir)/test_stealing_collectives.c'; fi`
-
-test_stealing_workers-test_stealing_workers.o: test_stealing_workers.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_stealing_workers_CFLAGS) $(CFLAGS) -MT test_stealing_workers-test_stealing_workers.o -MD -MP -MF $(DEPDIR)/test_stealing_workers-test_stealing_workers.Tpo -c -o test_stealing_workers-test_stealing_workers.o `test -f 'test_stealing_workers.c' || echo '$(srcdir)/'`test_stealing_workers.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_stealing_workers-test_stealing_workers.Tpo $(DEPDIR)/test_stealing_workers-test_stealing_workers.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_stealing_workers.c' object='test_stealing_workers-test_stealing_workers.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_stealing_workers_CFLAGS) $(CFLAGS) -c -o test_stealing_workers-test_stealing_workers.o `test -f 'test_stealing_workers.c' || echo '$(srcdir)/'`test_stealing_workers.c
-
-test_stealing_workers-test_stealing_workers.obj: test_stealing_workers.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_stealing_workers_CFLAGS) $(CFLAGS) -MT test_stealing_workers-test_stealing_workers.obj -MD -MP -MF $(DEPDIR)/test_stealing_workers-test_stealing_workers.Tpo -c -o test_stealing_workers-test_stealing_workers.obj `if test -f 'test_stealing_workers.c'; then $(CYGPATH_W) 'test_stealing_workers.c'; else $(CYGPATH_W) '$(srcdir)/test_stealing_workers.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_stealing_workers-test_stealing_workers.Tpo $(DEPDIR)/test_stealing_workers-test_stealing_workers.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test_stealing_workers.c' object='test_stealing_workers-test_stealing_workers.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_stealing_workers_CFLAGS) $(CFLAGS) -c -o test_stealing_workers-test_stealing_workers.obj `if test -f 'test_stealing_workers.c'; then $(CYGPATH_W) 'test_stealing_workers.c'; else $(CYGPATH_W) '$(srcdir)/test_stealing_workers.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -668,6 +579,7 @@ uninstall-am: uninstall-binPROGRAMS
 	uninstall-binPROGRAMS
 
 .PRECIOUS: Makefile
+
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

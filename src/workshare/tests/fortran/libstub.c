@@ -10,28 +10,32 @@
 #define WS_UNUSED(a) (void)(a)
 #define WS_SUCCESS() do {printf("SUCCESS !\n"); }while(0)
 
-int x=0;
+extern struct
+{
+   int x;
+} x_;
+int x;
 void MPC_Workshare_start(void (*func) (void*,long long,long long) , void* shareds,long long lb, long long ub, long long incr, int chunk_size, int steal_chunk_size, int scheduling_types, int nowait)
 {
-  x++;
+  x_.x++;
 }
 void MPC_Workshare_stop_stealing()
 {
-  x++;
+  x_.x++;
 }
 
 void MPC_Workshare_resteal()
 {
-  x++;
+  x_.x++;
 }
 
 void MPC_Workshare_atomic_start()
 {
-  x++;
+  x_.x++;
 }
 
 void MPC_Workshare_critical_start()
 {
-  x++;
+  x_.x++;
 }
 #endif

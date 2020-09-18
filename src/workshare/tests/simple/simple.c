@@ -1,29 +1,34 @@
-#include <mpi.h>
 #include <ws_test.h>
-#define N 1000000
 
 int main(int argc, char ** argv)
 {
-  MPI_Init(&argc,&argv);
-  int i,rank,sum=0;
-  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+  int i,j=0,sum=0;
 #pragma ws for schedule(guided) reduction(+:sum)
-  for(i=0;i<N;i++)
+  for(i=0;i<10;i++)
   {
     sum++;
   }
-  MPI_Barrier(MPI_COMM_WORLD);
-  WS_ASSERT(sum,N);
 
-  sum = 0;
-#pragma ws for schedule(dynamic,10) reduction(+:sum)
-  for(i=0;i<N;i++)
+  WS_ASSERT(x,1);
+
+#pragma ws for schedule(dynamic,10) private(j) 
+  for(i=0;i<10;i++)
   {
+    j++;
     sum++;
   }
-  MPI_Barrier(MPI_COMM_WORLD);
-  WS_ASSERT(sum,N);
-  if(rank == 0) WS_SUCCESS();
-  MPI_Finalize();
+  WS_ASSERT(x,2);
+
+#pragma ws stopsteal
+  WS_ASSERT(x,3);
+#pragma ws resteal
+  WS_ASSERT(x,4);
+#pragma ws critical
+  {
+    i++;
+  }
+  
+  WS_ASSERT(x,5);
+  WS_SUCCESS();
   return 0;
 }
