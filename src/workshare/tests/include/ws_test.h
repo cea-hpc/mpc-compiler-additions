@@ -25,13 +25,14 @@ void MPC_Workshare_resteal()
   x++;
 }
 
-void MPC_Workshare_atomic_start()
-{
-  x++;
-}
-
 void MPC_Workshare_critical_start()
 {
   x++;
 }
+
+void MPC_Workshare_critical_end()
+{
+
+}
+
 #endif
