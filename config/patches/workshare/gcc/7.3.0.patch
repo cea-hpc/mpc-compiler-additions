@@ -40,6 +40,7 @@ diff -ru gcc/builtin-types.def ../gcc/builtin-types.def
 +		     BT_LONG, BT_LONG, BT_LONG, BT_INT, BT_INT, BT_INT,BT_INT)
 +
 +
+
 diff -ru gcc/c/c-parser.c ../gcc/c/c-parser.c
 --- gcc/c/c-parser.c	2020-07-15 18:05:41.000000000 +0200
 +++ ../gcc/c/c-parser.c	2020-07-15 17:12:38.000000000 +0200
@@ -52,15 +53,6 @@ diff -ru gcc/c/c-parser.c ../gcc/c/c-parser.c
  
  static void c_parser_omp_end_declare_target (c_parser *);
  static void c_parser_omp_declare (c_parser *, enum pragma_context);
-@@ -10179,7 +10181,7 @@
-   objc_add_dynamic_declaration (loc, list);
- }
- 
--
-+
- /* Handle pragmas.  Some OpenMP pragmas are associated with, and therefore
-    should be considered, statements.  ALLOW_STMT is true if we're within
-    the context of a function and such pragmas are to be allowed.  Returns
 @@ -10402,6 +10404,21 @@
        return false ;
  
@@ -92,15 +84,6 @@ diff -ru gcc/c/c-parser.c ../gcc/c/c-parser.c
  	  break;
  	case 't':
  	  if (!strcmp ("taskgroup", p))
-@@ -13698,8 +13717,6 @@
- 
-   if (finish_p)
-     {
--      if ((mask & (OMP_CLAUSE_MASK_1 << PRAGMA_OMP_CLAUSE_UNIFORM)) != 0)
--	return c_finish_omp_clauses (clauses, C_ORT_OMP_DECLARE_SIMD);
-       return c_finish_omp_clauses (clauses, C_ORT_OMP);
-     }
- 
 @@ -17423,9 +17440,369 @@
    return ret;
  }
@@ -471,16 +454,6 @@ diff -ru gcc/c/c-parser.c ../gcc/c/c-parser.c
  c_parser_omp_construct (c_parser *parser, bool *if_p)
  {
    enum pragma_kind p_kind;
-@@ -17488,8 +17865,7 @@
-       strcpy (p_name, "#pragma omp");
-       stmt = c_parser_omp_parallel (loc, parser, p_name, mask, NULL, if_p);
-       break;
--    case PRAGMA_OMP_SECTIONS:
--      strcpy (p_name, "#pragma omp");
-+    case PRAGMA_OMP_SECTIONS: strcpy (p_name, "#pragma omp");
-       stmt = c_parser_omp_sections (loc, parser, p_name, mask, NULL);
-       break;
-     case PRAGMA_OMP_SIMD:
 @@ -17513,6 +17889,44 @@
        strcpy (p_name, "#pragma omp");
        stmt = c_parser_omp_teams (loc, parser, p_name, mask, NULL, if_p);
@@ -508,21 +481,21 @@ diff -ru gcc/c/c-parser.c ../gcc/c/c-parser.c
 +      }
 +      stmt = c_parser_ws_critical (loc, parser, if_p);
 +      break;
-+    //case PRAGMA_WS_STOPSTEAL:
-+      //if(flag_mpc_ws == 2)
-+      //{
-+         //fprintf(stderr,"\033[1;33mFound WS STOPSTEAL pragma !\n\033[0;0m");
-+      //}
-+      //c_parser_ws_stopsteal(parser);
-+      //break;
-+    //case PRAGMA_WS_RESTEAL:
-+      //if(flag_mpc_ws == 2)
-+      //{
-+         //fprintf(stderr,"\033[1;33mFound WS RESTEAL pragma !\n\033[0;0m");
-+      //}
-+      //c_parser_ws_resteal(parser);
-+      //break;
-+
++    case PRAGMA_WS_STOPSTEAL:
++      if(flag_mpc_ws == 2)
++      {
++         fprintf(stderr,"\033[1;33mFound WS STOPSTEAL pragma !\n\033[0;0m");
++      }
++      c_parser_ws_stopsteal(parser);
++      break;
++    case PRAGMA_WS_RESTEAL:
++      if(flag_mpc_ws == 2)
++      {
++         fprintf(stderr,"\033[1;33mFound WS RESTEAL pragma !\n\033[0;0m");
++      }
++      c_parser_ws_resteal(parser);
++      break;
++     
      default:
        gcc_unreachable ();
      }
@@ -601,14 +574,7 @@ diff -ru gcc/c-family/c-omp.c ../gcc/c-family/c-omp.c
 +
  /* Complete a #pragma omp ordered construct.  STMT is the structured-block
     that follows the pragma.  LOC is the location of the #pragma.  */
- 
-@@ -131,7 +163,6 @@
-   tree x;
- 
-   x = builtin_decl_explicit (BUILT_IN_GOMP_BARRIER);
--  /* MPC OMP end */
-   x = build_call_expr_loc (loc, x, 0);
-   add_stmt (x);
+
  }
 diff -ru gcc/c-family/c.opt ../gcc/c-family/c.opt
 --- gcc/c-family/c.opt	2020-07-15 18:05:42.000000000 +0200
@@ -627,22 +593,7 @@ diff -ru gcc/c-family/c.opt ../gcc/c-family/c.opt
  
  fms-extensions
  C ObjC C++ ObjC++ Var(flag_ms_extensions)
-diff -ru gcc/c-family/c-opts.c ../gcc/c-family/c-opts.c
---- gcc/c-family/c-opts.c	2020-07-15 18:05:42.000000000 +0200
-+++ ../gcc/c-family/c-opts.c	2020-07-15 17:12:38.000000000 +0200
-@@ -1451,10 +1451,10 @@
- 		srand(rnd[2] + rnd[0]);
- 		rnd[3] = rand();;
- 		
--		char fname[64];
-+		char fname[20];
- 		char file_cont[500];
- 		
--		snprintf(fname, 64, "/tmp/tmp-gcc-insert-mpc-XXXXXX" );
-+		snprintf(fname, 20, "/tmp/tmp-gcc-XXXXXX" );
- 		snprintf(file_cont, 500, "void _%d%d%d%d(){}", rnd[0], rnd[1], rnd[2], rnd[3] );
- 		
- 		int fd = mkstemp(fname);
+
 diff -ru gcc/c-family/c-pragma.c ../gcc/c-family/c-pragma.c
 --- gcc/c-family/c-pragma.c	2020-07-15 18:05:42.000000000 +0200
 +++ ../gcc/c-family/c-pragma.c	2020-07-15 17:12:38.000000000 +0200
@@ -714,12 +665,10 @@ diff -ru gcc/c-family/c-pragma.h ../gcc/c-family/c-pragma.h
 +  PRAGMA_WS_CLAUSE_LASTPRIVATE = PRAGMA_OMP_CLAUSE_LASTPRIVATE,
 +  PRAGMA_WS_CLAUSE_REDUCTION = PRAGMA_OMP_CLAUSE_REDUCTION,
 +  PRAGMA_WS_CLAUSE_NUM_TASKS = PRAGMA_OMP_CLAUSE_NUM_TASKS,
-+  PRAGMA_WS_CLAUSE_NOWAIT = PRAGMA_OMP_CLAUSE_NOWAIT,
++  PRAGMA_WS_CLAUSE_NOWAIT = PRAGMA_OMP_CLAUSE_NOWAIT
  };
  
  extern struct cpp_reader* parse_in;
-Only in ../gcc/config/i386: i386.c.orig
-Only in ../gcc/config/i386: i386.md.orig
 diff -ru gcc/cp/constexpr.c ../gcc/cp/constexpr.c
 --- gcc/cp/constexpr.c	2020-07-15 18:05:42.000000000 +0200
 +++ ../gcc/cp/constexpr.c	2020-07-15 17:12:38.000000000 +0200
@@ -791,322 +740,7 @@ diff -ru gcc/cp/cp-tree.h ../gcc/cp/cp-tree.h
  
  /* in tree.c */
  extern int cp_tree_operand_length		(const_tree);
-diff -ru gcc/cp/decl2.c ../gcc/cp/decl2.c
---- gcc/cp/decl2.c	2020-07-15 18:05:44.000000000 +0200
-+++ ../gcc/cp/decl2.c	2020-07-15 17:12:39.000000000 +0200
-@@ -68,7 +68,7 @@
- static bool maybe_emit_vtables (tree);
- static tree start_objects (int, int);
- static void finish_objects (int, int, tree);
--static tree start_static_storage_duration_function (unsigned, bool);
-+static tree start_static_storage_duration_function (unsigned);
- static void finish_static_storage_duration_function (tree);
- static priority_info get_priority_info (int);
- static void do_static_initialization_or_destruction (tree, bool);
-@@ -951,8 +951,7 @@
-   if (VAR_P (value))
-     DECL_CONTEXT (value) = current_class_type;
- 
--
--  /* MPC TLS BEGIN */
-+/* MPC TLS BEGIN */
-   if ( flag_mpi_privatize &&
- 	TREE_CODE(value) == VAR_DECL &&
- 	( TREE_STATIC( value ) || DECL_EXTERNAL(value) ) &&
-@@ -971,25 +970,25 @@
-     if (!processing_template_decl)
- 	    set_decl_tls_model (value, decl_default_tls_model (value));
-   }
--  if (flag_mpc_privatize &&
--      TREE_CODE(value) == VAR_DECL &&
--      (TREE_STATIC(value) || DECL_EXTERNAL(value)) &&
--      !mpc_decl_match_invalid_header(value) &&
--      !TREE_READONLY(value) &&
--      !TREE_CONSTANT(value) &&
--      !DECL_THREAD_LOCAL_P(value))
--  {
--    fprintf(stderr,
--            "(Front-end C++) Automatic privatization to MPC task "
--            "(variable %s in file %s line %d)\n",
--            lang_decl_name(value, 2, 0),
--            DECL_SOURCE_FILE(value),
--            DECL_SOURCE_LINE(value));
--    CP_DECL_THREAD_LOCAL_P(value) = true;
--    if (!processing_template_decl)
--      set_decl_tls_model(value, TLS_MODEL_MPC_TASK);
--    }
--    /* MPC TLS END */
-+  if ( flag_mpc_privatize &&
-+		  TREE_CODE(value) == VAR_DECL &&
-+		  ( TREE_STATIC( value ) || DECL_EXTERNAL(value) ) &&
-+		  !mpc_decl_match_invalid_header(value) &&
-+		  !TREE_READONLY( value ) &&
-+		  !TREE_CONSTANT( value ) &&
-+		  !DECL_THREAD_LOCAL_P(value)
-+     ) {
-+	  fprintf( stderr,
-+			  "(Front-end C++) Automatic privatization to MPC task "
-+			  "(variable %s in file %s line %d)\n",
-+			  lang_decl_name( value, 2 , 0),
-+			  DECL_SOURCE_FILE(value),
-+			  DECL_SOURCE_LINE(value) ) ;
-+	  CP_DECL_THREAD_LOCAL_P(value) = true;
-+	  if (!processing_template_decl)
-+		  set_decl_tls_model (value, TLS_MODEL_MPC_TASK);
-+  }
-+  /* MPC TLS END */
-   
-     if (processing_template_decl && VAR_OR_FUNCTION_DECL_P (value))
-     {
-@@ -3531,27 +3530,8 @@
-    translation unit.  */
- 
- static tree
--start_static_storage_duration_function (unsigned count, bool add_tls=false)
-+start_static_storage_duration_function (unsigned count)
- {
--  /* MPC CPP */
--  if(flag_mpc_privatize && add_tls)
--  {
--    tree vars = tls_aggregates;
--    if (vars)
--    {
--      for (; vars; vars = TREE_CHAIN (vars))
--      {
--        tree var = TREE_VALUE(vars);
--        tree wrap = get_tls_wrapper_fn (var);
--        if(wrap != NULL_TREE)
--        {
--          generate_tls_wrapper(wrap);
--        }
--      }
--    }
--  }
--  /* MPC CPP */
--
-   tree type;
-   tree body;
-   char id[sizeof (SSDF_IDENTIFIER) + 1 /* '\0' */ + 32];
-@@ -3588,16 +3568,7 @@
- 	 DEFAULT_INIT_PRIORITY so enter it now.  That way when we walk
- 	 priorities later, we'll be sure to find the
- 	 DEFAULT_INIT_PRIORITY.  */
--/* MPC CPP */
--      priority_info prio = get_priority_info (DEFAULT_INIT_PRIORITY);
--
--      if(prio && add_tls )
--      {
--        /* Flag the presence of static initializers */
--        prio->initializations_p = 1;
--      }
--/* MPC CPP */
--
-+      get_priority_info (DEFAULT_INIT_PRIORITY);
-     }
- 
-   vec_safe_push (ssdf_decls, ssdf_decl);
-@@ -3632,24 +3603,6 @@
-   /* Set up the scope of the outermost block in the function.  */
-   body = begin_compound_stmt (BCS_FN_BODY);
- 
--  if (flag_mpc_privatize && add_tls)
--  {
--    tree vars = tls_aggregates;
--    if (vars)
--    {
--      for (; vars; vars = TREE_CHAIN (vars))
--      {
--        tree var = TREE_VALUE (vars);
--        tree init = get_tls_init_fn(var);
--        if(init != NULL_TREE)
--        {
--          tree decl = build_cxx_call (init, 0, NULL, tf_warning_or_error);
--          finish_expr_stmt(decl);
--        }
--      }
--    }
--  }
--
-   return body;
- }
- 
-@@ -4355,7 +4308,7 @@
- /* Build up the function to run dynamic initializers for thread_local
-    variables in this translation unit and alias the init functions for the
-    individual variables to it.  */
--/* MPCCP */
-+
- static void
- handle_tls_init (void)
- {
-@@ -4367,69 +4320,66 @@
- 
-   write_out_vars (vars);
- 
-+  tree guard = build_decl (loc, VAR_DECL, get_identifier ("__tls_guard"),
-+			   boolean_type_node);
-+  TREE_PUBLIC (guard) = false;
-+  TREE_STATIC (guard) = true;
-+  DECL_ARTIFICIAL (guard) = true;
-+  DECL_IGNORED_P (guard) = true;
-+  TREE_USED (guard) = true;
-+  CP_DECL_THREAD_LOCAL_P (guard) = true;
-+  
-+  
-+  #if 0 /* MPC PRIV-PLUGIN BEGIN */
-+  set_decl_tls_model (guard, decl_default_tls_model (guard));
-+  #else
-+  if(flag_mpc_privatize)
-+  {
-+      set_decl_tls_model (guard, TLS_MODEL_MPC_TASK);
-+  }
-+  else
-+  {
-+    set_decl_tls_model (guard, decl_default_tls_model (guard));
-+  }
-+  #endif /* MPC PRIV-PLUGIN END */
-+  pushdecl_top_level_and_finish (guard, NULL_TREE);
-+
-   tree fn = get_local_tls_init_fn ();
-   start_preparsed_function (fn, NULL_TREE, SF_PRE_PARSED);
-   tree body = begin_function_body ();
--
-+  tree if_stmt = begin_if_stmt ();
-+  tree cond = cp_build_unary_op (TRUTH_NOT_EXPR, guard, false,
-+				 tf_warning_or_error);
-+  finish_if_stmt_cond (cond, if_stmt);
-+  finish_expr_stmt (cp_build_modify_expr (loc, guard, NOP_EXPR,
-+					  boolean_true_node,
-+					  tf_warning_or_error));
-   for (; vars; vars = TREE_CHAIN (vars))
-     {
-       tree var = TREE_VALUE (vars);
-       tree init = TREE_PURPOSE (vars);
--
--    /* MPC the guard is moved for each variable
--       Create the Guard */
--    static int tls_guard_id = 0;
--    char name[500];
--    snprintf(name, 500, "__tls_guard_%d", tls_guard_id++);
--    tree guard = build_decl (loc, VAR_DECL, get_identifier (name),
--          boolean_type_node);
--    TREE_PUBLIC (guard) = false;
--    TREE_STATIC (guard) = true;
--    DECL_ARTIFICIAL (guard) = true;
--    DECL_IGNORED_P (guard) = true;
--    TREE_USED (guard) = true;
--    CP_DECL_THREAD_LOCAL_P (guard) = CP_DECL_THREAD_LOCAL_P(var);
--    /* MPC we make sure to copy the level of the var */
--    set_decl_tls_model (guard, decl_tls_model(var));
--
--    pushdecl_top_level_and_finish (guard, NULL_TREE);
--
--   /* MPC the if has been moved here */
--    tree if_stmt = begin_if_stmt ();
--    tree cond = cp_build_unary_op (TRUTH_NOT_EXPR, guard, false,
--            tf_warning_or_error);
--    finish_if_stmt_cond (cond, if_stmt);
--    finish_expr_stmt (cp_build_modify_expr (loc, guard, NOP_EXPR,
--					  boolean_true_node,
--					  tf_warning_or_error));
-+      one_static_initialization_or_destruction (var, init, true);
- 
- #ifdef ASM_OUTPUT_DEF
-       /* Output init aliases even with -fno-extern-tls-init.  */
-       if (TREE_PUBLIC (var))
- 	{
-           tree single_init_fn = get_tls_init_fn (var);
--	  if (single_init_fn != NULL_TREE)
--    {
--      cgraph_node *alias
--        = cgraph_node::get_create (fn)->create_same_body_alias
--      (single_init_fn, fn);
--      gcc_assert (alias != NULL);
--    }
-+	  if (single_init_fn == NULL_TREE)
-+	    continue;
-+	  cgraph_node *alias
-+	    = cgraph_node::get_create (fn)->create_same_body_alias
-+		(single_init_fn, fn);
-+	  gcc_assert (alias != NULL);
- 	}
- #endif
--
--  /* MPC the initialization is moved here too to be in the If */
--  one_static_initialization_or_destruction(var, init, true);
--
--  /* MPC the end of the if is moved here too */
--  finish_then_clause(if_stmt);
--  finish_if_stmt(if_stmt);
-     }
- 
-+  finish_then_clause (if_stmt);
-+  finish_if_stmt (if_stmt);
-   finish_function_body (body);
-   expand_or_defer_fn (finish_function (0));
- }
--/* MPCCP*/
- 
- /* We're at the end of compilation, so generate any mangling aliases that
-    we've been saving up, if DECL is going to be output and ID2 isn't
-@@ -4702,8 +4652,6 @@
- 	    unemitted_tinfo_decls->unordered_remove (i);
- 	  }
- 
--    /* GENERATE THE TLS WRAPPER */
--
-       /* The list of objects with static storage duration is built up
- 	 in reverse order.  We clear STATIC_AGGREGATES so that any new
- 	 aggregates added during the initialization of these will be
-@@ -4711,7 +4659,7 @@
- 	 loop.  */
-       vars = prune_vars_needing_no_initialization (&static_aggregates);
- 
--      if (vars || tls_aggregates)
-+      if (vars)
- 	{
- 	  /* We need to start a new initialization function each time
- 	     through the loop.  That's because we need to know which
-@@ -4725,7 +4673,7 @@
- 	  /* Set the line and file, so that it is obviously not from
- 	     the source file.  */
- 	  input_location = locus_at_end_of_parsing;
--	  ssdf_body = start_static_storage_duration_function (ssdf_count, bool(tls_aggregates));
-+	  ssdf_body = start_static_storage_duration_function (ssdf_count);
- 
- 	  /* Make sure the back end knows about all the variables.  */
- 	  write_out_vars (vars);
-@@ -4761,14 +4709,13 @@
- 	  /* ??? was:  locus_at_end_of_parsing.line++; */
- 	}
- 
-+      /* Now do the same for thread_local variables.  */
-+      handle_tls_init ();
- 
--  /* Now do the same for thread_local variables.  */
--  handle_tls_init();
--
--  /* Go through the set of inline functions whose bodies have not
-+      /* Go through the set of inline functions whose bodies have not
- 	 been emitted yet.  If out-of-line copies of these functions
- 	 are required, emit them.  */
--  FOR_EACH_VEC_SAFE_ELT(deferred_fns, i, decl)
-+      FOR_EACH_VEC_SAFE_ELT (deferred_fns, i, decl)
- 	{
- 	  /* Does it need synthesizing?  */
- 	  if (DECL_DEFAULTED_FN (decl) && ! DECL_INITIAL (decl)
-diff -ru gcc/cp/decl.c ../gcc/cp/decl.c
---- gcc/cp/decl.c	2020-07-15 18:05:44.000000000 +0200
-+++ ../gcc/cp/decl.c	2020-07-15 17:12:39.000000000 +0200
-@@ -8125,7 +8125,7 @@
-   
-   /* MPC BEGIN */
-   if(flag_mpc_privatize 
--		  && DECL_TLS_MODEL(decl) >= TLS_MODEL_MPC_TASK) 
-+		  && DECL_TLS_MODEL(decl) == TLS_MODEL_MPC_TASK) 
-   {
- 	  atex_node = get_thread_mpc_atexit_node();
-   }
+
 diff -ru gcc/cp/parser.c ../gcc/cp/parser.c
 --- gcc/cp/parser.c	2020-07-15 18:05:44.000000000 +0200
 +++ ../gcc/cp/parser.c	2020-07-15 17:12:39.000000000 +0200
@@ -1119,7 +753,7 @@ diff -ru gcc/cp/parser.c ../gcc/cp/parser.c
  	  break;
  	case 't':
  	  if (!strcmp ("taskgroup", p))
-@@ -37650,8 +37652,361 @@
+@@ -37650,8 +37652,354 @@
      }
  }
  
@@ -1460,9 +1094,7 @@ diff -ru gcc/cp/parser.c ../gcc/cp/parser.c
 +static void
 +cp_parser_ws_stopsteal (cp_parser *parser, cp_token* pragma_tok)
 +{
-+  //cp_parser_omp_barrier(parser,pragma_tok);
 +  cp_parser_require_pragma_eol (parser, pragma_tok);
-+  //finish_omp_barrier();
 +  c_finish_ws_stopsteal(input_location);
 +}
 +
@@ -1471,11 +1103,6 @@ diff -ru gcc/cp/parser.c ../gcc/cp/parser.c
 +{
 +  cp_parser_require_pragma_eol (parser, pragma_tok);
 +  c_finish_ws_resteal(input_location);
-+  //tree fn = builtin_decl_explicit (BUILT_IN_MPC_WS_RESTEAL);
-+  //vec<tree, va_gc> *vec = make_tree_vector ();
-+  //tree stmt = finish_call_expr (fn, &vec, false, false, tf_warning_or_error);
-+  //release_tree_vector (vec);
-+  //finish_expr_stmt (stmt);
 +}
 +
  static void
@@ -1565,31 +1192,7 @@ diff -ru gcc/cp/pt.c ../gcc/cp/pt.c
        {
  	tree clauses, body, pre_body;
  	tree declv = NULL_TREE, initv = NULL_TREE, condv = NULL_TREE;
-diff -ru gcc/cp/semantics.c ../gcc/cp/semantics.c
---- gcc/cp/semantics.c	2020-07-15 18:05:45.000000000 +0200
-+++ ../gcc/cp/semantics.c	2020-07-15 17:12:39.000000000 +0200
-@@ -3711,18 +3711,9 @@
- 	  && CP_DECL_THREAD_LOCAL_P (decl)
- 	  && (wrap = get_tls_wrapper_fn (decl)))
- 	{
--
--		/* MPCCPP */
--		if((current_function_decl == NULL_TREE)/* we are in __tls_init */
--		|| !flag_mpc_privatize /* We are not privatizing */)
--		{
--
--			/* Replace an evaluated use of the thread_local variable with
--				a call to its wrapper.  */
--			decl = build_cxx_call (wrap, 0, NULL, tf_warning_or_error);
--		}
--		/* MPCCPP */
--
-+	  /* Replace an evaluated use of the thread_local variable with
-+	     a call to its wrapper.  */
-+	  decl = build_cxx_call (wrap, 0, NULL, tf_warning_or_error);
- 	}
-       else if (TREE_CODE (decl) == TEMPLATE_ID_EXPR
- 	       && variable_template_p (TREE_OPERAND (decl, 0)))
+
 @@ -6426,6 +6417,36 @@
  	    }
  	  break;
@@ -1627,21 +1230,17 @@ diff -ru gcc/cp/semantics.c ../gcc/cp/semantics.c
  	case OMP_CLAUSE_SIMDLEN:
  	case OMP_CLAUSE_SAFELEN:
  	  t = OMP_CLAUSE_OPERAND (c, 0);
-@@ -8621,6 +8642,19 @@
+@@ -8621,6 +8642,15 @@
    finish_expr_stmt (stmt);
  }
  
 +void finish_ws_stopsteal(void)
 +{
 +  tree fn = build_fn_decl("MPC_Workshare_stop_stealing",build_function_type_list(void_type_node,NULL_TREE));
-+  //tree fn = builtin_decl_explicit (BUILT_IN_MPC_WS_STOPSTEAL);
-+  //tree fn = builtin_decl_explicit (BUILT_IN_GOMP_BARRIER);
-+  //tree fn = builtin_decl_explicit (BUILT_IN_MPC_WS_CRITICAL_START);
 +  vec<tree, va_gc> *vec = make_tree_vector ();
 +  tree stmt = finish_call_expr (fn, &vec, false, false, tf_warning_or_error);
 +  release_tree_vector (vec);
 +  finish_expr_stmt (stmt);
-+  //add_stmt (stmt);
 +}
 +
  void
@@ -1793,47 +1392,17 @@ diff -ru gcc/fortran/gfortran.h ../gcc/fortran/gfortran.h
  
  /* expr.c */
  void gfc_free_actual_arglist (gfc_actual_arglist *);
-diff -ru gcc/fortran/hls.c ../gcc/fortran/hls.c
---- gcc/fortran/hls.c	2020-07-15 18:05:46.000000000 +0200
-+++ ../gcc/fortran/hls.c	2020-07-15 17:12:39.000000000 +0200
-@@ -55,7 +55,7 @@
-   locus loc_var_list, loc_after_level ;
-   int level_clause_found = 0 ;
-   
--  m = gfc_match (" (");
-+  m = gfc_match ("(");
-   if (m != MATCH_YES)
-     return m;
- 
-@@ -417,8 +417,9 @@
- 		call_hls = build_call_expr (call_hls, 1, arg);
- 		return call_hls;
- 	case EXEC_HLS_SINGLE:
--		nowait = false ;
- 	case EXEC_HLS_SINGLE_NOWAIT:
-+    if(code->op == EXEC_HLS_SINGLE)
-+      nowait = false;
- 		pushlevel ();
- 		then_block = gfc_trans_code (code->block->next);
- 		if ( !nowait ) {
+
 diff -ru gcc/fortran/lang.opt ../gcc/fortran/lang.opt
 --- gcc/fortran/lang.opt	2020-07-15 18:05:46.000000000 +0200
 +++ ../gcc/fortran/lang.opt	2020-07-15 17:12:39.000000000 +0200
-@@ -395,7 +395,7 @@
- Fortran RejectNegative Joined UInteger Var(flag_blas_matmul_limit) Init(30)
- -fblas-matmul-limit=<n>	Size of the smallest matrix for which matmul will use BLAS.
- 
--; MPC TLS BEGIN 
-+; MPC HLS BEGIN 
- fhls
- Fortran
- Enable Hierarchical Local Storage (HLS) directives
+
 @@ -403,7 +403,15 @@
  fhls-verbose
  Fortran
  Enable verbose output for Hierarchical Local Storage (HLS) directives
 -; MPC TLS END 
-+; MPC HLS END 
++; MPC TLS END 
 +
 +fws
 +Fortran Var(flag_mpc_ws)
@@ -2078,7 +1647,7 @@ diff -ru gcc/fortran/openmp.c ../gcc/fortran/openmp.c
      default: gcc_unreachable ();
      }
  
-@@ -6122,6 +6284,26 @@
+@@ -6122,6 +6284,20 @@
      }
  }
  
@@ -2092,14 +1661,8 @@ diff -ru gcc/fortran/openmp.c ../gcc/fortran/openmp.c
 +      case EXEC_WS_ATOMIC:
 +        resolve_omp_atomic(code);
 +        break;
-+      //case EXEC_WS_CRITICAL:
-+        //resolve_omp_critical(code);
-+        //break;
 +      default:
 +        break;
-+        //gcc_unreachable();
-+
-+      //resolve_omp_atomic (code);
 +    }
 +}
  /* Resolve !$omp declare simd constructs in NS.  */
@@ -2179,23 +1742,16 @@ diff -ru gcc/fortran/parse.c ../gcc/fortran/parse.c
  /* MPC END */
  
  static gfc_statement
-@@ -1218,6 +1282,7 @@
- 			   &label_locus);
- 	}
-     }
-+
-   else if (c == '!')
-     {
-       /* Comments have already been skipped by the time we get here,
+
 @@ -1238,46 +1303,31 @@
  	  return decode_gcc_attribute ();
  
  	}
--
--	 #if 0
--      		else if (c == '$')
--      #endif
--    /* MPC END */
+
+	 #if 0
+      		else if (c == '$')
+      #endif
+    /* MPC END */
        else if (c == '$' )
  	{
 +		gfc_next_ascii_char ();
@@ -2206,36 +1762,33 @@ diff -ru gcc/fortran/parse.c ../gcc/fortran/parse.c
  	      && !flag_openacc)
  	    {
  		/* MPC OMP BEGIN */
--	  #if 0
--	      	verify_token_free ("$omp", 4, last_was_use_stmt);
--		return decode_omp_directive ();
--	  #else
--		gfc_next_ascii_char ();
--		c = gfc_peek_ascii_char ();
-+
+	  #if 0
+	      	verify_token_free ("$omp", 4, last_was_use_stmt);
+		return decode_omp_directive ();
+	  #else
+		gfc_next_ascii_char ();
+		c = gfc_peek_ascii_char ();
  		
  		if (c == 'o')
  		{
  		  verify_token_free ("omp", 3, last_was_use_stmt);
  	      	  return decode_omp_directive ();
  		}
--	      else if (c == 'h')
--		{
--		  verify_token_free ("hls", 3, last_was_use_stmt);
--		 return decode_hls_directive() ;
--		}
- 
--	  #endif
--	  
-+
+	      else if (c == 'h')
+		{
+		  verify_token_free ("hls", 3, last_was_use_stmt);
+		 return decode_hls_directive() ;
+		}
+
+	  #endif
+	  
  	  /* MPC OMP END */
  	    }
  	  else if ((flag_openmp || flag_openmp_simd)
  		   && flag_openacc)
  	    {
--	      gfc_next_ascii_char (); /* Eat up dollar character */
--	      c = gfc_peek_ascii_char ();
-+	      //gfc_next_ascii_char (); /* Eat up dollar character */
+	      gfc_next_ascii_char (); /* Eat up dollar character */
+	      c = gfc_peek_ascii_char ();
  
  	      if (c == 'o')
  		{
@@ -2243,8 +1796,7 @@ diff -ru gcc/fortran/parse.c ../gcc/fortran/parse.c
  	    }
  	  else if (flag_openacc)
  	    {
--	      verify_token_free ("$acc", 4, last_was_use_stmt);
-+	      verify_token_free ("acc", 3, last_was_use_stmt);
+	      verify_token_free ("$acc", 4, last_was_use_stmt);
  	      return decode_oacc_directive ();
  	    }
 +
@@ -2261,32 +1813,12 @@ diff -ru gcc/fortran/parse.c ../gcc/fortran/parse.c
  	}
        gcc_unreachable ();
      }
-@@ -1413,14 +1474,6 @@
- 		      return decode_omp_directive ();
- 		    }
- 	       
--                  #if 1/* MPC BEGIN */
--		  if (c == 'h' || c == 'H')
--                    {
--	              if ( verify_token_fixed ("hls", 3, last_was_use_stmt) )
--			return decode_hls_directive() ;
--		    }
--		  /* MPC END */
--                  #endif
- 
- 		  else if (c == 'a' || c == 'A')
- 		    {
+
 @@ -1435,6 +1488,22 @@
  		    return ST_NONE;
  		  return decode_oacc_directive ();
  		}
-+      /* MPC BEGIN */
-+        if(gfc_option.flag_hls_verbose)
-+        {
-+          if ( !verify_token_fixed ("hls", 3, last_was_use_stmt) )
-+            return ST_NONE;
-+          return decode_hls_directive() ;
-+        }
+
 +		  /* MPC END */
 +
 +        if(flag_mpc_ws)
@@ -2512,24 +2044,6 @@ diff -ru gcc/fortran/resolve.c ../gcc/fortran/resolve.c
  	
  	default:
  	  gfc_internal_error ("gfc_resolve_code(): Bad statement code");
-@@ -14859,12 +14875,12 @@
- 
- 	      
- 	/* MPC HLS BEGIN */
--  if (sym->attr.hls_scope && !sym->attr.save && !sym->ns->save_all
--      && (!sym->attr.in_common
--	  && sym->module == NULL
--	  && (sym->ns->proc_name == NULL
--	      || sym->ns->proc_name->attr.flavor != FL_MODULE)))
--    gfc_error ("HLS at %L isn't SAVEd", &sym->declared_at);
-+  //if (sym->attr.hls_scope && !sym->attr.save && !sym->ns->save_all
-+      //&& (!sym->attr.in_common
-+	  //&& sym->module == NULL
-+	  //&& (sym->ns->proc_name == NULL
-+	      //|| sym->ns->proc_name->attr.flavor != FL_MODULE)))
-+    //gfc_error ("HLS at %L isn't SAVEd", &sym->declared_at);
-   /* MPC HLS END */
- 
  
 diff -ru gcc/fortran/scanner.c ../gcc/fortran/scanner.c
 --- gcc/fortran/scanner.c	2020-07-15 18:05:47.000000000 +0200
@@ -2546,47 +2060,12 @@ diff -ru gcc/fortran/scanner.c ../gcc/fortran/scanner.c
  static int continue_count, continue_line;
  static locus openmp_locus;
  static locus openacc_locus;
-@@ -909,8 +914,24 @@
- 			  next_char();
- 			  c = next_char();
- 			}
-+        
-+
-+		      if (continue_flag || c == ' ' || c == '\t')
-+			{
-+			  gfc_current_locus = old_loc;
-+			  next_char();
-+			  openacc_flag = 0;
-+			  return true;
-+			}
-+		  }
-+		gfc_current_locus = old_loc;
-+	      }
- 		    /* MPC HLS BEGIN */
--		  else if (c == 'h' || c == 'H')
-+		locus old_loc = gfc_current_locus;
-+		if (next_char () == '$')
-+		  {
-+		    c = next_char ();
-+		  if (c == 'h' || c == 'H')
- 		    {
- 		      if (((c = next_char ()) == 'l' || c == 'L')
- 			  && ((c = next_char ()) == 's' || c == 'S'))
+
 @@ -938,17 +959,42 @@
  		      next_char ();
  		      c = next_char ();
  		    }
--                    /* MPC HLS END */
--		      if (continue_flag || c == ' ' || c == '\t')
--			{
--			  gfc_current_locus = old_loc;
--			  next_char();
--			  openacc_flag = 0;
--			  return true;
--			}
--		  }
--		gfc_current_locus = old_loc;
--	      }
+
 +        /* MPC HLS END */
 +      
 +      /* MPC WS */
@@ -2641,41 +2120,7 @@ diff -ru gcc/fortran/scanner.c ../gcc/fortran/scanner.c
 @@ -1085,6 +1136,74 @@
  	      return;
  	    }
- 
-+		     /* MPC HLS BEGIN */
-+    if(gfc_option.flag_hls_verbose)
-+    {
-+        if(next_char() == '$')
-+        {
-+		    if (c == 'h' || c == 'H')
-+		      {
-+		      if (((c = next_char ()) == 'l' || c == 'L')
-+			  && ((c = next_char ()) == 's' || c == 'S'))
-+			{
-+			  c = next_char ();
-+			  if (c != '\n'
-+			      && ((hls_flag && continue_flag)
-+				  || c == ' ' || c == '\t' || c == '0'))
-+			    {
-+			      do
-+				c = next_char ();
-+			      while (gfc_is_whitespace (c));
-+			      if (c != '\n' && c != '!')
-+				{
-+				  /* Canonicalize to *$hls.  */
-+				  *start.nextc = '*';
-+				  hls_flag = 1;
-+	        gfc_current_locus = start;
-+          return;
-+
-+				}
-+			    }
-+      }
-+			    }
-+        }
-+				gfc_current_locus = start;
-+		}
-+		   /* MPC HLS END */
+
 +
 +      /* MPC WS */
 +		  if (flag_mpc_ws)
@@ -2713,41 +2158,7 @@ diff -ru gcc/fortran/scanner.c ../gcc/fortran/scanner.c
  	  /* If -fopenmp/-fopenacc, we need to handle here 2 things:
  	     1) don't treat !$omp/!$acc|c$omp/c$acc|*$omp / *$acc as comments, 
  		but directives
-@@ -1111,32 +1230,8 @@
- 		}
- 	      gfc_current_locus = start;
- 	    }
--		     /* MPC HLS BEGIN */
--		  else if (c == 'h' || c == 'H')
--		    {
--		      if (((c = next_char ()) == 'l' || c == 'L')
--			  && ((c = next_char ()) == 's' || c == 'S'))
--			{
--			  c = next_char ();
--			  if (c != '\n'
--			      && ((hls_flag && continue_flag)
--				  || c == ' ' || c == '\t' || c == '0'))
--			    {
--			      do
--				c = next_char ();
--			      while (gfc_is_whitespace (c));
--			      if (c != '\n' && c != '!')
--				{
--				  /* Canonicalize to *$hls.  */
--				  *start.nextc = '*';
--				  hls_flag = 1;
--				  gfc_current_locus = start;
--				  return;
--				}
--			    }
--			}
--		    }
--		   /* MPC HLS END */
-+
-+		    
- 
- 	  if (flag_openacc && !(flag_openmp || flag_openmp_simd))
- 	    {
+
 @@ -1252,6 +1347,7 @@
    /* MPC HLS BEGIN */
    hls_flag = 0;
@@ -2878,16 +2289,12 @@ diff -ru gcc/fortran/scanner.c ../gcc/fortran/scanner.c
  	  goto not_continuation;
  	}
  
--#if 1 /* MPC HLS BEGIN */
-+/* MPC HLS BEGIN */
      
      if (hls_flag != prev_hls_flag)
  	{
  	  hls_flag = prev_hls_flag;
  	  goto not_continuation;
  	}
--#endif /* MPC HLS END */
-+/* MPC HLS END */
 +
  
 +      /* MPC WS */
@@ -2915,22 +2322,12 @@ diff -ru gcc/fortran/scanner.c ../gcc/fortran/scanner.c
  	  for (i = 0; i < 5; i++)
  	  {
  	    c = next_char ();
-@@ -1662,7 +1817,7 @@
- 	    if (gfc_wide_tolower (c) != (unsigned char) "*$acc"[i])
- 	      goto not_continuation;
- 	  }
--      #if 1 /* MPC HLS BEGIN */
-+      /* MPC HLS BEGIN */
-       else if (hls_flag)
- 	for (i = 0; i < 5; i++)
- 	  {
+
 @@ -1670,8 +1825,17 @@
  	    if (gfc_wide_tolower (c) != (unsigned char) "*$hls"[i])
  	      goto not_continuation;
  	  }
--      #endif/* MPC HLS END */
--      
-+      /* MPC HLS END */
+     
 +
 +      /* MPC WS */
 +      else if (ws_flag)
@@ -2999,49 +2396,7 @@ diff -ru gcc/fortran/trans.c ../gcc/fortran/trans.c
  	/* MPC HLS BEGIN */
  	case EXEC_HLS_BARRIER:
  	case EXEC_HLS_SINGLE:
-diff -ru gcc/fortran/trans-common.c ../gcc/fortran/trans-common.c
---- gcc/fortran/trans-common.c	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/fortran/trans-common.c	2020-07-15 17:12:39.000000000 +0200
-@@ -488,19 +488,19 @@
- 		  else if ( com->hls_level == 2 )
-               set_decl_tls_model (decl, TLS_MODEL_HLS_NUMA_LEVEL_2);
- 		  else
--			gfc_internal_error ("HLS level for NUMA scope is invalid");
-+			  gfc_internal_error ("HLS level for NUMA scope is invalid");
-           if ( gfc_option.flag_hls_verbose && DECL_NAME(decl) )
-             fprintf( stderr, "HLS: Privatization to scope numa level %d of variable %s (file %s line %d)\n",
-               com->hls_level, IDENTIFIER_POINTER( DECL_NAME(decl) ),
-               DECL_SOURCE_FILE(decl), DECL_SOURCE_LINE(decl) ) ;
--            break;
-+          break;
-         case HLS_SCOPE_SOCKET:
-           set_decl_tls_model (decl, TLS_MODEL_HLS_SOCKET);
-           if ( gfc_option.flag_hls_verbose && DECL_NAME(decl) )
-             fprintf( stderr, "HLS: Privatization to scope socket of variable %s (file %s line %d)\n",
-               IDENTIFIER_POINTER( DECL_NAME(decl) ),
-               DECL_SOURCE_FILE(decl), DECL_SOURCE_LINE(decl) ) ;
--            break;
-+          break;
-         case HLS_SCOPE_CACHE:
- 		  if ( com->hls_level == 1 )
-               set_decl_tls_model (decl, TLS_MODEL_HLS_CACHE_LEVEL_1);
-@@ -514,14 +514,14 @@
-             fprintf( stderr, "HLS: Privatization to scope cache level %d of variable %s (file %s line %d)\n",
-               com->hls_level, IDENTIFIER_POINTER( DECL_NAME(decl) ),
-               DECL_SOURCE_FILE(decl), DECL_SOURCE_LINE(decl) ) ;
--            break;
-+          break;
-         case HLS_SCOPE_CORE:
-           set_decl_tls_model (decl, TLS_MODEL_HLS_CORE);
-           if ( gfc_option.flag_hls_verbose && DECL_NAME(decl) )
-             fprintf( stderr, "HLS: Privatization to scope core of variable %s (file %s line %d)\n",
-               IDENTIFIER_POINTER( DECL_NAME(decl) ),
-               DECL_SOURCE_FILE(decl), DECL_SOURCE_LINE(decl) ) ;
--            break;
-+          break;
-         case HLS_SCOPE_NONE:
-           /* do not privatize variables modified by hls or omp threadprivate pragmas */ 
-           if ( flag_mpc_privatize  && ! com->threadprivate && !mpc_decl_match_invalid_header(decl)) {
+
 diff -ru gcc/fortran/trans-openmp.c ../gcc/fortran/trans-openmp.c
 --- gcc/fortran/trans-openmp.c	2020-07-15 18:05:47.000000000 +0200
 +++ ../gcc/fortran/trans-openmp.c	2020-07-15 17:12:39.000000000 +0200
@@ -3151,12 +2506,11 @@ diff -ru gcc/fortran/trans-openmp.c ../gcc/fortran/trans-openmp.c
  typedef struct dovar_init_d {
    tree var;
    tree init;
-@@ -3806,6 +3855,8 @@
+@@ -3806,6 +3855,7 @@
      case EXEC_OMP_DISTRIBUTE: stmt = make_node (OMP_DISTRIBUTE); break;
      case EXEC_OMP_TASKLOOP: stmt = make_node (OMP_TASKLOOP); break;
      case EXEC_OACC_LOOP: stmt = make_node (OACC_LOOP); break;
 +    case EXEC_WS_DO: stmt = make_node (WS_FOR); break;
-+    //case EXEC_WS_DO: stmt = make_node (OMP_TASKLOOP); break;
      default: gcc_unreachable ();
      }
  
@@ -4225,7 +3579,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  /* Lowering of OMP parallel and workshare constructs proceeds in two
     phases.  The first phase scans the function looking for OMP statements
     and then for variables that must be replaced to satisfy data sharing
-@@ -281,7 +282,33 @@
+@@ -281,7 +282,23 @@
  	 && gimple_omp_for_kind (ctx->stmt) == GF_OMP_FOR_KIND_TASKLOOP;
  }
  
@@ -4244,16 +3598,6 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
 +  if(is_ws_ctx(ctx) || (ctx->outer && is_ws_ctx(ctx->outer)))
 +    return true;
 +
-+  //omp_context* tmp_ctx = ctx;
-+  //while(tmp_ctx->outer)
-+  //{
-+    //tmp_ctx = tmp_ctx->outer;
-+  ////if(!ctx->outer)
-+    ////return false;
-+  ////if(is_task_ctx(ctx) && is_ws_ctx(ctx->outer))
-+  //if(is_ws_ctx(tmp_ctx))
-+    //return true;
-+  //}
 +  return false;
 +}
  /* Return true if CTX is for an omp parallel or omp task.  */
@@ -5094,70 +4438,6 @@ diff -ru gcc/tree.c ../gcc/tree.c
  	  WALK_SUBTREE (OMP_CLAUSE_OPERAND (*tp, 0));
  	  /* FALLTHRU */
  
-@@ -14693,39 +14695,21 @@
- mpc_decl_match_invalid_header(tree decl)
- {
- 	bool invalid = 0;
--
--  if(DECL_IN_SYSTEM_HEADER(decl))
--  {
--    /* In some cases when using macros from headers to construct
--    object a local variable may appear as being from header
--    we then disqualify the case where we are in the current input file
--
--    For example a global such as:
--      int privatize(syscall(SYS_gettid));
--     */
--
--    /* No info assume from header */
--    if (!DECL_SOURCE_FILE(decl) || !main_input_filename)
--      return 1;
--
--    if (strcmp(DECL_SOURCE_FILE(decl), main_input_filename))
--    {
--      /* Is is actually from header and not local macro exp */
--      return 1;
--    }
--
--  }
-+	
-+	if(DECL_IN_SYSTEM_HEADER(decl))
-+		return 1;
-+	
- 	const char * name = lang_hooks.decl_printable_name (decl,0);
- 
- 
- 	if(invalid_headers == NULL)
- 	{
--		invalid_headers = mpc_decl_load_invalid_from_getenv("AP_UNPRIVATIZED_FILES");
-+		invalid_headers = mpc_decl_load_invalid_from_getenv((char*)"MPC_UNPRIVATIZED_FILES");
- 	}
- 	
- 	if(invalid_vars == NULL)
- 	{
--		invalid_vars = mpc_decl_load_invalid_from_getenv("AP_UNPRIVATIZED_VARS");
-+		invalid_vars = mpc_decl_load_invalid_from_getenv((char*)"MPC_UNPRIVATIZED_VARS");
- 	}
- 
- 	int i = 0;
-@@ -14735,7 +14719,7 @@
- 		{
- 			if(strcmp(basename(DECL_SOURCE_FILE(decl)), invalid_headers[i]) == 0)
- 			{
--        invalid = 1;
-+				invalid = 1;
- 				break;
- 			}
- 		}
-@@ -14744,7 +14728,7 @@
- 		{
- 			if(strcmp(name, invalid_vars[i]) == 0)
- 			{
--        /*fprintf(stderr, "Matching %s w/ %s\n", name, invalid_vars[i]);*/
-+				/*fprintf(stderr, "Matching %s w/ %s\n", name, invalid_vars[i]);*/
- 				invalid = 1;
- 				break;
- 			}
 diff -ru gcc/tree-core.h ../gcc/tree-core.h
 --- gcc/tree-core.h	2020-07-15 18:05:48.000000000 +0200
 +++ ../gcc/tree-core.h	2020-07-15 17:12:39.000000000 +0200
