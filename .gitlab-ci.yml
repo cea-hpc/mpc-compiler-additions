@@ -538,3 +538,12 @@ Simple Tests:
   script: 
   - cd $HOME/GL_$CI_PIPELINE_ID/build_730/BUILD_workshare
   - make check -C tests/simple VERBOSE=1
+
+Fortran Tests:
+  <<: *run_by_main
+  stage: Workshare Tests
+  allow_failure: false
+  script: 
+  - cd $HOME/GL_$CI_PIPELINE_ID/build/BUILD_workshare
+  - make check -C tests/fortran VERBOSE=1
+
