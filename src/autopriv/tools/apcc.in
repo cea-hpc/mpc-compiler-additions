@@ -15,7 +15,7 @@ assert_dynpriv()
 
 is_gcc_priv()
 {
-	test "x@EXTLS_COMPILER_FAMILY^" = "xgcc"
+	test "x@EXTLS_COMPILER_FAMILY@" = "xgcc"
 }
 
 assert_gcc()
