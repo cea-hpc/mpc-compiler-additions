@@ -1,7 +1,22 @@
-diff -ru gcc/builtins.def ../gcc/builtins.def
---- gcc/builtins.def	2020-07-15 18:05:38.000000000 +0200
-+++ ../gcc/builtins.def	2020-07-15 17:12:38.000000000 +0200
-@@ -191,6 +191,16 @@
+diff --git a/gcc/builtin-types.def b/gcc/builtin-types.def
+index ac9894467..1efc93561 100644
+--- a/gcc/builtin-types.def
++++ b/gcc/builtin-types.def
+@@ -791,3 +791,9 @@ DEF_FUNCTION_TYPE_2 (BT_FN_VOID_VPTR_LDOUBLE, BT_VOID,
+ 		     BT_VOLATILE_PTR, BT_LONGDOUBLE)
+ DEF_FUNCTION_TYPE_2 (BT_FN_VOID_VPTR_SIZE, BT_VOID,
+ 		     BT_VOLATILE_PTR, BT_SIZE)
++
++DEF_FUNCTION_TYPE_9 (BT_FN_VOID_OMPFN_PTR_LONG_LONG_LONG_INT_INT_INT_INT,
++		     BT_VOID, BT_PTR_FN_VOID_PTR, BT_PTR,
++		     BT_LONG, BT_LONG, BT_LONG, BT_INT, BT_INT, BT_INT,BT_INT)
++
++
+diff --git a/gcc/builtins.def b/gcc/builtins.def
+index 58d78dbbd..eb4c7a6c5 100644
+--- a/gcc/builtins.def
++++ b/gcc/builtins.def
+@@ -191,6 +191,16 @@ along with GCC; see the file COPYING3.  If not see
  #define DEF_GOACC_BUILTIN_COMPILER(ENUM, NAME, TYPE, ATTRS) \
    DEF_BUILTIN (ENUM, "__builtin_" NAME, BUILT_IN_NORMAL, TYPE, TYPE,    \
  	       flag_openacc, true, true, ATTRS, false, true)
@@ -18,7 +33,7 @@ diff -ru gcc/builtins.def ../gcc/builtins.def
  #undef DEF_GOMP_BUILTIN
  #define DEF_GOMP_BUILTIN(ENUM, NAME, TYPE, ATTRS) \
    DEF_BUILTIN (ENUM, "__builtin_" NAME, BUILT_IN_NORMAL, TYPE, TYPE,    \
-@@ -201,7 +211,7 @@
+@@ -201,7 +211,7 @@ along with GCC; see the file COPYING3.  If not see
  		|| flag_cilkplus \
  		|| flag_offload_abi != OFFLOAD_ABI_UNSET))
  
@@ -27,36 +42,178 @@ diff -ru gcc/builtins.def ../gcc/builtins.def
  #ifdef ENABLE_HSA
  #define DEF_HSA_BUILTIN(ENUM, NAME, TYPE, ATTRS)			\
    DEF_BUILTIN (ENUM, "__builtin_" NAME, BUILT_IN_NORMAL, TYPE, TYPE,    \
-diff -ru gcc/builtin-types.def ../gcc/builtin-types.def
---- gcc/builtin-types.def	2020-07-15 18:05:38.000000000 +0200
-+++ ../gcc/builtin-types.def	2020-07-15 17:12:38.000000000 +0200
-@@ -792,3 +792,9 @@
- 		     BT_VOLATILE_PTR, BT_LONGDOUBLE)
- DEF_FUNCTION_TYPE_2 (BT_FN_VOID_VPTR_SIZE, BT_VOID,
- 		     BT_VOLATILE_PTR, BT_SIZE)
+diff --git a/gcc/c-family/c-common.h b/gcc/c-family/c-common.h
+index b93334204..b5ff9cbdb 100644
+--- a/gcc/c-family/c-common.h
++++ b/gcc/c-family/c-common.h
+@@ -1268,7 +1268,8 @@ enum c_omp_clause_split
+   C_OMP_CLAUSE_SPLIT_SIMD,
+   C_OMP_CLAUSE_SPLIT_COUNT,
+   C_OMP_CLAUSE_SPLIT_SECTIONS = C_OMP_CLAUSE_SPLIT_FOR,
+-  C_OMP_CLAUSE_SPLIT_TASKLOOP = C_OMP_CLAUSE_SPLIT_FOR
++  C_OMP_CLAUSE_SPLIT_TASKLOOP = C_OMP_CLAUSE_SPLIT_FOR,
++  C_OMP_CLAUSE_SPLIT_WS_FOR = C_OMP_CLAUSE_SPLIT_FOR
+ };
+ 
+ enum c_omp_region_type
+@@ -1283,6 +1284,9 @@ enum c_omp_region_type
+ extern tree c_finish_omp_master (location_t, tree);
+ extern tree c_finish_omp_taskgroup (location_t, tree);
+ extern tree c_finish_omp_critical (location_t, tree, tree, tree);
++extern tree c_finish_ws_critical (location_t, tree, tree, tree);
++extern void c_finish_ws_stopsteal (location_t);
++extern void c_finish_ws_resteal (location_t);
+ extern tree c_finish_omp_ordered (location_t, tree, tree);
+ extern void c_finish_omp_barrier (location_t);
+ extern tree c_finish_omp_atomic (location_t, enum tree_code, enum tree_code,
+diff --git a/gcc/c-family/c-omp.c b/gcc/c-family/c-omp.c
+index 977cb0ea1..105d8f166 100644
+--- a/gcc/c-family/c-omp.c
++++ b/gcc/c-family/c-omp.c
+@@ -107,6 +107,38 @@ c_finish_omp_critical (location_t loc, tree body, tree name, tree clauses)
+   return add_stmt (stmt);
+ }
+ 
++tree
++c_finish_ws_critical (location_t loc, tree body, tree name, tree clauses)
++{
++  tree stmt = make_node (WS_CRITICAL);
++  TREE_TYPE (stmt) = void_type_node;
++  OMP_CRITICAL_BODY (stmt) = body;
++  OMP_CRITICAL_NAME (stmt) = name;
++  OMP_CRITICAL_CLAUSES (stmt) = clauses;
++  SET_EXPR_LOCATION (stmt, loc);
++  return add_stmt (stmt);
++}
 +
-+DEF_FUNCTION_TYPE_9 (BT_FN_VOID_OMPFN_PTR_LONG_LONG_LONG_INT_INT_INT_INT,
-+		     BT_VOID, BT_PTR_FN_VOID_PTR, BT_PTR,
-+		     BT_LONG, BT_LONG, BT_LONG, BT_INT, BT_INT, BT_INT,BT_INT)
++void
++c_finish_ws_stopsteal (location_t loc)
++{
++  tree x;
 +
++  x = builtin_decl_explicit (BUILT_IN_MPC_WS_STOPSTEAL);
++  x = build_call_expr_loc (loc, x, 1,build_int_cst (integer_type_node, 0));
++  add_stmt (x);
++}
 +
-
-diff -ru gcc/c/c-parser.c ../gcc/c/c-parser.c
---- gcc/c/c-parser.c	2020-07-15 18:05:41.000000000 +0200
-+++ ../gcc/c/c-parser.c	2020-07-15 17:12:38.000000000 +0200
-@@ -1284,6 +1284,8 @@
- static void c_parser_hls_single(c_parser *);
- static void c_parser_hls_barrier(c_parser *);
- /* MPC HLS END */
++void
++c_finish_ws_resteal (location_t loc)
++{
++  tree x;
++
++  x = builtin_decl_explicit (BUILT_IN_MPC_WS_RESTEAL);
++  x = build_call_expr_loc (loc, x, 0);
++  add_stmt (x);
++}
++
+ /* Complete a #pragma omp ordered construct.  STMT is the structured-block
+    that follows the pragma.  LOC is the location of the #pragma.  */
+ 
+diff --git a/gcc/c-family/c-pragma.c b/gcc/c-family/c-pragma.c
+index d8ef48bee..92258d77a 100644
+--- a/gcc/c-family/c-pragma.c
++++ b/gcc/c-family/c-pragma.c
+@@ -1536,6 +1536,16 @@ init_pragma (void)
+     cpp_register_deferred_pragma (parse_in, "cilk", "grainsize",
+ 				  PRAGMA_CILK_GRAINSIZE, true, false);
+ 
++  /* MPC WS */
++  if(flag_mpc_ws)
++  {
++    cpp_register_deferred_pragma(parse_in, "ws", "for", PRAGMA_WS_FOR, true,true);
++    cpp_register_deferred_pragma(parse_in, "ws", "atomic", PRAGMA_WS_ATOMIC, true,true);
++    cpp_register_deferred_pragma(parse_in, "ws", "critical", PRAGMA_WS_CRITICAL, true,true);
++    cpp_register_deferred_pragma(parse_in, "ws", "stopsteal", PRAGMA_WS_STOPSTEAL, true,true);
++    cpp_register_deferred_pragma(parse_in, "ws", "resteal", PRAGMA_WS_RESTEAL, true,true);
++  }
++
+ #ifdef HANDLE_PRAGMA_PACK_WITH_EXPANSION
+   c_register_pragma_with_expansion (0, "pack", handle_pragma_pack);
+ #else
+diff --git a/gcc/c-family/c-pragma.h b/gcc/c-family/c-pragma.h
+index a79036e97..d3d28771d 100644
+--- a/gcc/c-family/c-pragma.h
++++ b/gcc/c-family/c-pragma.h
+@@ -75,6 +75,12 @@ enum pragma_kind {
+ 
+   PRAGMA_GCC_PCH_PREPROCESS,
+   PRAGMA_IVDEP,
++  /* MPC WS */
++  PRAGMA_WS_FOR,
++  PRAGMA_WS_ATOMIC,
++  PRAGMA_WS_CRITICAL,
++  PRAGMA_WS_STOPSTEAL,
++  PRAGMA_WS_RESTEAL,
+ 
+   PRAGMA_FIRST_EXTERNAL
+ };
+@@ -126,6 +132,7 @@ enum pragma_omp_clause {
+   PRAGMA_OMP_CLAUSE_SHARED,
+   PRAGMA_OMP_CLAUSE_SIMD,
+   PRAGMA_OMP_CLAUSE_SIMDLEN,
++  PRAGMA_OMP_CLAUSE_STEAL_SCHEDULE,
+   PRAGMA_OMP_CLAUSE_TASKGROUP,
+   PRAGMA_OMP_CLAUSE_THREAD_LIMIT,
+   PRAGMA_OMP_CLAUSE_THREADS,
+@@ -181,7 +188,21 @@ enum pragma_omp_clause {
+   PRAGMA_OACC_CLAUSE_IF = PRAGMA_OMP_CLAUSE_IF,
+   PRAGMA_OACC_CLAUSE_PRIVATE = PRAGMA_OMP_CLAUSE_PRIVATE,
+   PRAGMA_OACC_CLAUSE_REDUCTION = PRAGMA_OMP_CLAUSE_REDUCTION,
+-  PRAGMA_OACC_CLAUSE_LINK = PRAGMA_OMP_CLAUSE_LINK
++  PRAGMA_OACC_CLAUSE_LINK = PRAGMA_OMP_CLAUSE_LINK,
++  
++  /* Clauses for MPC WS. */
++  PRAGMA_WS_CLAUSE_STEAL_SCHEDULE = PRAGMA_OMP_CLAUSE_STEAL_SCHEDULE,
++  PRAGMA_WS_CLAUSE_SCHEDULE = PRAGMA_OMP_CLAUSE_SCHEDULE,
++  PRAGMA_WS_CLAUSE_COLLAPSE = PRAGMA_OMP_CLAUSE_COLLAPSE,
++  PRAGMA_WS_CLAUSE_COPYIN = PRAGMA_OMP_CLAUSE_COPYIN,
++  PRAGMA_WS_CLAUSE_DEFAULT = PRAGMA_OMP_CLAUSE_DEFAULT,
++  PRAGMA_WS_CLAUSE_SHARED = PRAGMA_OMP_CLAUSE_SHARED,
++  PRAGMA_WS_CLAUSE_PRIVATE = PRAGMA_OMP_CLAUSE_PRIVATE,
++  PRAGMA_WS_CLAUSE_FIRSTPRIVATE = PRAGMA_OMP_CLAUSE_FIRSTPRIVATE,
++  PRAGMA_WS_CLAUSE_LASTPRIVATE = PRAGMA_OMP_CLAUSE_LASTPRIVATE,
++  PRAGMA_WS_CLAUSE_REDUCTION = PRAGMA_OMP_CLAUSE_REDUCTION,
++  PRAGMA_WS_CLAUSE_NUM_TASKS = PRAGMA_OMP_CLAUSE_NUM_TASKS,
++  PRAGMA_WS_CLAUSE_NOWAIT = PRAGMA_OMP_CLAUSE_NOWAIT
+ };
+ 
+ extern struct cpp_reader* parse_in;
+diff --git a/gcc/c-family/c.opt b/gcc/c-family/c.opt
+index 13b930d75..19a3c5434 100644
+--- a/gcc/c-family/c.opt
++++ b/gcc/c-family/c.opt
+@@ -1409,6 +1409,14 @@ C++ ObjC++ Ignore Warn(switch %qs is no longer supported)
+ fhandle-exceptions
+ C++ ObjC++ Optimization Alias(fexceptions) Warn({-fhandle-exceptions has been renamed -fexceptions (and is now on by default)})
+ 
++fws
++C C++ Var(flag_mpc_ws)
++Enable MPC Workshare (ws) directives
++
++fws-verbose
++C C++ Var(flag_mpc_ws,2) 
++Enable MPC Workshare (ws) directives with verbose output
++
+ fhonor-std
+ C++ ObjC++ Ignore Warn(switch %qs is no longer supported)
+ 
+diff --git a/gcc/c/c-parser.c b/gcc/c/c-parser.c
+index 101afb8e3..306efe5db 100644
+--- a/gcc/c/c-parser.c
++++ b/gcc/c/c-parser.c
+@@ -1262,6 +1262,8 @@ static void c_parser_oacc_update (c_parser *);
+ static void c_parser_omp_construct (c_parser *, bool *);
+ static void c_parser_omp_threadprivate (c_parser *);
+ static void c_parser_omp_barrier (c_parser *);
 +static void c_parser_ws_stopsteal(c_parser *);
 +static void c_parser_ws_resteal(c_parser *);
- 
- static void c_parser_omp_end_declare_target (c_parser *);
- static void c_parser_omp_declare (c_parser *, enum pragma_context);
-@@ -10402,6 +10404,21 @@
-       return false ;
- 
-       /* MPC HLS END */
+ static void c_parser_omp_flush (c_parser *);
+ static tree c_parser_omp_for_loop (location_t, c_parser *, enum tree_code,
+ 				   tree, tree *, bool *);
+@@ -10279,6 +10281,20 @@ c_parser_pragma (c_parser *parser, enum pragma_context context, bool *if_p)
+     case PRAGMA_OMP_THREADPRIVATE:
+       c_parser_omp_threadprivate (parser);
+       return false;
 +    case PRAGMA_WS_STOPSTEAL:
 +      if(flag_mpc_ws == 2)
 +      {
@@ -71,11 +228,10 @@ diff -ru gcc/c/c-parser.c ../gcc/c/c-parser.c
 +      }
 +      c_parser_ws_resteal(parser);
 +      return false;
-+
-     default:
-       if (id < PRAGMA_FIRST_EXTERNAL)
- 	{
-@@ -10648,6 +10665,8 @@
+ 
+     case PRAGMA_OMP_TARGET:
+       return c_parser_omp_target (parser, context, if_p);
+@@ -10602,6 +10618,8 @@ c_parser_omp_clause_name (c_parser *parser)
  	    result = PRAGMA_OMP_CLAUSE_SIMDLEN;
  	  else if (!strcmp ("self", p))
  	    result = PRAGMA_OACC_CLAUSE_SELF;
@@ -84,7 +240,7 @@ diff -ru gcc/c/c-parser.c ../gcc/c/c-parser.c
  	  break;
  	case 't':
  	  if (!strcmp ("taskgroup", p))
-@@ -17423,9 +17440,369 @@
+@@ -17377,8 +17395,368 @@ c_parser_omp_taskloop (location_t loc, c_parser *parser,
    return ret;
  }
  
@@ -429,7 +585,7 @@ diff -ru gcc/c/c-parser.c ../gcc/c/c-parser.c
 +}
  /* Main entry point to parsing most OpenMP pragmas.  */
  
- static void
++static void
 +c_parser_ws_stopsteal (c_parser *parser)
 +{
 +  location_t loc = c_parser_peek_token (parser)->location;
@@ -450,11 +606,10 @@ diff -ru gcc/c/c-parser.c ../gcc/c/c-parser.c
 +  c_finish_ws_resteal (loc);
 +}
 +
-+static void
+ static void
  c_parser_omp_construct (c_parser *parser, bool *if_p)
  {
-   enum pragma_kind p_kind;
-@@ -17513,6 +17889,44 @@
+@@ -17467,6 +17845,44 @@ c_parser_omp_construct (c_parser *parser, bool *if_p)
        strcpy (p_name, "#pragma omp");
        stmt = c_parser_omp_teams (loc, parser, p_name, mask, NULL, if_p);
        break;
@@ -499,10 +654,11 @@ diff -ru gcc/c/c-parser.c ../gcc/c/c-parser.c
      default:
        gcc_unreachable ();
      }
-diff -ru gcc/c/c-typeck.c ../gcc/c/c-typeck.c
---- gcc/c/c-typeck.c	2020-07-15 18:05:42.000000000 +0200
-+++ ../gcc/c/c-typeck.c	2020-07-15 17:12:38.000000000 +0200
-@@ -13674,6 +13674,7 @@
+diff --git a/gcc/c/c-typeck.c b/gcc/c/c-typeck.c
+index ee365313c..ef24baba3 100644
+--- a/gcc/c/c-typeck.c
++++ b/gcc/c/c-typeck.c
+@@ -13664,6 +13664,7 @@ c_finish_omp_clauses (tree clauses, enum c_omp_region_type ort)
  	case OMP_CLAUSE_WORKER:
  	case OMP_CLAUSE_VECTOR:
  	case OMP_CLAUSE_TILE:
@@ -510,169 +666,11 @@ diff -ru gcc/c/c-typeck.c ../gcc/c/c-typeck.c
  	  pc = &OMP_CLAUSE_CHAIN (c);
  	  continue;
  
-diff -ru gcc/c-family/c-common.h ../gcc/c-family/c-common.h
---- gcc/c-family/c-common.h	2020-07-15 18:05:42.000000000 +0200
-+++ ../gcc/c-family/c-common.h	2020-07-15 17:12:38.000000000 +0200
-@@ -1271,7 +1271,8 @@
-   C_OMP_CLAUSE_SPLIT_SIMD,
-   C_OMP_CLAUSE_SPLIT_COUNT,
-   C_OMP_CLAUSE_SPLIT_SECTIONS = C_OMP_CLAUSE_SPLIT_FOR,
--  C_OMP_CLAUSE_SPLIT_TASKLOOP = C_OMP_CLAUSE_SPLIT_FOR
-+  C_OMP_CLAUSE_SPLIT_TASKLOOP = C_OMP_CLAUSE_SPLIT_FOR,
-+  C_OMP_CLAUSE_SPLIT_WS_FOR = C_OMP_CLAUSE_SPLIT_FOR
- };
- 
- enum c_omp_region_type
-@@ -1286,6 +1287,9 @@
- extern tree c_finish_omp_master (location_t, tree);
- extern tree c_finish_omp_taskgroup (location_t, tree);
- extern tree c_finish_omp_critical (location_t, tree, tree, tree);
-+extern tree c_finish_ws_critical (location_t, tree, tree, tree);
-+extern void c_finish_ws_stopsteal (location_t);
-+extern void c_finish_ws_resteal (location_t);
- extern tree c_finish_omp_ordered (location_t, tree, tree);
- extern void c_finish_omp_barrier (location_t);
- extern tree c_finish_omp_atomic (location_t, enum tree_code, enum tree_code,
-diff -ru gcc/c-family/c-omp.c ../gcc/c-family/c-omp.c
---- gcc/c-family/c-omp.c	2020-07-15 18:05:42.000000000 +0200
-+++ ../gcc/c-family/c-omp.c	2020-07-15 17:12:38.000000000 +0200
-@@ -107,6 +107,38 @@
-   return add_stmt (stmt);
- }
- 
-+tree
-+c_finish_ws_critical (location_t loc, tree body, tree name, tree clauses)
-+{
-+  tree stmt = make_node (WS_CRITICAL);
-+  TREE_TYPE (stmt) = void_type_node;
-+  OMP_CRITICAL_BODY (stmt) = body;
-+  OMP_CRITICAL_NAME (stmt) = name;
-+  OMP_CRITICAL_CLAUSES (stmt) = clauses;
-+  SET_EXPR_LOCATION (stmt, loc);
-+  return add_stmt (stmt);
-+}
-+
-+void
-+c_finish_ws_stopsteal (location_t loc)
-+{
-+  tree x;
-+
-+  x = builtin_decl_explicit (BUILT_IN_MPC_WS_STOPSTEAL);
-+  x = build_call_expr_loc (loc, x, 1,build_int_cst (integer_type_node, 0));
-+  add_stmt (x);
-+}
-+
-+void
-+c_finish_ws_resteal (location_t loc)
-+{
-+  tree x;
-+
-+  x = builtin_decl_explicit (BUILT_IN_MPC_WS_RESTEAL);
-+  x = build_call_expr_loc (loc, x, 0);
-+  add_stmt (x);
-+}
-+
- /* Complete a #pragma omp ordered construct.  STMT is the structured-block
-    that follows the pragma.  LOC is the location of the #pragma.  */
-
- }
-diff -ru gcc/c-family/c.opt ../gcc/c-family/c.opt
---- gcc/c-family/c.opt	2020-07-15 18:05:42.000000000 +0200
-+++ ../gcc/c-family/c.opt	2020-07-15 17:12:38.000000000 +0200
-@@ -1477,6 +1477,13 @@
- Enable verbose output for Hierarchical Local Storage (HLS) directives
- ; MPC HLS END
- 
-+fws
-+C C++ Var(flag_mpc_ws)
-+Enable MPC Workshare (ws) directives
-+
-+fws-verbose
-+C C++ Var(flag_mpc_ws,2) 
-+Enable MPC Workshare (ws) directives with verbose output
- 
- fms-extensions
- C ObjC C++ ObjC++ Var(flag_ms_extensions)
-
-diff -ru gcc/c-family/c-pragma.c ../gcc/c-family/c-pragma.c
---- gcc/c-family/c-pragma.c	2020-07-15 18:05:42.000000000 +0200
-+++ ../gcc/c-family/c-pragma.c	2020-07-15 17:12:38.000000000 +0200
-@@ -1560,6 +1560,16 @@
-     cpp_register_deferred_pragma (parse_in, "cilk", "grainsize",
- 				  PRAGMA_CILK_GRAINSIZE, true, false);
- 
-+  /* MPC WS */
-+  if(flag_mpc_ws)
-+  {
-+    cpp_register_deferred_pragma(parse_in, "ws", "for", PRAGMA_WS_FOR, true,true);
-+    cpp_register_deferred_pragma(parse_in, "ws", "atomic", PRAGMA_WS_ATOMIC, true,true);
-+    cpp_register_deferred_pragma(parse_in, "ws", "critical", PRAGMA_WS_CRITICAL, true,true);
-+    cpp_register_deferred_pragma(parse_in, "ws", "stopsteal", PRAGMA_WS_STOPSTEAL, true,true);
-+    cpp_register_deferred_pragma(parse_in, "ws", "resteal", PRAGMA_WS_RESTEAL, true,true);
-+  }
-+
- #ifdef HANDLE_PRAGMA_PACK_WITH_EXPANSION
-   c_register_pragma_with_expansion (0, "pack", handle_pragma_pack);
- #else
-diff -ru gcc/c-family/c-pragma.h ../gcc/c-family/c-pragma.h
---- gcc/c-family/c-pragma.h	2020-07-15 18:05:42.000000000 +0200
-+++ ../gcc/c-family/c-pragma.h	2020-07-15 17:12:38.000000000 +0200
-@@ -83,6 +83,12 @@
-   /* MPC HLS END */
-   PRAGMA_GCC_PCH_PREPROCESS,
-   PRAGMA_IVDEP,
-+  /* MPC WS */
-+  PRAGMA_WS_FOR,
-+  PRAGMA_WS_ATOMIC,
-+  PRAGMA_WS_CRITICAL,
-+  PRAGMA_WS_STOPSTEAL,
-+  PRAGMA_WS_RESTEAL,
- 
-   PRAGMA_FIRST_EXTERNAL
- };
-@@ -134,6 +140,7 @@
-   PRAGMA_OMP_CLAUSE_SHARED,
-   PRAGMA_OMP_CLAUSE_SIMD,
-   PRAGMA_OMP_CLAUSE_SIMDLEN,
-+  PRAGMA_OMP_CLAUSE_STEAL_SCHEDULE,
-   PRAGMA_OMP_CLAUSE_TASKGROUP,
-   PRAGMA_OMP_CLAUSE_THREAD_LIMIT,
-   PRAGMA_OMP_CLAUSE_THREADS,
-@@ -142,6 +149,7 @@
-   PRAGMA_OMP_CLAUSE_UNTIED,
-   PRAGMA_OMP_CLAUSE_USE_DEVICE_PTR,
- 
-+
-   /* Clauses for Cilk Plus SIMD-enabled function.  */
-   PRAGMA_CILK_CLAUSE_NOMASK,
-   PRAGMA_CILK_CLAUSE_MASK,
-@@ -189,7 +197,21 @@
-   PRAGMA_OACC_CLAUSE_IF = PRAGMA_OMP_CLAUSE_IF,
-   PRAGMA_OACC_CLAUSE_PRIVATE = PRAGMA_OMP_CLAUSE_PRIVATE,
-   PRAGMA_OACC_CLAUSE_REDUCTION = PRAGMA_OMP_CLAUSE_REDUCTION,
--  PRAGMA_OACC_CLAUSE_LINK = PRAGMA_OMP_CLAUSE_LINK
-+  PRAGMA_OACC_CLAUSE_LINK = PRAGMA_OMP_CLAUSE_LINK,
-+  
-+  /* Clauses for MPC WS. */
-+  PRAGMA_WS_CLAUSE_STEAL_SCHEDULE = PRAGMA_OMP_CLAUSE_STEAL_SCHEDULE,
-+  PRAGMA_WS_CLAUSE_SCHEDULE = PRAGMA_OMP_CLAUSE_SCHEDULE,
-+  PRAGMA_WS_CLAUSE_COLLAPSE = PRAGMA_OMP_CLAUSE_COLLAPSE,
-+  PRAGMA_WS_CLAUSE_COPYIN = PRAGMA_OMP_CLAUSE_COPYIN,
-+  PRAGMA_WS_CLAUSE_DEFAULT = PRAGMA_OMP_CLAUSE_DEFAULT,
-+  PRAGMA_WS_CLAUSE_SHARED = PRAGMA_OMP_CLAUSE_SHARED,
-+  PRAGMA_WS_CLAUSE_PRIVATE = PRAGMA_OMP_CLAUSE_PRIVATE,
-+  PRAGMA_WS_CLAUSE_FIRSTPRIVATE = PRAGMA_OMP_CLAUSE_FIRSTPRIVATE,
-+  PRAGMA_WS_CLAUSE_LASTPRIVATE = PRAGMA_OMP_CLAUSE_LASTPRIVATE,
-+  PRAGMA_WS_CLAUSE_REDUCTION = PRAGMA_OMP_CLAUSE_REDUCTION,
-+  PRAGMA_WS_CLAUSE_NUM_TASKS = PRAGMA_OMP_CLAUSE_NUM_TASKS,
-+  PRAGMA_WS_CLAUSE_NOWAIT = PRAGMA_OMP_CLAUSE_NOWAIT
- };
- 
- extern struct cpp_reader* parse_in;
-diff -ru gcc/cp/constexpr.c ../gcc/cp/constexpr.c
---- gcc/cp/constexpr.c	2020-07-15 18:05:42.000000000 +0200
-+++ ../gcc/cp/constexpr.c	2020-07-15 17:12:38.000000000 +0200
-@@ -5490,6 +5490,8 @@
+diff --git a/gcc/cp/constexpr.c b/gcc/cp/constexpr.c
+index 9082230b9..b156ed1ab 100644
+--- a/gcc/cp/constexpr.c
++++ b/gcc/cp/constexpr.c
+@@ -5490,6 +5490,8 @@ potential_constant_expression_1 (tree t, bool want_rval, bool strict,
      case TRANSACTION_EXPR:
      case ASM_EXPR:
      case AT_ENCODE_EXPR:
@@ -681,10 +679,11 @@ diff -ru gcc/cp/constexpr.c ../gcc/cp/constexpr.c
      fail:
        if (flags & tf_error)
  	error_at (loc, "expression %qE is not a constant expression", t);
-diff -ru gcc/cp/cp-gimplify.c ../gcc/cp/cp-gimplify.c
---- gcc/cp/cp-gimplify.c	2020-07-15 18:05:43.000000000 +0200
-+++ ../gcc/cp/cp-gimplify.c	2020-07-15 17:12:38.000000000 +0200
-@@ -387,7 +387,7 @@
+diff --git a/gcc/cp/cp-gimplify.c b/gcc/cp/cp-gimplify.c
+index b0e010e18..9d5767a2e 100644
+--- a/gcc/cp/cp-gimplify.c
++++ b/gcc/cp/cp-gimplify.c
+@@ -387,7 +387,7 @@ genericize_omp_for_stmt (tree *stmt_p, int *walk_subtrees, void *data)
    tree clab = begin_bc_block (bc_continue, locus);
  
    cp_walk_tree (&OMP_FOR_BODY (stmt), cp_genericize_r, data, NULL);
@@ -693,7 +692,7 @@ diff -ru gcc/cp/cp-gimplify.c ../gcc/cp/cp-gimplify.c
      cp_walk_tree (&OMP_FOR_CLAUSES (stmt), cp_genericize_r, data, NULL);
    cp_walk_tree (&OMP_FOR_INIT (stmt), cp_genericize_r, data, NULL);
    cp_walk_tree (&OMP_FOR_COND (stmt), cp_genericize_r, data, NULL);
-@@ -764,6 +764,7 @@
+@@ -764,6 +764,7 @@ cp_gimplify_expr (tree *expr_p, gimple_seq *pre_p, gimple_seq *post_p)
      case OMP_SIMD:
      case OMP_DISTRIBUTE:
      case OMP_TASKLOOP:
@@ -701,7 +700,7 @@ diff -ru gcc/cp/cp-gimplify.c ../gcc/cp/cp-gimplify.c
        ret = cp_gimplify_omp_for (expr_p, pre_p);
        break;
  
-@@ -1031,7 +1032,7 @@
+@@ -1031,7 +1032,7 @@ cp_fold_r (tree *stmt_p, int *walk_subtrees, void *data)
    code = TREE_CODE (stmt);
    if (code == OMP_FOR || code == OMP_SIMD || code == OMP_DISTRIBUTE
        || code == OMP_TASKLOOP || code == CILK_FOR || code == CILK_SIMD
@@ -710,7 +709,7 @@ diff -ru gcc/cp/cp-gimplify.c ../gcc/cp/cp-gimplify.c
      {
        tree x;
        int i, n;
-@@ -1366,7 +1367,8 @@
+@@ -1366,7 +1367,8 @@ cp_genericize_r (tree *stmt_p, int *walk_subtrees, void *data)
      }
    else if (TREE_CODE (stmt) == OMP_PARALLEL
  	   || TREE_CODE (stmt) == OMP_TASK
@@ -720,7 +719,7 @@ diff -ru gcc/cp/cp-gimplify.c ../gcc/cp/cp-gimplify.c
      {
        struct cp_genericize_omp_taskreg omp_ctx;
        tree c, decl;
-@@ -1406,7 +1408,7 @@
+@@ -1406,7 +1408,7 @@ cp_genericize_r (tree *stmt_p, int *walk_subtrees, void *data)
  	  default:
  	    break;
  	  }
@@ -729,22 +728,23 @@ diff -ru gcc/cp/cp-gimplify.c ../gcc/cp/cp-gimplify.c
  	genericize_omp_for_stmt (stmt_p, walk_subtrees, data);
        else
  	cp_walk_tree (&OMP_BODY (stmt), cp_genericize_r, data, NULL);
-diff -ru gcc/cp/cp-tree.h ../gcc/cp/cp-tree.h
---- gcc/cp/cp-tree.h	2020-07-15 18:05:43.000000000 +0200
-+++ ../gcc/cp/cp-tree.h	2020-07-15 17:12:39.000000000 +0200
-@@ -6595,6 +6595,7 @@
- /* MPC HLS BEGIN */
- extern void finish_hls_scope			(tree vars);
- /* MPC HLS END */
+diff --git a/gcc/cp/cp-tree.h b/gcc/cp/cp-tree.h
+index fadf6ecb1..e2fad6c05 100644
+--- a/gcc/cp/cp-tree.h
++++ b/gcc/cp/cp-tree.h
+@@ -6514,6 +6514,7 @@ extern void add_typedef_to_current_template_for_access_check (tree, tree,
+ extern void check_accessibility_of_qualified_id (tree, tree, tree);
+ extern tree finish_qualified_id_expr		(tree, tree, bool, bool,
+ 						 bool, bool, tsubst_flags_t);
 +extern void finish_ws_stopsteal();
- 
- /* in tree.c */
- extern int cp_tree_operand_length		(const_tree);
-
-diff -ru gcc/cp/parser.c ../gcc/cp/parser.c
---- gcc/cp/parser.c	2020-07-15 18:05:44.000000000 +0200
-+++ ../gcc/cp/parser.c	2020-07-15 17:12:39.000000000 +0200
-@@ -30793,6 +30793,8 @@
+ extern void simplify_aggr_init_expr		(tree *);
+ extern void finalize_nrv			(tree *, tree, tree);
+ extern tree omp_reduction_id			(enum tree_code, tree, tree);
+diff --git a/gcc/cp/parser.c b/gcc/cp/parser.c
+index 29aa76b5d..89586c10a 100644
+--- a/gcc/cp/parser.c
++++ b/gcc/cp/parser.c
+@@ -30772,6 +30772,8 @@ cp_parser_omp_clause_name (cp_parser *parser)
  	    result = PRAGMA_OMP_CLAUSE_SIMD;
  	  else if (!strcmp ("simdlen", p))
  	    result = PRAGMA_OMP_CLAUSE_SIMDLEN;
@@ -753,7 +753,7 @@ diff -ru gcc/cp/parser.c ../gcc/cp/parser.c
  	  break;
  	case 't':
  	  if (!strcmp ("taskgroup", p))
-@@ -37650,8 +37652,354 @@
+@@ -37629,8 +37631,354 @@ cp_finalize_oacc_routine (cp_parser *parser, tree fndecl, bool is_defn)
      }
  }
  
@@ -1108,9 +1108,9 @@ diff -ru gcc/cp/parser.c ../gcc/cp/parser.c
  static void
  cp_parser_omp_construct (cp_parser *parser, cp_token *pragma_tok, bool *if_p)
  {
-@@ -37748,6 +38103,29 @@
-       stmt = cp_parser_omp_teams (parser, pragma_tok, p_name, mask, NULL,
- 				  if_p);
+@@ -37664,6 +38012,29 @@ cp_parser_omp_construct (cp_parser *parser, cp_token *pragma_tok, bool *if_p)
+       stmt = cp_parser_oacc_kernels_parallel (parser, pragma_tok, p_name,
+ 					      if_p);
        break;
 +    case PRAGMA_WS_FOR:
 +      if(flag_mpc_ws == 2)
@@ -1135,23 +1135,13 @@ diff -ru gcc/cp/parser.c ../gcc/cp/parser.c
 +      }
 +      stmt = cp_parser_ws_critical (parser, pragma_tok, if_p);
 +      break;
-     default:
-       gcc_unreachable ();
-     }
-@@ -38592,6 +38970,9 @@
-     case PRAGMA_OMP_TASKGROUP:
-     case PRAGMA_OMP_TASKLOOP:
-     case PRAGMA_OMP_TEAMS:
-+    case PRAGMA_WS_FOR:
-+    case PRAGMA_WS_ATOMIC:
-+    case PRAGMA_WS_CRITICAL:
-       if (context != pragma_stmt && context != pragma_compound)
- 	goto bad_stmt;
-       stmt = push_omp_privatization_clauses (false);
-@@ -38665,6 +39046,24 @@
-       return false ;
- 
-       /* MPC HLS END */
+     case PRAGMA_OACC_LOOP:
+       strcpy (p_name, "#pragma acc");
+       stmt = cp_parser_oacc_loop (parser, pragma_tok, p_name, mask, NULL,
+@@ -38125,6 +38496,23 @@ cp_parser_pragma (cp_parser *parser, enum pragma_context context, bool *if_p)
+     cp_ensure_no_omp_declare_simd (parser);
+   switch (id)
+     {
 +    case PRAGMA_WS_STOPSTEAL:
 +      if(flag_mpc_ws == 2)
 +      {
@@ -1169,14 +1159,24 @@ diff -ru gcc/cp/parser.c ../gcc/cp/parser.c
 +      cp_parser_ws_resteal(parser,pragma_tok);
 +      return false;
 +      break;
-+
-     case PRAGMA_CILK_SIMD:
-       if (context == pragma_external)
- 	{
-diff -ru gcc/cp/pt.c ../gcc/cp/pt.c
---- gcc/cp/pt.c	2020-07-15 18:05:45.000000000 +0200
-+++ ../gcc/cp/pt.c	2020-07-15 17:12:39.000000000 +0200
-@@ -15261,6 +15261,7 @@
+     case PRAGMA_GCC_PCH_PREPROCESS:
+       error_at (pragma_tok->location,
+ 		"%<#pragma GCC pch_preprocess%> must be first");
+@@ -38305,6 +38693,9 @@ cp_parser_pragma (cp_parser *parser, enum pragma_context context, bool *if_p)
+     case PRAGMA_OMP_TASKGROUP:
+     case PRAGMA_OMP_TASKLOOP:
+     case PRAGMA_OMP_TEAMS:
++    case PRAGMA_WS_FOR:
++    case PRAGMA_WS_ATOMIC:
++    case PRAGMA_WS_CRITICAL:
+       if (context != pragma_stmt && context != pragma_compound)
+ 	goto bad_stmt;
+       stmt = push_omp_privatization_clauses (false);
+diff --git a/gcc/cp/pt.c b/gcc/cp/pt.c
+index 5687bb212..68bbc32fe 100644
+--- a/gcc/cp/pt.c
++++ b/gcc/cp/pt.c
+@@ -15261,6 +15261,7 @@ tsubst_omp_clauses (tree clauses, enum c_omp_region_type ort,
  	case OMP_CLAUSE_IF:
  	case OMP_CLAUSE_NUM_THREADS:
  	case OMP_CLAUSE_SCHEDULE:
@@ -1184,7 +1184,7 @@ diff -ru gcc/cp/pt.c ../gcc/cp/pt.c
  	case OMP_CLAUSE_COLLAPSE:
  	case OMP_CLAUSE_FINAL:
  	case OMP_CLAUSE_DEVICE:
-@@ -16265,6 +16266,7 @@
+@@ -16265,6 +16266,7 @@ tsubst_expr (tree t, tree args, tsubst_flags_t complain, tree in_decl,
      case OMP_DISTRIBUTE:
      case OMP_TASKLOOP:
      case OACC_LOOP:
@@ -1192,1433 +1192,48 @@ diff -ru gcc/cp/pt.c ../gcc/cp/pt.c
        {
  	tree clauses, body, pre_body;
  	tree declv = NULL_TREE, initv = NULL_TREE, condv = NULL_TREE;
-
-@@ -6426,6 +6417,36 @@
- 	    }
- 	  break;
- 
-+  case OMP_CLAUSE_STEAL_SCHEDULE:
-+	  t = OMP_CLAUSE_STEAL_SCHEDULE_CHUNK_EXPR (c);
-+	  if (t == NULL)
-+	    ;
-+	  else if (t == error_mark_node)
-+	    remove = true;
-+	  else if (!type_dependent_expression_p (t)
-+		   && !INTEGRAL_TYPE_P (TREE_TYPE (t)))
-+	    {
-+	      error ("schedule chunk size expression must be integral");
-+	      remove = true;
-+	    }
-+	  else
-+	    {
-+	      t = mark_rvalue_use (t);
-+	      if (!processing_template_decl)
-+		{
-+		      t = maybe_constant_value (t);
-+		      if (TREE_CODE (t) == INTEGER_CST
-+			  && tree_int_cst_sgn (t) != 1)
-+			{
-+			  warning_at (OMP_CLAUSE_LOCATION (c), 0,
-+				      "chunk size value must be positive");
-+			  t = integer_one_node;
-+			}
-+		  t = fold_build_cleanup_point_expr (TREE_TYPE (t), t);
-+		}
-+	      OMP_CLAUSE_STEAL_SCHEDULE_CHUNK_EXPR (c) = t;
-+	    }
-+	  break;
- 	case OMP_CLAUSE_SIMDLEN:
- 	case OMP_CLAUSE_SAFELEN:
- 	  t = OMP_CLAUSE_OPERAND (c, 0);
-@@ -8621,6 +8642,15 @@
-   finish_expr_stmt (stmt);
- }
- 
-+void finish_ws_stopsteal(void)
-+{
-+  tree fn = build_fn_decl("MPC_Workshare_stop_stealing",build_function_type_list(void_type_node,NULL_TREE));
-+  vec<tree, va_gc> *vec = make_tree_vector ();
-+  tree stmt = finish_call_expr (fn, &vec, false, false, tf_warning_or_error);
-+  release_tree_vector (vec);
-+  finish_expr_stmt (stmt);
-+}
-+
- void
- finish_omp_flush (void)
- {
-diff -ru gcc/fortran/dump-parse-tree.c ../gcc/fortran/dump-parse-tree.c
---- gcc/fortran/dump-parse-tree.c	2020-07-15 18:05:46.000000000 +0200
-+++ ../gcc/fortran/dump-parse-tree.c	2020-07-15 17:12:39.000000000 +0200
-@@ -1274,6 +1274,30 @@
- 	}
-       fputc (')', dumpfile);
-     }
-+
-+  if (omp_clauses->steal_sched_kind != OMP_SCHED_NONE)
-+    {
-+      const char *type;
-+      switch (omp_clauses->steal_sched_kind)
-+	{
-+	case OMP_SCHED_STATIC: type = "STATIC"; break;
-+	case OMP_SCHED_DYNAMIC: type = "DYNAMIC"; break;
-+	case OMP_SCHED_GUIDED: type = "GUIDED"; break;
-+	case OMP_SCHED_RUNTIME: type = "RUNTIME"; break;
-+	case OMP_SCHED_AUTO: type = "AUTO"; break;
-+	default:
-+	  gcc_unreachable ();
-+	}
-+      fputs ("STEAL SCHEDULE (", dumpfile);
-+      fputs (type, dumpfile);
-+      if (omp_clauses->steal_chunk_size)
-+	{
-+	  fputc (',', dumpfile);
-+	  show_expr (omp_clauses->steal_chunk_size);
-+	}
-+      fputc (')', dumpfile);
-+    }
-+
-   if (omp_clauses->default_sharing != OMP_DEFAULT_UNKNOWN)
-     {
-       const char *type;
-diff -ru gcc/fortran/f95-lang.c ../gcc/fortran/f95-lang.c
---- gcc/fortran/f95-lang.c	2020-07-15 18:05:46.000000000 +0200
-+++ ../gcc/fortran/f95-lang.c	2020-07-15 17:12:39.000000000 +0200
-@@ -1204,6 +1204,8 @@
-       gfc_define_builtin (name, builtin_types[type], code, name, attr);
- #undef DEF_MPC_BUILTIN
- #define DEF_MPC_BUILTIN(code, name, type, attr) /* ignore */
-+#undef DEF_MPC_WS_BUILTIN
-+#define DEF_MPC_WS_BUILTIN(code, name, type, attr) /* ignore */
- #undef DEF_GOMP_BUILTIN
- #define DEF_GOMP_BUILTIN(code, name, type, attr) /* ignore */
- #include "../omp-builtins.def"
-@@ -1211,6 +1213,7 @@
- #undef DEF_GOACC_BUILTIN_COMPILER
- #undef DEF_GOMP_BUILTIN
- #undef DEF_MPC_BUILTIN
-+#undef DEF_MPC_WS_BUILTIN
-     }
- 
-     /* MPC HLS BEGIN */
-@@ -1225,6 +1228,25 @@
-   }
-   /* MPC HLS END */
- 
-+  if (flag_mpc_ws)
-+  {
-+#undef DEF_MPC_WS_BUILTIN
-+#define DEF_MPC_WS_BUILTIN(code, name, type, attr) \
-+	  gfc_define_builtin ("__builtin_" name, builtin_types[type], \
-+			  code, name, attr);
-+#undef DEF_GOMP_BUILTIN
-+#define DEF_GOMP_BUILTIN(code, name, type, attr) /* ignore */
-+#undef DEF_GOACC_BUILTIN
-+#define DEF_GOACC_BUILTIN(code, name, type, attr) /* ignore */
-+#undef DEF_GOACC_BUILTIN_COMPILER
-+#define DEF_GOACC_BUILTIN_COMPILER(code, name, type, attr)  /* ignore */
-+
-+#include "../omp-builtins.def"
-+#undef DEF_GOACC_BUILTIN
-+#undef DEF_GOACC_BUILTIN_COMPILER
-+#undef DEF_GOMP_BUILTIN
-+#undef DEF_MPC_WS_BUILTIN
-+  }
-     
-   if (flag_openmp || flag_openmp_simd || flag_tree_parallelize_loops)
-     {
-@@ -1232,6 +1254,8 @@
- #define DEF_GOACC_BUILTIN(code, name, type, attr) /* ignore */
- #undef DEF_GOACC_BUILTIN_COMPILER
- #define DEF_GOACC_BUILTIN_COMPILER(code, name, type, attr)  /* ignore */
-+#undef DEF_MPC_WS_BUILTIN
-+#define DEF_MPC_WS_BUILTIN(code, name, type, attr) /* ignore */
- #undef DEF_GOMP_BUILTIN
- #define DEF_GOMP_BUILTIN(code, name, type, attr) \
-       gfc_define_builtin ("__builtin_" name, builtin_types[type], \
-@@ -1241,6 +1265,7 @@
- #undef DEF_GOACC_BUILTIN
- #undef DEF_GOACC_BUILTIN_COMPILER
- #undef DEF_GOMP_BUILTIN
-+#undef DEF_MPC_WS_BUILTIN
-     }
- 
- #ifdef ENABLE_HSA
-diff -ru gcc/fortran/gfortran.h ../gcc/fortran/gfortran.h
---- gcc/fortran/gfortran.h	2020-07-15 18:05:46.000000000 +0200
-+++ ../gcc/fortran/gfortran.h	2020-07-15 17:12:39.000000000 +0200
-@@ -244,6 +244,14 @@
-   ST_HLS_END_SINGLE,
-   ST_HLS_BARRIER,
-   /* MPC HLS END */
-+  /* MPC WS BEGIN */
-+  ST_WS_DO, ST_WS_END_DO,
-+  ST_WS_ATOMIC,
-+  ST_WS_CRITICAL,
-+  ST_WS_END_CRITICAL,
-+  ST_WS_STOPSTEAL,
-+  ST_WS_RESTEAL,
-+  /* MPC WS END */
-   ST_OMP_TEAMS, ST_OMP_END_TEAMS, ST_OMP_DISTRIBUTE, ST_OMP_END_DISTRIBUTE,
-   ST_OMP_DISTRIBUTE_SIMD, ST_OMP_END_DISTRIBUTE_SIMD,
-   ST_OMP_DISTRIBUTE_PARALLEL_DO, ST_OMP_END_DISTRIBUTE_PARALLEL_DO,
-@@ -1300,8 +1308,9 @@
-   struct gfc_expr *final_expr;
-   struct gfc_expr *num_threads;
-   gfc_omp_namelist *lists[OMP_LIST_NUM];
--  enum gfc_omp_sched_kind sched_kind;
-+  enum gfc_omp_sched_kind sched_kind,steal_sched_kind;
-   struct gfc_expr *chunk_size;
-+  struct gfc_expr *steal_chunk_size;
-   enum gfc_omp_default_sharing default_sharing;
-   int collapse, orderedc;
-   bool nowait, ordered, untied, mergeable;
-@@ -2505,6 +2514,9 @@
-   EXEC_HLS_BARRIER, EXEC_HLS_SINGLE, EXEC_HLS_SINGLE_NOWAIT,
-   EXEC_HLS_END_SINGLE,
-   /* MPC HLS END */
-+  /* MPC WS */
-+  EXEC_WS_DO, EXEC_WS_ATOMIC, EXEC_WS_CRITICAL, 
-+  EXEC_WS_END_CRITICAL, EXEC_WS_STOPSTEAL, EXEC_WS_RESTEAL,
-   EXEC_OMP_TARGET_TEAMS, EXEC_OMP_TEAMS_DISTRIBUTE,
-   EXEC_OMP_TEAMS_DISTRIBUTE_SIMD, EXEC_OMP_TARGET_TEAMS_DISTRIBUTE,
-   EXEC_OMP_TARGET_TEAMS_DISTRIBUTE_SIMD,
-@@ -3126,6 +3138,9 @@
- void gfc_resolve_oacc_declare (gfc_namespace *);
- void gfc_resolve_oacc_parallel_loop_blocks (gfc_code *, gfc_namespace *);
- void gfc_resolve_oacc_blocks (gfc_code *, gfc_namespace *);
-+/* MPC WS */
-+void gfc_resolve_ws_directive (gfc_code *, gfc_namespace *);
-+
- 
- /* expr.c */
- void gfc_free_actual_arglist (gfc_actual_arglist *);
-
-diff -ru gcc/fortran/lang.opt ../gcc/fortran/lang.opt
---- gcc/fortran/lang.opt	2020-07-15 18:05:46.000000000 +0200
-+++ ../gcc/fortran/lang.opt	2020-07-15 17:12:39.000000000 +0200
-
-@@ -403,7 +403,15 @@
- fhls-verbose
- Fortran
- Enable verbose output for Hierarchical Local Storage (HLS) directives
--; MPC TLS END 
-+; MPC TLS END 
-+
-+fws
-+Fortran Var(flag_mpc_ws)
-+Enable MPC Workshare (ws) directives
-+
-+fws-verbose
-+Fortran Var(flag_mpc_ws,2)
-+Enable MPC Workshare (ws) directives with verbose output
- 
- fcheck-array-temporaries
- Fortran
-diff -ru gcc/fortran/match.h ../gcc/fortran/match.h
---- gcc/fortran/match.h	2020-07-15 18:05:46.000000000 +0200
-+++ ../gcc/fortran/match.h	2020-07-15 17:12:39.000000000 +0200
-@@ -203,6 +203,15 @@
- match gfc_match_omp_end_nowait (void);
- match gfc_match_omp_end_single (void);
- 
-+/* MPC WS */
-+match gfc_match_ws_do (void);
-+match gfc_match_ws_end_do (void);
-+match gfc_match_ws_atomic (void);
-+match gfc_match_ws_critical (void);
-+match gfc_match_ws_end_critical (void);
-+match gfc_match_ws_stopsteal (void);
-+match gfc_match_ws_resteal (void);
-+
- /* decl.c.  */
- 
- match gfc_match_data (void);
-diff -ru gcc/fortran/openmp.c ../gcc/fortran/openmp.c
---- gcc/fortran/openmp.c	2020-07-15 18:05:46.000000000 +0200
-+++ ../gcc/fortran/openmp.c	2020-07-15 17:12:39.000000000 +0200
-@@ -781,6 +781,7 @@
-   OMP_CLAUSE_THREADS,
-   OMP_CLAUSE_USE_DEVICE_PTR,
-   OMP_CLAUSE_NOWAIT,
-+  OMP_CLAUSE_STEAL_SCHEDULE,
-   /* This must come last.  */
-   OMP_MASK1_LAST
- };
-@@ -934,6 +935,7 @@
- /* Match OpenMP and OpenACC directive clauses. MASK is a bitmask of
-    clauses that are allowed for a particular directive.  */
- 
-+
- static match
- gfc_match_omp_clauses (gfc_omp_clauses **cp, const omp_mask mask,
- 		       bool first = true, bool needs_space = true,
-@@ -1762,6 +1764,54 @@
- 	      else
- 		gfc_current_locus = old_loc;
- 	    }
-+
-+ if ((mask & OMP_CLAUSE_STEAL_SCHEDULE)
-+	      && c->steal_sched_kind == OMP_SCHED_NONE
-+	      && gfc_match ("steal_schedule ( ") == MATCH_YES)
-+	    {
-+	      int nmodifiers = 0;
-+	      locus old_loc2 = gfc_current_locus;
-+	      do
-+		{
-+		      if (nmodifiers)
-+			gfc_current_locus = old_loc2;
-+		      break;
-+		  if (nmodifiers == 0
-+		      && gfc_match (" , ") == MATCH_YES)
-+		    continue;
-+		  else if (gfc_match (" : ") == MATCH_YES)
-+		    break;
-+		  gfc_current_locus = old_loc2;
-+		  break;
-+		}
-+	      while (1);
-+	      if (gfc_match ("static") == MATCH_YES)
-+		c->steal_sched_kind = OMP_SCHED_STATIC;
-+	      else if (gfc_match ("dynamic") == MATCH_YES)
-+		c->steal_sched_kind = OMP_SCHED_DYNAMIC;
-+	      else if (gfc_match ("guided") == MATCH_YES)
-+		c->steal_sched_kind = OMP_SCHED_GUIDED;
-+	      else if (gfc_match ("runtime") == MATCH_YES)
-+		c->steal_sched_kind = OMP_SCHED_RUNTIME;
-+	      else if (gfc_match ("auto") == MATCH_YES)
-+		c->steal_sched_kind = OMP_SCHED_AUTO;
-+	      if (c->steal_sched_kind != OMP_SCHED_NONE)
-+		{
-+		  match m = MATCH_NO;
-+		  if (c->steal_sched_kind != OMP_SCHED_RUNTIME
-+		      && c->steal_sched_kind != OMP_SCHED_AUTO)
-+		    m = gfc_match (" , %e )", &c->steal_chunk_size);
-+		  if (m != MATCH_YES)
-+		    m = gfc_match_char (')');
-+		  if (m != MATCH_YES)
-+		    c->steal_sched_kind = OMP_SCHED_NONE;
-+		}
-+	      if (c->steal_sched_kind != OMP_SCHED_NONE)
-+		continue;
-+	      else
-+		gfc_current_locus = old_loc;
-+	    }
-+
- 	  if ((mask & OMP_CLAUSE_HOST_SELF)
- 	      && gfc_match ("self ( ") == MATCH_YES
- 	      && gfc_match_omp_map_clause (&c->lists[OMP_LIST_MAP],
-@@ -2362,6 +2412,7 @@
- }
- 
- 
-+
- #define OMP_PARALLEL_CLAUSES \
-   (omp_mask (OMP_CLAUSE_PRIVATE) | OMP_CLAUSE_FIRSTPRIVATE		\
-    | OMP_CLAUSE_SHARED | OMP_CLAUSE_COPYIN | OMP_CLAUSE_REDUCTION	\
-@@ -3507,6 +3558,101 @@
- }
- 
- 
-+#define WS_DO_CLAUSES \
-+  (omp_mask (OMP_CLAUSE_PRIVATE) | OMP_CLAUSE_FIRSTPRIVATE		\
-+   | OMP_CLAUSE_LASTPRIVATE | OMP_CLAUSE_SHARED 		\
-+   | OMP_CLAUSE_DEFAULT  | OMP_CLAUSE_NUM_TASKS | OMP_CLAUSE_COLLAPSE) \
-+   | OMP_CLAUSE_SCHEDULE | OMP_CLAUSE_REDUCTION | OMP_CLAUSE_STEAL_SCHEDULE
-+
-+
-+match
-+gfc_match_ws_do (void)
-+{
-+  return match_omp (EXEC_WS_DO, WS_DO_CLAUSES);
-+}
-+
-+
-+match
-+gfc_match_ws_end_do (void)
-+{
-+  return gfc_match_omp_end_nowait ();
-+}
-+
-+match
-+gfc_match_ws_atomic (void)
-+{
-+  return gfc_match_omp_atomic ();
-+}
-+
-+match
-+gfc_match_ws_critical (void)
-+{
-+  char n[GFC_MAX_SYMBOL_LEN+1];
-+  gfc_omp_clauses *c = NULL;
-+
-+  if (gfc_match (" ( %n )", n) != MATCH_YES)
-+    {
-+      n[0] = '\0';
-+      if (gfc_match_omp_eos () != MATCH_YES)
-+	{
-+	  gfc_error ("Unexpected junk after $WS CRITICAL statement at %C");
-+	  return MATCH_ERROR;
-+	}
-+    }
-+  else if (gfc_match_omp_clauses (&c, omp_mask (OMP_CLAUSE_HINT)) != MATCH_YES)
-+    return MATCH_ERROR;
-+
-+  new_st.op = EXEC_WS_CRITICAL;
-+  new_st.ext.omp_clauses = c;
-+  if (n[0])
-+    c->critical_name = xstrdup (n);
-+  return MATCH_YES;
-+}
-+
-+match
-+gfc_match_ws_end_critical (void)
-+{
-+  char n[GFC_MAX_SYMBOL_LEN+1];
-+
-+  if (gfc_match (" ( %n )", n) != MATCH_YES)
-+    n[0] = '\0';
-+  if (gfc_match_omp_eos () != MATCH_YES)
-+    {
-+      gfc_error ("Unexpected junk after $WS CRITICAL statement at %C");
-+      return MATCH_ERROR;
-+    }
-+
-+  new_st.op = EXEC_WS_END_CRITICAL;
-+  new_st.ext.omp_name = n[0] ? xstrdup (n) : NULL;
-+  return MATCH_YES;
-+}
-+
-+match
-+gfc_match_ws_stopsteal (void)
-+{
-+  if (gfc_match_omp_eos () != MATCH_YES)
-+    {
-+      gfc_error ("Unexpected junk after $WS STOPSTEAL statement at %C");
-+      return MATCH_ERROR;
-+    }
-+  new_st.op = EXEC_WS_STOPSTEAL;
-+  new_st.ext.omp_clauses = NULL;
-+  return MATCH_YES;
-+}
-+
-+match
-+gfc_match_ws_resteal (void)
-+{
-+  if (gfc_match_omp_eos () != MATCH_YES)
-+    {
-+      gfc_error ("Unexpected junk after $WS RESTEAL statement at %C");
-+      return MATCH_ERROR;
-+    }
-+  new_st.op = EXEC_WS_RESTEAL;
-+  new_st.ext.omp_clauses = NULL;
-+  return MATCH_YES;
-+}
-+
- static match
- gfc_match_omp_oacc_atomic (bool omp_p)
- {
-@@ -4065,6 +4211,19 @@
- 		     "at %L must be positive", &expr->where);
-     }
- 
-+  if (omp_clauses->steal_chunk_size)
-+    {
-+      gfc_expr *expr = omp_clauses->steal_chunk_size;
-+      if (!gfc_resolve_expr (expr)
-+	  || expr->ts.type != BT_INTEGER || expr->rank != 0)
-+	gfc_error ("STEAL SCHEDULE clause's chunk_size at %L requires "
-+		   "a scalar INTEGER expression", &expr->where);
-+      else if (expr->expr_type == EXPR_CONSTANT
-+	       && expr->ts.type == BT_INTEGER
-+	       && mpz_sgn (expr->value.integer) <= 0)
-+	gfc_warning (0, "INTEGER expression of STEAL SCHEDULE clause's chunk_size "
-+		     "at %L must be positive", &expr->where);
-+    }
-   /* Check that no symbol appears on multiple clauses, except that
-      a symbol can appear on both firstprivate and lastprivate.  */
-   for (list = 0; list < OMP_LIST_NUM; list++)
-@@ -5499,6 +5658,9 @@
-       name = "!$OMP TEAMS DISTRIBUTE SIMD";
-       is_simd = true;
-       break;
-+    case EXEC_WS_DO:
-+      name="!$WS DO";
-+      break;
-     default: gcc_unreachable ();
-     }
- 
-@@ -6122,6 +6284,20 @@
-     }
- }
- 
-+void gfc_resolve_ws_directive(gfc_code *code, gfc_namespace *ns ATTRIBUTE_UNUSED)
-+{
-+    switch (code->op)
-+    {
-+      case EXEC_WS_DO:
-+        resolve_omp_do (code);
-+        break;
-+      case EXEC_WS_ATOMIC:
-+        resolve_omp_atomic(code);
-+        break;
-+      default:
-+        break;
-+    }
-+}
- /* Resolve !$omp declare simd constructs in NS.  */
- 
- void
-diff -ru gcc/fortran/parse.c ../gcc/fortran/parse.c
---- gcc/fortran/parse.c	2020-07-15 18:05:46.000000000 +0200
-+++ ../gcc/fortran/parse.c	2020-07-15 17:12:39.000000000 +0200
-@@ -1110,6 +1110,70 @@
- 
-   return ST_NONE;
- }
-+
-+static gfc_statement
-+decode_ws_directive (void)
-+{
-+  locus old_locus;
-+  char c;
-+
-+#ifdef GFC_DEBUG
-+  gfc_symbol_state ();
-+#endif
-+
-+  gfc_clear_error ();	/* Clear any pending errors.  */
-+  gfc_clear_warning ();	/* Clear any pending warnings.  */
-+
-+  if (gfc_pure (NULL))
-+  {
-+    gfc_error_now ("WS directives at %C may not appear in PURE "
-+        "or ELEMENTAL procedures");
-+    gfc_error_recovery ();
-+    return ST_NONE;
-+  }
-+
-+  old_locus = gfc_current_locus;
-+
-+  /* return statement not used here */
-+  c = gfc_peek_ascii_char ();
-+
-+  switch (c)
-+  {
-+    case 'd':
-+      match ( "do", gfc_match_ws_do, ST_WS_DO);
-+      break;
-+    case 'a':
-+      match ("atomic",gfc_match_ws_atomic, ST_WS_ATOMIC);
-+      break;
-+    case 'c':
-+      match("critical",gfc_match_ws_critical, ST_WS_CRITICAL);
-+      break;
-+    case 'e':
-+      match("end critical",gfc_match_ws_end_critical, ST_WS_END_CRITICAL);
-+      match("end do",gfc_match_ws_end_do, ST_WS_END_DO);
-+      break;
-+    case 's' :
-+      match("stopsteal", gfc_match_ws_stopsteal, ST_WS_STOPSTEAL);
-+      break;
-+    case 'r' :
-+      match("resteal", gfc_match_ws_resteal, ST_WS_RESTEAL);
-+      break;
-+
-+
-+  }
-+
-+  /* All else has failed, so give up.  See if any of the matchers has
-+     stored an error message of some sort.  */
-+
-+  if (gfc_error_check () == 0)
-+    gfc_error_now ("Unclassifiable WS directive at %C");
-+
-+  reject_statement ();
-+
-+  gfc_error_recovery ();
-+
-+  return ST_NONE;
-+}
- /* MPC END */
- 
- static gfc_statement
-
-@@ -1238,46 +1303,31 @@
- 	  return decode_gcc_attribute ();
- 
- 	}
-
-	 #if 0
-      		else if (c == '$')
-      #endif
-    /* MPC END */
-       else if (c == '$' )
- 	{
-+		gfc_next_ascii_char ();
-+		c = gfc_peek_ascii_char ();
- 	  /* Since both OpenMP and OpenACC directives starts with
- 	     !$ character sequence, we must check all flags combinations */
- 	  if ((flag_openmp || flag_openmp_simd)
- 	      && !flag_openacc)
- 	    {
- 		/* MPC OMP BEGIN */
-	  #if 0
-	      	verify_token_free ("$omp", 4, last_was_use_stmt);
-		return decode_omp_directive ();
-	  #else
-		gfc_next_ascii_char ();
-		c = gfc_peek_ascii_char ();
- 		
- 		if (c == 'o')
- 		{
- 		  verify_token_free ("omp", 3, last_was_use_stmt);
- 	      	  return decode_omp_directive ();
- 		}
-	      else if (c == 'h')
-		{
-		  verify_token_free ("hls", 3, last_was_use_stmt);
-		 return decode_hls_directive() ;
-		}
-
-	  #endif
-	  
- 	  /* MPC OMP END */
- 	    }
- 	  else if ((flag_openmp || flag_openmp_simd)
- 		   && flag_openacc)
- 	    {
-	      gfc_next_ascii_char (); /* Eat up dollar character */
-	      c = gfc_peek_ascii_char ();
- 
- 	      if (c == 'o')
- 		{
-@@ -1292,9 +1342,20 @@
- 	    }
- 	  else if (flag_openacc)
- 	    {
-	      verify_token_free ("$acc", 4, last_was_use_stmt);
- 	      return decode_oacc_directive ();
- 	    }
-+
-+	  if (c == 'h')
-+		{
-+		  verify_token_free ("hls", 3, last_was_use_stmt);
-+		  return decode_hls_directive() ;
-+		}
-+    else if(flag_mpc_ws && c == 'w')
-+    {
-+        verify_token_free ("ws", 2, last_was_use_stmt);
-+        return decode_ws_directive() ;
-+		}
- 	}
-       gcc_unreachable ();
-     }
-
-@@ -1435,6 +1488,22 @@
- 		    return ST_NONE;
- 		  return decode_oacc_directive ();
- 		}
-
-+		  /* MPC END */
-+
-+        if(flag_mpc_ws)
-+        {
-+          if (!verify_token_fixed ("ws", 2, last_was_use_stmt))
-+            return ST_NONE;
-+          return decode_ws_directive() ;
-+        }
-+
- 	    }
- 	  gcc_fallthrough ();
- 
-@@ -1600,7 +1669,7 @@
-   case ST_ERROR_STOP: case ST_SYNC_ALL: \
-   case ST_SYNC_IMAGES: case ST_SYNC_MEMORY: case ST_LOCK: case ST_UNLOCK: \
-   case ST_EVENT_POST: case ST_EVENT_WAIT: case ST_FAIL_IMAGE: \
--  case ST_HLS_BARRIER: \
-+  case ST_HLS_BARRIER: case ST_WS_STOPSTEAL: case ST_WS_RESTEAL: \
-   case ST_OACC_UPDATE: case ST_OACC_WAIT: case ST_OACC_CACHE:\
-   case ST_OACC_ENTER_DATA: case ST_OACC_EXIT_DATA
- 
-@@ -1630,7 +1699,7 @@
-   case ST_OMP_DISTRIBUTE_PARALLEL_DO_SIMD: case ST_OMP_TARGET_PARALLEL: \
-   case ST_OMP_TARGET_PARALLEL_DO: case ST_OMP_TARGET_PARALLEL_DO_SIMD: \
-   case ST_OMP_TARGET_SIMD: case ST_OMP_TASKLOOP: case ST_OMP_TASKLOOP_SIMD: \
--  case ST_CRITICAL: \
-+  case ST_CRITICAL: case ST_WS_DO: case ST_WS_ATOMIC: case ST_WS_CRITICAL: \
-   case ST_OACC_PARALLEL_LOOP: case ST_OACC_PARALLEL: case ST_OACC_KERNELS: \
-   case ST_OACC_DATA: case ST_OACC_HOST_DATA: case ST_OACC_LOOP: \
-   case ST_OACC_KERNELS_LOOP: case ST_OACC_ATOMIC
-@@ -2528,6 +2597,31 @@
-       break;
-     /* MPC HLS END */
-     
-+    /* MPC WS */
-+    case ST_WS_DO:
-+      p = "!$WS DO";
-+      break;
-+    case ST_WS_END_DO:
-+      p = "!$WS END DO";
-+      break;
-+    case ST_WS_ATOMIC:
-+      p = "!$WS ATOMIC";
-+      break;
-+    case ST_WS_CRITICAL:
-+      p = "!$WS CRITICAL";
-+      break;
-+    case ST_WS_END_CRITICAL:
-+      p = "!$WS END CRITICAL";
-+      break;
-+    case ST_WS_STOPSTEAL:
-+      p = "$WS STOPSTEAL";
-+      break;
-+    case ST_WS_RESTEAL:
-+      p = "$WS RESTEAL";
-+      break;
-+
-+
-+    
-     default:
-       gfc_internal_error ("gfc_ascii_statement(): Bad statement code");
-     }
-@@ -4923,6 +5017,52 @@
-   return st;
- }
- 
-+static gfc_statement
-+parse_ws_do (gfc_statement ws_st)
-+{
-+  gfc_statement st;
-+  gfc_code *cp, *np;
-+  gfc_state_data s;
-+
-+  accept_statement (ws_st);
-+
-+  cp = gfc_state_stack->tail;
-+  push_state (&s, COMP_OMP_STRUCTURED_BLOCK, NULL);
-+  np = new_level (cp);
-+  np->op = cp->op;
-+  np->block = NULL;
-+
-+  for (;;)
-+    {
-+      st = next_statement ();
-+      if (st == ST_NONE)
-+	unexpected_eof ();
-+      else if (st == ST_DO)
-+	break;
-+      else
-+	unexpected_statement (st);
-+    }
-+
-+  parse_do_block ();
-+
-+  check_do_closure ();
-+  pop_state ();
-+
-+  st = next_statement ();
-+  gfc_statement omp_end_st = ST_WS_END_DO;
-+  if (st == omp_end_st)
-+    {
-+      if (new_st.op == EXEC_OMP_END_NOWAIT)
-+	cp->ext.omp_clauses->nowait |= new_st.ext.omp_bool;
-+      else
-+	gcc_assert (new_st.op == EXEC_NOP);
-+      gfc_clear_new_st ();
-+      gfc_commit_symbols ();
-+      gfc_warning_check ();
-+      st = next_statement ();
-+    }
-+  return st;
-+}
- 
- /* Parse the statements of OpenMP atomic directive.  */
- 
-@@ -5332,6 +5472,33 @@
-   pop_state ();
- }
- 
-+static void
-+parse_ws_structured_block (gfc_statement ws_st)
-+{
-+  gfc_statement st;
-+  gfc_code *cp, *np;
-+  gfc_state_data s;
-+
-+  accept_statement (ws_st);
-+
-+  cp = gfc_state_stack->tail;
-+  push_state (&s, COMP_WS_STRUCTURED_BLOCK, NULL);
-+  np = new_level (cp);
-+  np->op = cp->op;
-+  np->block = NULL;
-+
-+  st = parse_executable (ST_NONE);
-+  if (st == ST_NONE)
-+	  unexpected_eof ();
-+  else if (st != ST_WS_END_CRITICAL)
-+	unexpected_statement (st);
-+
-+  gfc_clear_new_st ();
-+  gfc_commit_symbols ();
-+  gfc_warning_check ();
-+  pop_state ();
-+}
-+
- /* MPC HLS BEGIN */
- static void
- parse_hls_structured_block (gfc_statement hls_st)
-@@ -5535,6 +5702,15 @@
- 	  parse_hls_structured_block (st);
- 	  break;
- 	/* MPC HLS END */
-+	case ST_WS_DO:
-+	  st = parse_ws_do (st);
-+    continue;
-+	case ST_WS_ATOMIC:
-+	  st = parse_omp_oacc_atomic (true);
-+    continue;
-+  case ST_WS_CRITICAL:
-+	  parse_ws_structured_block (st);
-+    break;
- 	
- 	default:
- 	  return st;
-diff -ru gcc/fortran/parse.h ../gcc/fortran/parse.h
---- gcc/fortran/parse.h	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/fortran/parse.h	2020-07-15 17:12:39.000000000 +0200
-@@ -31,7 +31,7 @@
-   COMP_STRUCTURE, COMP_UNION, COMP_MAP,
-   COMP_DO, COMP_SELECT, COMP_FORALL, COMP_WHERE, COMP_CONTAINS, COMP_ENUM,
-   COMP_SELECT_TYPE, COMP_OMP_STRUCTURED_BLOCK, COMP_CRITICAL, COMP_DO_CONCURRENT,
--  COMP_HLS_STRUCTURED_BLOCK /* MPC HLS */
-+  COMP_HLS_STRUCTURED_BLOCK /* MPC HLS */, COMP_WS_STRUCTURED_BLOCK
- };
- 
- /* Stack element for the current compilation state.  These structures
-diff -ru gcc/fortran/resolve.c ../gcc/fortran/resolve.c
---- gcc/fortran/resolve.c	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/fortran/resolve.c	2020-07-15 17:12:39.000000000 +0200
-@@ -9829,6 +9829,7 @@
- 
- 	case EXEC_OMP_ATOMIC:
- 	case EXEC_OACC_ATOMIC:
-+  case EXEC_WS_ATOMIC:
- 	  {
- 	    gfc_omp_atomic_op aop
- 	      = (gfc_omp_atomic_op) (b->ext.omp_atomic & GFC_OMP_ATOMIC_MASK);
-@@ -9901,6 +9902,8 @@
- 	case EXEC_OMP_TEAMS_DISTRIBUTE_PARALLEL_DO_SIMD:
- 	case EXEC_OMP_TEAMS_DISTRIBUTE_SIMD:
- 	case EXEC_OMP_WORKSHARE:
-+  case EXEC_WS_DO:
-+  case EXEC_WS_CRITICAL:
- 	  break;
- 	
- 	/* MPC HLS BEGIN */
-@@ -10841,6 +10844,7 @@
- 	    case EXEC_OMP_TARGET_SIMD:
- 	    case EXEC_OMP_TASKLOOP:
- 	    case EXEC_OMP_TASKLOOP_SIMD:
-+      case EXEC_WS_DO:
- 	      gfc_resolve_omp_do_blocks (code, ns);
- 	      break;
- 	    case EXEC_SELECT_TYPE:
-@@ -11279,7 +11283,19 @@
- 	case EXEC_HLS_SINGLE:
- 	case EXEC_HLS_SINGLE_NOWAIT:
- 	  break;
-+
- 	/* MPC HLS END */
-+
-+  /* MPC WS */
-+  case EXEC_WS_DO:
-+  case EXEC_WS_ATOMIC:
-+  case EXEC_WS_CRITICAL:
-+    gfc_resolve_ws_directive(code,ns);
-+    break;
-+
-+  case EXEC_WS_STOPSTEAL:
-+  case EXEC_WS_RESTEAL:
-+    break;  
- 	
- 	default:
- 	  gfc_internal_error ("gfc_resolve_code(): Bad statement code");
- 
-diff -ru gcc/fortran/scanner.c ../gcc/fortran/scanner.c
---- gcc/fortran/scanner.c	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/fortran/scanner.c	2020-07-15 17:12:39.000000000 +0200
-@@ -62,6 +62,11 @@
- static int hls_flag;
- static locus hls_locus;
- /* MPC HLS END */
-+
-+/* MPC WS */
-+static int ws_flag;
-+static locus ws_locus;
-+
- static int continue_count, continue_line;
- static locus openmp_locus;
- static locus openacc_locus;
-
-@@ -938,17 +959,42 @@
- 		      next_char ();
- 		      c = next_char ();
- 		    }
-
-+        /* MPC HLS END */
-+      
-+      /* MPC WS */
-+      if(flag_mpc_ws)
-+      {
-+        if (c == 'w' || c == 'W')
-+        {
-+          if ((c = next_char ()) == 's' || c == 'S')
-+          {
-+            if ((c = next_char ()) == ' ' || c == '\t'
-+                || continue_flag)
-+            {
-+              while (gfc_is_whitespace (c))
-+                c = next_char ();
-+              if (c != '\n' && c != '!')
-+              {
-+                ws_flag = 1;
-+                ws_locus = old_loc;
-+                gfc_current_locus = start;
-+                return false;
-+              }
-+            }
-+            else
-+              gfc_warning_now (0, "!$WS at %C starts a commented "
-+                  "line as it neither is followed "
-+                  "by a space nor is a "
-+                  "continuation line");
-+          }
-+          gfc_current_locus = old_loc;
-+          next_char ();
-+          c = next_char ();
-+        }
-+      }
-+      }
-+
-+
- 	  }
- 	  skip_comment_line ();
- 	  continue;
-@@ -963,6 +1009,11 @@
-   if (hls_flag && at_bol)
-     hls_flag = 0;
- /* MPC HLS END */
-+
-+  /* MPC WS */
-+  if (ws_flag && at_bol)
-+    ws_flag = 0;
-+
-   if (openacc_flag && at_bol)
-     openacc_flag = 0;
- 
-@@ -1085,6 +1136,74 @@
- 	      return;
- 	    }
-
-+
-+      /* MPC WS */
-+		  if (flag_mpc_ws)
-+      {
-+        c = next_char();
-+        if(c == '$')
-+        {
-+          if((c = next_char()) == 'w' || c == 'W') 
-+		      {
-+		        if ((c = next_char ()) == 's' || c == 'S')
-+			{
-+			  c = next_char ();
-+			  if (c != '\n'
-+			      && ((ws_flag && continue_flag)
-+				  || c == ' ' || c == '\t' || c == '0'))
-+			    {
-+			      do
-+				c = next_char ();
-+			      while (gfc_is_whitespace (c));
-+			      if (c != '\n' && c != '!')
-+				{
-+				  /* Canonicalize to *$ws.  */
-+				  *start.nextc = '*';
-+				  ws_flag = 1;
-+	        gfc_current_locus = start;
-+          return;
-+
-+				}
-+			    }
-+			}
-+          }
-+        }
-+				  gfc_current_locus = start;
-+      }
- 	  /* If -fopenmp/-fopenacc, we need to handle here 2 things:
- 	     1) don't treat !$omp/!$acc|c$omp/c$acc|*$omp / *$acc as comments, 
- 		but directives
-
-@@ -1252,6 +1347,7 @@
-   /* MPC HLS BEGIN */
-   hls_flag = 0;
-   /* MPC HLS END */
-+  ws_flag = 0;
-   gcc_attribute_flag = 0;
-   gfc_current_locus = start;
- }
-@@ -1284,6 +1380,9 @@
-   /* MPC HLS BEGIN */
-   int prev_hls_flag;
-   /* MPC HLS END */
-+
-+  /* MPC WS */
-+  int prev_ws_flag;
-   gfc_char_t c;
- 
-   continue_flag = 0;
-@@ -1304,6 +1403,9 @@
-       bool hls_cond_flag;
-       /* MPC HLS END */
- 
-+      /* MPC WS */
-+      bool ws_cond_flag;
-+
-       if (!in_string && c == '!')
- 	{
- 	  if (gcc_attribute_flag
-@@ -1318,6 +1420,12 @@
- 	    goto done;
-           /* MPC HLS END */
-           
-+    /* MPC WS */
-+	  if (ws_flag
-+	      && memcmp (&gfc_current_locus, &ws_locus,
-+		 sizeof (gfc_current_locus)) == 0)
-+	    goto done;
-+
- 	  if (openmp_flag
- 	      && memcmp (&gfc_current_locus, &openmp_locus,
- 		 sizeof (gfc_current_locus)) == 0)
-@@ -1393,6 +1501,9 @@
-       /* MPC HLS BEGIN */
-       prev_hls_flag = hls_flag;
-       /* MPC HLS END */
-+      /* MPC WS */
-+      prev_ws_flag = ws_flag;
-+
-       continue_flag = 1;
-       if (c == '!')
- 	skip_comment_line ();
-@@ -1421,6 +1532,9 @@
-       hls_cond_flag = openmp_cond_flag;
-       /* MPC HLS END */
- 
-+      /* MPC WS */
-+      ws_cond_flag = openmp_cond_flag;
-+
-       if (gfc_current_locus.lb != NULL
- 	  && continue_line < gfc_linebuf_linenum (gfc_current_locus.lb))
- 	continue_line = gfc_linebuf_linenum (gfc_current_locus.lb);
-@@ -1452,6 +1566,16 @@
- 	  goto done;
- 	}
- 	/* MPC HLS END */
-+
-+      if(flag_mpc_ws)
-+ if (prev_ws_flag != ws_flag)
-+	{
-+	  gfc_current_locus = old_loc;
-+	  ws_flag = prev_ws_flag;
-+	  c = '&';
-+	  goto done;
-+	}
-+
- 	
-       /* Now that we have a non-comment line, probe ahead for the
- 	 first non-whitespace character.  If it is another '&', then
-@@ -1519,7 +1643,20 @@
- 	    c = next_char ();
- 	}
-       /* MPC HLS END */
--      
-+
-+      /* MPC WS */
-+   if (ws_flag)
-+	{
-+	  for (i = 0; i < 4; i++, c = next_char ())
-+	    {
-+	      gcc_assert (gfc_wide_tolower (c) == (unsigned char) "!$ws"[i]);
-+	      if (i == 3)
-+		old_loc = gfc_current_locus;
-+	    }
-+	  while (gfc_is_whitespace (c))
-+	    c = next_char ();
-+	}
-+
- 	}
- 
-       if (c != '&')
-@@ -1548,6 +1685,14 @@
- 	        gfc_current_locus.nextc--;
- 	  }
- 	  /* MPC HLS END */
-+
-+    /* MPC WS */
-+	  else if (ws_flag || ws_cond_flag)
-+	  {
-+	      if (gfc_current_locus.nextc)
-+	        gfc_current_locus.nextc--;
-+	  }
-+
- 	  else
- 	    {
- 	      c = ' ';
-@@ -1592,6 +1737,10 @@
-       /* MPC HLS BEGIN */
-       prev_hls_flag = hls_flag;
-       /* MPC HLS END */
-+
-+      /* MPC WS */
-+      prev_ws_flag = ws_flag;
-+
-       continue_flag = 1;
-       old_loc = gfc_current_locus;
- 
-@@ -1610,15 +1759,22 @@
- 	  goto not_continuation;
- 	}
- 
-     
-     if (hls_flag != prev_hls_flag)
- 	{
- 	  hls_flag = prev_hls_flag;
- 	  goto not_continuation;
- 	}
-+
- 
-+      /* MPC WS */
-+    if (ws_flag != prev_ws_flag)
-+	{
-+	  ws_flag = prev_ws_flag;
-+	  goto not_continuation;
-+	}
-       /* In case we have an OpenMP directive continued by OpenACC
- 	 sentinel, or vice versa, we get both openmp_flag and
- 	 openacc_flag on.  */
-@@ -1637,11 +1793,10 @@
- 		     : G_("Wrong OpenMP continuation at %C: "
- 			  "expected !$OMP, got !$ACC"));
- 	}
--      #if 0 /* MPC HLS BEGIN */
--      else if (!openmp_flag && !openacc_flag)
--      #else
--      else if (!openmp_flag && !openacc_flag && !hls_flag)
--      #endif /* MPC HLS END */
-+      /* MPC HLS BEGIN */
-+      //else if (!openmp_flag && !openacc_flag)
-+            else if (!openmp_flag && !openacc_flag && !hls_flag && !ws_flag)
-+      /* MPC HLS END */
- 	  for (i = 0; i < 5; i++)
- 	  {
- 	    c = next_char ();
-
-@@ -1670,8 +1825,17 @@
- 	    if (gfc_wide_tolower (c) != (unsigned char) "*$hls"[i])
- 	      goto not_continuation;
- 	  }
-     
-+
-+      /* MPC WS */
-+      else if (ws_flag)
-+	for (i = 0; i < 4; i++)
-+	  {
-+	    c = next_char ();
-+	    if (gfc_wide_tolower (c) != (unsigned char) "*$ws"[i])
-+	      goto not_continuation;
-+	  }
-+
-       c = next_char ();
-       if (c == '0' || c == ' ' || c == '\n')
- 	goto not_continuation;
-diff -ru gcc/fortran/st.c ../gcc/fortran/st.c
---- gcc/fortran/st.c	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/fortran/st.c	2020-07-15 17:12:39.000000000 +0200
-@@ -248,10 +248,13 @@
-     case EXEC_OMP_TEAMS_DISTRIBUTE_PARALLEL_DO_SIMD:
-     case EXEC_OMP_TEAMS_DISTRIBUTE_SIMD:
-     case EXEC_OMP_WORKSHARE:
-+    case EXEC_WS_DO:
-+    case EXEC_WS_CRITICAL:
-       gfc_free_omp_clauses (p->ext.omp_clauses);
-       break;
- 
-     case EXEC_OMP_END_CRITICAL:
-+    case EXEC_WS_END_CRITICAL:
-       free (CONST_CAST (char *, p->ext.omp_name));
-       break;
- 
-@@ -267,6 +270,9 @@
-     case EXEC_OMP_TASKGROUP:
-     case EXEC_OMP_TASKWAIT:
-     case EXEC_OMP_TASKYIELD:
-+    case EXEC_WS_ATOMIC:
-+    case EXEC_WS_STOPSTEAL:
-+    case EXEC_WS_RESTEAL:
-       break;
- 	
- 	/* MPC HLS BEGIN */
-@@ -275,7 +281,7 @@
- 	case EXEC_HLS_SINGLE_NOWAIT:
- 	  break;
- 	/* MPC HLS END */
--	
-+
-     default:
-       gfc_internal_error ("gfc_free_statement(): Bad statement");
-     }
-diff -ru gcc/fortran/trans.c ../gcc/fortran/trans.c
---- gcc/fortran/trans.c	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/fortran/trans.c	2020-07-15 17:12:39.000000000 +0200
-@@ -2079,6 +2079,15 @@
- 	  res = gfc_trans_omp_directive (code);
- 	  break;
- 	
-+  /* MPC WS */
-+  case EXEC_WS_DO:
-+  case EXEC_WS_ATOMIC:
-+  case EXEC_WS_CRITICAL:
-+  case EXEC_WS_STOPSTEAL:
-+  case EXEC_WS_RESTEAL:
-+    res = gfc_trans_ws_directive(code);
-+    break;
-+
- 	/* MPC HLS BEGIN */
- 	case EXEC_HLS_BARRIER:
- 	case EXEC_HLS_SINGLE:
-
-diff -ru gcc/fortran/trans-openmp.c ../gcc/fortran/trans-openmp.c
---- gcc/fortran/trans-openmp.c	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/fortran/trans-openmp.c	2020-07-15 17:12:39.000000000 +0200
-@@ -38,6 +38,8 @@
- #include "gomp-constants.h"
- #include "omp-general.h"
- #include "omp-low.h"
+diff --git a/gcc/gimple-low.c b/gcc/gimple-low.c
+index 619b9d7bf..2c3ffb0e6 100644
+--- a/gcc/gimple-low.c
++++ b/gcc/gimple-low.c
+@@ -30,6 +30,7 @@ along with GCC; see the file COPYING3.  If not see
+ #include "calls.h"
+ #include "gimple-iterator.h"
+ #include "gimple-low.h"
 +#include "gimple-pretty-print.h"
-+#include "dumpfile.h"
- #undef GCC_DIAG_STYLE
- #define GCC_DIAG_STYLE __gcc_tdiag__
- #include "diagnostic-core.h"
-@@ -53,7 +55,6 @@
- gfc_omp_privatize_by_reference (const_tree decl)
- {
-   tree type = TREE_TYPE (decl);
--
-   if (TREE_CODE (type) == REFERENCE_TYPE
-       && (!DECL_ARTIFICIAL (decl) || TREE_CODE (decl) == PARM_DECL))
-     return true;
-@@ -1795,7 +1796,7 @@
- gfc_trans_omp_clauses (stmtblock_t *block, gfc_omp_clauses *clauses,
- 		       locus where, bool declare_simd = false)
- {
--  tree omp_clauses = NULL_TREE, chunk_size, c;
-+  tree omp_clauses = NULL_TREE, chunk_size, steal_chunk_size,c;
-   int list, ifc;
-   enum omp_clause_code clause_code;
-   gfc_se se;
-@@ -2511,10 +2512,20 @@
-       gfc_add_block_to_block (block, &se.post);
-     }
  
-+  steal_chunk_size = NULL_TREE;
-+  if (clauses->steal_chunk_size)
-+    {
-+      gfc_init_se (&se, NULL);
-+      gfc_conv_expr (&se, clauses->steal_chunk_size);
-+      gfc_add_block_to_block (block, &se.pre);
-+      steal_chunk_size = gfc_evaluate_now (se.expr, block);
-+      gfc_add_block_to_block (block, &se.post);
-+    }
-+
-   if (clauses->sched_kind != OMP_SCHED_NONE)
-     {
-       c = build_omp_clause (where.lb->location, OMP_CLAUSE_SCHEDULE);
--      OMP_CLAUSE_SCHEDULE_CHUNK_EXPR (c) = chunk_size;
-+      OMP_CLAUSE_SCHEDULE_CHUNK_EXPR (c) = steal_chunk_size;
-       switch (clauses->sched_kind)
- 	{
- 	case OMP_SCHED_STATIC:
-@@ -2548,6 +2559,33 @@
-       omp_clauses = gfc_trans_add_clause (c, omp_clauses);
-     }
- 
-+  if (clauses->steal_sched_kind != OMP_SCHED_NONE)
-+    {
-+      c = build_omp_clause (where.lb->location, OMP_CLAUSE_STEAL_SCHEDULE);
-+      OMP_CLAUSE_STEAL_SCHEDULE_CHUNK_EXPR (c) = steal_chunk_size;
-+      switch (clauses->steal_sched_kind)
-+	{
-+	case OMP_SCHED_STATIC:
-+	  OMP_CLAUSE_STEAL_SCHEDULE_KIND (c) = OMP_CLAUSE_SCHEDULE_STATIC;
+ /* The differences between High GIMPLE and Low GIMPLE are the
+    following:
+diff --git a/gcc/gimple-pretty-print.c b/gcc/gimple-pretty-print.c
+index 49cc80c57..c224579cf 100644
+--- a/gcc/gimple-pretty-print.c
++++ b/gcc/gimple-pretty-print.c
+@@ -1354,6 +1354,9 @@ dump_gimple_omp_for (pretty_printer *buffer, gomp_for *gs, int spc, int flags)
+ 	case GF_OMP_FOR_KIND_CILKSIMD:
+ 	  kind = " cilksimd";
+ 	  break;
++	case GF_OMP_FOR_KIND_WS_FOR:
++	  kind = " ws_for";
 +	  break;
-+	case OMP_SCHED_DYNAMIC:
-+	  OMP_CLAUSE_STEAL_SCHEDULE_KIND (c) = OMP_CLAUSE_SCHEDULE_DYNAMIC;
-+	  break;
-+	case OMP_SCHED_GUIDED:
-+	  OMP_CLAUSE_STEAL_SCHEDULE_KIND (c) = OMP_CLAUSE_SCHEDULE_GUIDED;
-+	  break;
-+	case OMP_SCHED_RUNTIME:
-+	  OMP_CLAUSE_STEAL_SCHEDULE_KIND (c) = OMP_CLAUSE_SCHEDULE_RUNTIME;
-+	  break;
-+	case OMP_SCHED_AUTO:
-+	  OMP_CLAUSE_STEAL_SCHEDULE_KIND (c) = OMP_CLAUSE_SCHEDULE_AUTO;
-+	  break;
-+	default:
-+	  gcc_unreachable ();
-+	}
-+      omp_clauses = gfc_trans_add_clause (c, omp_clauses);
-+    }
-+
-   if (clauses->default_sharing != OMP_DEFAULT_UNKNOWN)
-     {
-       c = build_omp_clause (where.lb->location, OMP_CLAUSE_DEFAULT);
-@@ -3464,10 +3502,21 @@
-   if (code->ext.omp_clauses != NULL)
-     name = get_identifier (code->ext.omp_clauses->critical_name);
-   stmt = gfc_trans_code (code->block->next);
--  return build3_loc (input_location, OMP_CRITICAL, void_type_node, stmt,
--		     NULL_TREE, name);
-+
-+  switch(code->op)
-+  {
-+    case EXEC_OMP_CRITICAL:
-+      return build3_loc (input_location, OMP_CRITICAL, void_type_node, stmt,
-+          NULL_TREE, name);
-+    case EXEC_WS_CRITICAL:
-+      return build3_loc (input_location, WS_CRITICAL, void_type_node, stmt,
-+          NULL_TREE, name);
-+    default:
-+      gfc_internal_error ("Unclassified CRITICAL directive");
-+  }
- }
- 
-+
- typedef struct dovar_init_d {
-   tree var;
-   tree init;
-@@ -3806,6 +3855,7 @@
-     case EXEC_OMP_DISTRIBUTE: stmt = make_node (OMP_DISTRIBUTE); break;
-     case EXEC_OMP_TASKLOOP: stmt = make_node (OMP_TASKLOOP); break;
-     case EXEC_OACC_LOOP: stmt = make_node (OACC_LOOP); break;
-+    case EXEC_WS_DO: stmt = make_node (WS_FOR); break;
-     default: gcc_unreachable ();
-     }
- 
-@@ -3957,6 +4008,7 @@
-   GFC_OMP_SPLIT_TEAMS,
-   GFC_OMP_SPLIT_TARGET,
-   GFC_OMP_SPLIT_TASKLOOP,
-+  GFC_WS_SPLIT_DO,
-   GFC_OMP_SPLIT_NUM
- };
- 
-@@ -3968,7 +4020,8 @@
-   GFC_OMP_MASK_DISTRIBUTE = (1 << GFC_OMP_SPLIT_DISTRIBUTE),
-   GFC_OMP_MASK_TEAMS = (1 << GFC_OMP_SPLIT_TEAMS),
-   GFC_OMP_MASK_TARGET = (1 << GFC_OMP_SPLIT_TARGET),
--  GFC_OMP_MASK_TASKLOOP = (1 << GFC_OMP_SPLIT_TASKLOOP)
-+  GFC_OMP_MASK_TASKLOOP = (1 << GFC_OMP_SPLIT_TASKLOOP),
-+  GFC_WS_MASK_DO = (1 << GFC_WS_SPLIT_DO)
- };
- 
- static void
-@@ -4088,6 +4141,9 @@
-       mask = GFC_OMP_MASK_TEAMS | GFC_OMP_MASK_DISTRIBUTE | GFC_OMP_MASK_SIMD;
-       innermost = GFC_OMP_SPLIT_SIMD;
-       break;
-+    case EXEC_WS_DO:
-+      innermost = GFC_WS_SPLIT_DO;
-+      break;
-     default:
-       gcc_unreachable ();
-     }
-@@ -4229,6 +4285,16 @@
- 	  clausesa[GFC_OMP_SPLIT_TASKLOOP].collapse
- 	    = code->ext.omp_clauses->collapse;
+ 	default:
+ 	  gcc_unreachable ();
  	}
-+      if(mask & GFC_WS_MASK_DO)
-+      {
+@@ -1399,6 +1402,10 @@ dump_gimple_omp_for (pretty_printer *buffer, gomp_for *gs, int spc, int flags)
+ 	case GF_OMP_FOR_KIND_GRID_LOOP:
+ 	  pp_string (buffer, "#pragma omp for grid_loop");
+ 	  break;
++	case GF_OMP_FOR_KIND_WS_FOR:
++	  pp_string (buffer, "#pragma ws for");
++	  break;
 +
-+	  clausesa[GFC_WS_SPLIT_DO].lists[OMP_LIST_SHARED]
-+	    = code->ext.omp_clauses->lists[OMP_LIST_SHARED];
-+	  clausesa[GFC_WS_SPLIT_DO].default_sharing
-+	    = code->ext.omp_clauses->default_sharing;
-+	  clausesa[GFC_OMP_SPLIT_TASKLOOP].collapse
-+	    = code->ext.omp_clauses->collapse;
-+      }
-       /* Private clause is supported on all constructs,
- 	 it is enough to put it on the innermost one.  For
- 	 !$ omp parallel do put it on parallel though,
-@@ -5057,8 +5123,29 @@
-   return gfc_finish_block (&block);
- }
- 
--tree
--gfc_trans_oacc_directive (gfc_code *code)
-+tree gfc_trans_ws_directive (gfc_code *code)
-+{
-+  tree decl;
-+  switch(code->op)
-+  {
-+    case EXEC_WS_DO:
-+      return gfc_trans_omp_do (code, code->op, NULL, code->ext.omp_clauses,NULL);
-+    case EXEC_WS_ATOMIC:
-+      return gfc_trans_omp_atomic(code);
-+    case EXEC_WS_CRITICAL:
-+      return gfc_trans_omp_critical(code);
-+    case EXEC_WS_STOPSTEAL:
-+      decl = builtin_decl_explicit (BUILT_IN_MPC_WS_STOPSTEAL);
-+      return build_call_expr_loc (input_location, decl, 0);
-+    case EXEC_WS_RESTEAL:
-+      decl = builtin_decl_explicit (BUILT_IN_MPC_WS_RESTEAL);
-+      return build_call_expr_loc (input_location, decl, 0);
-+    default:
-+      gfc_internal_error ("Unclassified WS directive");
-+  }
-+}
-+
-+tree gfc_trans_oacc_directive (gfc_code *code)
- {
-   switch (code->op)
-     {
-diff -ru gcc/fortran/trans-stmt.h ../gcc/fortran/trans-stmt.h
---- gcc/fortran/trans-stmt.h	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/fortran/trans-stmt.h	2020-07-15 17:12:39.000000000 +0200
-@@ -76,6 +76,9 @@
- tree gfc_trans_hls_directive (gfc_code *);
- /* MPC HLS END */
- 
-+/* MPC WS */
-+tree gfc_trans_ws_directive(gfc_code*);
-+
- /* trans-io.c */
- tree gfc_trans_open (gfc_code *);
- tree gfc_trans_close (gfc_code *);
-diff -ru gcc/fortran/types.def ../gcc/fortran/types.def
---- gcc/fortran/types.def	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/fortran/types.def	2020-07-15 17:12:39.000000000 +0200
-@@ -252,3 +252,7 @@
- DEF_FUNCTION_TYPE_VAR_6 (BT_FN_VOID_INT_OMPFN_SIZE_PTR_PTR_PTR_VAR,
- 			  BT_VOID, BT_INT, BT_PTR_FN_VOID_PTR, BT_SIZE,
- 			  BT_PTR, BT_PTR, BT_PTR)
-+
-+DEF_FUNCTION_TYPE_9 (BT_FN_VOID_OMPFN_PTR_LONG_LONG_LONG_INT_INT_INT_INT,
-+		     BT_VOID, BT_PTR_FN_VOID_PTR, BT_PTR,
-+		     BT_LONG, BT_LONG, BT_LONG, BT_INT, BT_INT, BT_INT, BT_INT)
-diff -ru gcc/gimple.h ../gcc/gimple.h
---- gcc/gimple.h	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/gimple.h	2020-07-15 17:12:39.000000000 +0200
-@@ -150,6 +150,7 @@
+ 	default:
+ 	  gcc_unreachable ();
+ 	}
+diff --git a/gcc/gimple.h b/gcc/gimple.h
+index 460011c87..20342f394 100644
+--- a/gcc/gimple.h
++++ b/gcc/gimple.h
+@@ -150,6 +150,7 @@ enum gf_mask {
      GF_OMP_PARALLEL_COMBINED	= 1 << 0,
      GF_OMP_PARALLEL_GRID_PHONY = 1 << 1,
      GF_OMP_TASK_TASKLOOP	= 1 << 0,
@@ -2626,7 +1241,7 @@ diff -ru gcc/gimple.h ../gcc/gimple.h
      GF_OMP_FOR_KIND_MASK	= (1 << 4) - 1,
      GF_OMP_FOR_KIND_FOR		= 0,
      GF_OMP_FOR_KIND_DISTRIBUTE	= 1,
-@@ -157,6 +158,7 @@
+@@ -157,6 +158,7 @@ enum gf_mask {
      GF_OMP_FOR_KIND_CILKFOR     = 3,
      GF_OMP_FOR_KIND_OACC_LOOP	= 4,
      GF_OMP_FOR_KIND_GRID_LOOP = 5,
@@ -2634,7 +1249,7 @@ diff -ru gcc/gimple.h ../gcc/gimple.h
      /* Flag for SIMD variants of OMP_FOR kinds.  */
      GF_OMP_FOR_SIMD		= 1 << 3,
      GF_OMP_FOR_KIND_SIMD	= GF_OMP_FOR_SIMD | 0,
-@@ -185,6 +187,10 @@
+@@ -185,6 +187,10 @@ enum gf_mask {
      GF_OMP_TARGET_KIND_OACC_HOST_DATA = 11,
      GF_OMP_TEAMS_GRID_PHONY	= 1 << 0,
  
@@ -2645,7 +1260,7 @@ diff -ru gcc/gimple.h ../gcc/gimple.h
      /* True on an GIMPLE_OMP_RETURN statement if the return does not require
         a thread synchronization via some sort of barrier.  The exact barrier
         that would otherwise be emitted is dependent on the OMP statement with
-@@ -4818,6 +4824,19 @@
+@@ -4818,6 +4824,19 @@ gimple_omp_critical_set_clauses (gomp_critical *crit_stmt, tree clauses)
    crit_stmt->clauses = clauses;
  }
  
@@ -2665,7 +1280,7 @@ diff -ru gcc/gimple.h ../gcc/gimple.h
  
  /* Return the clauses associated with OMP_ORDERED statement ORD_STMT.  */
  
-@@ -5373,6 +5392,22 @@
+@@ -5373,6 +5392,22 @@ gimple_omp_task_set_taskloop_p (gimple *g, bool taskloop_p)
      g->subcode &= ~GF_OMP_TASK_TASKLOOP;
  }
  
@@ -2688,45 +1303,11 @@ diff -ru gcc/gimple.h ../gcc/gimple.h
  
  /* Return the child function used to hold the body of OMP_TASK GS.  */
  
-diff -ru gcc/gimple-low.c ../gcc/gimple-low.c
---- gcc/gimple-low.c	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/gimple-low.c	2020-07-15 17:12:39.000000000 +0200
-@@ -30,6 +30,7 @@
- #include "calls.h"
- #include "gimple-iterator.h"
- #include "gimple-low.h"
-+#include "gimple-pretty-print.h"
- 
- /* The differences between High GIMPLE and Low GIMPLE are the
-    following:
-diff -ru gcc/gimple-pretty-print.c ../gcc/gimple-pretty-print.c
---- gcc/gimple-pretty-print.c	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/gimple-pretty-print.c	2020-07-15 17:12:39.000000000 +0200
-@@ -1354,6 +1354,9 @@
- 	case GF_OMP_FOR_KIND_CILKSIMD:
- 	  kind = " cilksimd";
- 	  break;
-+	case GF_OMP_FOR_KIND_WS_FOR:
-+	  kind = " ws_for";
-+	  break;
- 	default:
- 	  gcc_unreachable ();
- 	}
-@@ -1399,6 +1402,10 @@
- 	case GF_OMP_FOR_KIND_GRID_LOOP:
- 	  pp_string (buffer, "#pragma omp for grid_loop");
- 	  break;
-+	case GF_OMP_FOR_KIND_WS_FOR:
-+	  pp_string (buffer, "#pragma ws for");
-+	  break;
-+
- 	default:
- 	  gcc_unreachable ();
- 	}
-diff -ru gcc/gimplify.c ../gcc/gimplify.c
---- gcc/gimplify.c	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/gimplify.c	2020-07-15 17:12:39.000000000 +0200
-@@ -62,7 +62,7 @@
+diff --git a/gcc/gimplify.c b/gcc/gimplify.c
+index 5264a4f3d..e3a28e52e 100644
+--- a/gcc/gimplify.c
++++ b/gcc/gimplify.c
+@@ -62,7 +62,7 @@ along with GCC; see the file COPYING3.  If not see
  #include "builtins.h"
  #include "asan.h"
  #include "dbgcnt.h"
@@ -2735,7 +1316,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  /* Hash set of poisoned variables in a bind expr.  */
  static hash_set<tree> *asan_poisoned_variables = NULL;
  
-@@ -115,6 +115,7 @@
+@@ -115,6 +115,7 @@ enum omp_region_type
  
    ORT_TASK	= 0x04,
    ORT_UNTIED_TASK = 0x05,
@@ -2743,7 +1324,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  
    ORT_TEAMS	= 0x08,
    ORT_COMBINED_TEAMS = 0x09,
-@@ -403,7 +404,7 @@
+@@ -403,7 +404,7 @@ new_omp_context (enum omp_region_type region_type)
    c->privatized_types = new hash_set<tree>;
    c->location = input_location;
    c->region_type = region_type;
@@ -2752,7 +1333,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
      c->default_kind = OMP_CLAUSE_DEFAULT_SHARED;
    else
      c->default_kind = OMP_CLAUSE_DEFAULT_UNSPECIFIED;
-@@ -5315,6 +5316,8 @@
+@@ -5315,6 +5316,8 @@ is_gimple_stmt (tree t)
      case OMP_TARGET_EXIT_DATA:
      case OMP_TASKLOOP:
      case OMP_TEAMS:
@@ -2761,25 +1342,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
        /* These are always void.  */
        return true;
  
-@@ -6611,7 +6614,6 @@
-   splay_tree_node n;
-   unsigned int nflags;
-   tree t;
--
-   if (error_operand_p (decl) || ctx->region_type == ORT_NONE)
-     return;
- 
-@@ -6621,7 +6623,9 @@
-   if ((flags & GOVD_SHARED) == 0
-       && (TREE_ADDRESSABLE (TREE_TYPE (decl))
- 	  || TYPE_NEEDS_CONSTRUCTING (TREE_TYPE (decl))))
-+  {
-     flags |= GOVD_SEEN;
-+  }
- 
-   n = splay_tree_lookup (ctx->variables, (splay_tree_key)decl);
-   if (n != NULL && (n->value & GOVD_DATA_SHARE_CLASS) != 0)
-@@ -6711,8 +6715,15 @@
+@@ -6711,8 +6714,15 @@ omp_add_variable (struct gimplify_omp_ctx *ctx, tree decl, unsigned int flags)
    if (n != NULL)
      n->value |= flags;
    else
@@ -2796,26 +1359,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
    /* For reductions clauses in OpenACC loop directives, by default create a
       copy clause on the enclosing parallel construct for carrying back the
       results.  */
-@@ -6751,6 +6762,7 @@
- 	  outer_ctx = outer_ctx->outer_context;
- 	}
-     }
-+
- }
- 
- /* Notice a threadprivate variable DECL used in OMP context CTX.
-@@ -6865,7 +6877,10 @@
-       }
-       /* FALLTHRU */
-     case OMP_CLAUSE_DEFAULT_SHARED:
-+      {
-       flags |= GOVD_SHARED;
-+
-+      }
-       break;
-     case OMP_CLAUSE_DEFAULT_PRIVATE:
-       flags |= GOVD_PRIVATE;
-@@ -6899,13 +6914,24 @@
+@@ -6899,13 +6909,24 @@ omp_default_clause (struct gimplify_omp_ctx *ctx, tree decl,
  		}
  	    }
  	}
@@ -2846,39 +1390,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
      found_outer:
        break;
  
-@@ -6991,6 +7017,7 @@
- static bool
- omp_notice_variable (struct gimplify_omp_ctx *ctx, tree decl, bool in_code)
- {
-+
-   splay_tree_node n;
-   unsigned flags = in_code ? GOVD_SEEN : 0;
-   bool ret = false, shared;
-@@ -7215,6 +7242,7 @@
-   n->value = flags;
- 
-  do_outer:
-+
-   /* If the variable is private in the current context, then we don't
-      need to propagate anything to an outer context.  */
-   if ((flags & GOVD_PRIVATE) && !(flags & GOVD_PRIVATE_OUTER_REF))
-@@ -8177,6 +8205,7 @@
- 	      remove = true;
- 	      break;
- 	    }
-+
- 	  if (DECL_NAME (decl) == NULL_TREE && (flags & GOVD_SHARED) == 0)
- 	    {
- 	      tree t = omp_member_access_dummy_var (decl);
-@@ -8305,6 +8334,7 @@
- 			  " or private in outer context", DECL_NAME (decl));
- 	    }
- 	do_notice:
-+
- 	  if (outer_ctx)
- 	    omp_notice_variable (outer_ctx, decl, true);
- 	  if (check_non_private
-@@ -8359,6 +8389,7 @@
+@@ -8349,6 +8370,7 @@ gimplify_scan_omp_clauses (tree *list_p, gimple_seq *pre_p,
  	  /* Fall through.  */
  
  	case OMP_CLAUSE_SCHEDULE:
@@ -2886,7 +1398,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  	case OMP_CLAUSE_NUM_THREADS:
  	case OMP_CLAUSE_NUM_TEAMS:
  	case OMP_CLAUSE_THREAD_LIMIT:
-@@ -8619,9 +8650,10 @@
+@@ -8609,9 +8631,10 @@ gimplify_adjust_omp_clauses_1 (splay_tree_node n, void *data)
      }
    else if (flags & GOVD_SHARED)
      {
@@ -2898,7 +1410,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  	  while (ctx != NULL)
  	    {
  	      splay_tree_node on
-@@ -8830,7 +8862,7 @@
+@@ -8820,7 +8843,7 @@ gimplify_adjust_omp_clauses (gimple_seq *pre_p, gimple_seq body, tree *list_p,
  	case OMP_CLAUSE_LINEAR:
  	  decl = OMP_CLAUSE_DECL (c);
  	  n = splay_tree_lookup (ctx->variables, (splay_tree_key) decl);
@@ -2907,7 +1419,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  	  if (! remove)
  	    {
  	      bool shared = OMP_CLAUSE_CODE (c) == OMP_CLAUSE_SHARED;
-@@ -9131,6 +9163,7 @@
+@@ -9121,6 +9144,7 @@ gimplify_adjust_omp_clauses (gimple_seq *pre_p, gimple_seq body, tree *list_p,
  	case OMP_CLAUSE_DIST_SCHEDULE:
  	case OMP_CLAUSE_DEVICE:
  	case OMP_CLAUSE_SCHEDULE:
@@ -2915,7 +1427,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  	case OMP_CLAUSE_NOWAIT:
  	case OMP_CLAUSE_ORDERED:
  	case OMP_CLAUSE_DEFAULT:
-@@ -9459,10 +9492,14 @@
+@@ -9449,6 +9473,9 @@ gimplify_omp_for (tree *expr_p, gimple_seq *pre_p)
        else
  	ort = ORT_TASK;
        break;
@@ -2925,12 +1437,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
      case OMP_SIMD:
      case CILK_SIMD:
        ort = ORT_SIMD;
-       break;
-+      //break;
-     default:
-       gcc_unreachable ();
-     }
-@@ -9496,7 +9533,7 @@
+@@ -9486,7 +9513,7 @@ gimplify_omp_for (tree *expr_p, gimple_seq *pre_p)
  	}
      }
  
@@ -2939,7 +1446,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
      gimplify_scan_omp_clauses (&OMP_FOR_CLAUSES (for_stmt), pre_p, ort,
  			       TREE_CODE (for_stmt));
  
-@@ -9530,7 +9567,7 @@
+@@ -9520,7 +9547,7 @@ gimplify_omp_for (tree *expr_p, gimple_seq *pre_p)
      }
    if (OMP_FOR_PRE_BODY (for_stmt))
      {
@@ -2948,7 +1455,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  	gimplify_and_add (OMP_FOR_PRE_BODY (for_stmt), &for_pre_body);
        else
  	{
-@@ -9549,7 +9586,7 @@
+@@ -9539,7 +9566,7 @@ gimplify_omp_for (tree *expr_p, gimple_seq *pre_p)
  
    /* For taskloop, need to gimplify the start, end and step before the
       taskloop, outside of the taskloop omp context.  */
@@ -2957,7 +1464,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
      {
        for (i = 0; i < TREE_VEC_LENGTH (OMP_FOR_INIT (for_stmt)); i++)
  	{
-@@ -9606,8 +9643,14 @@
+@@ -9596,8 +9623,14 @@ gimplify_omp_for (tree *expr_p, gimple_seq *pre_p)
  	    }
  	}
  
@@ -2972,16 +1479,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
      }
  
    if (orig_for_stmt != for_stmt)
-@@ -9937,6 +9980,8 @@
-       else
- 	var = decl;
- 
-+
-+
-       tret = gimplify_expr (&TREE_OPERAND (t, 1), &for_pre_body, NULL,
- 			    is_gimple_val, fb_rvalue, false);
-       ret = MIN (ret, tret);
-@@ -10086,7 +10131,7 @@
+@@ -10076,7 +10109,7 @@ gimplify_omp_for (tree *expr_p, gimple_seq *pre_p)
  
    BITMAP_FREE (has_decl_expr);
  
@@ -2990,7 +1488,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
      {
        push_gimplify_context ();
        if (TREE_CODE (OMP_FOR_BODY (orig_for_stmt)) != BIND_EXPR)
-@@ -10100,8 +10145,7 @@
+@@ -10090,8 +10123,7 @@ gimplify_omp_for (tree *expr_p, gimple_seq *pre_p)
  
    gimple *g = gimplify_and_return_first (OMP_FOR_BODY (orig_for_stmt),
  					 &for_body);
@@ -3000,7 +1498,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
      {
        if (gimple_code (g) == GIMPLE_BIND)
  	pop_gimplify_context (g);
-@@ -10115,7 +10159,7 @@
+@@ -10105,7 +10137,7 @@ gimplify_omp_for (tree *expr_p, gimple_seq *pre_p)
  	t = TREE_VEC_ELT (OMP_FOR_INIT (for_stmt), i);
  	decl = TREE_OPERAND (t, 0);
  	struct gimplify_omp_ctx *ctx = gimplify_omp_ctxp;
@@ -3009,7 +1507,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  	  gimplify_omp_ctxp = ctx->outer_context;
  	var = create_tmp_var (TREE_TYPE (decl), get_name (decl));
  	gimplify_omp_ctxp = ctx;
-@@ -10140,6 +10184,7 @@
+@@ -10130,6 +10162,7 @@ gimplify_omp_for (tree *expr_p, gimple_seq *pre_p)
      case OMP_DISTRIBUTE: kind = GF_OMP_FOR_KIND_DISTRIBUTE; break;
      case OMP_TASKLOOP: kind = GF_OMP_FOR_KIND_TASKLOOP; break;
      case OACC_LOOP: kind = GF_OMP_FOR_KIND_OACC_LOOP; break;
@@ -3017,7 +1515,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
      default:
        gcc_unreachable ();
      }
-@@ -10180,7 +10225,7 @@
+@@ -10170,7 +10203,7 @@ gimplify_omp_for (tree *expr_p, gimple_seq *pre_p)
       The task construct stands for the effect of data sharing on the
       explicit task it creates and the inner taskloop stands for expansion
       of the static loop inside of the explicit task construct.  */
@@ -3026,7 +1524,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
      {
        tree *gfor_clauses_ptr = gimple_omp_for_clauses_ptr (gfor);
        tree task_clauses = NULL_TREE;
-@@ -10189,7 +10234,8 @@
+@@ -10179,7 +10212,8 @@ gimplify_omp_for (tree *expr_p, gimple_seq *pre_p)
        tree outer_for_clauses = NULL_TREE;
        tree *gforo_clauses_ptr = &outer_for_clauses;
        for (; c; c = OMP_CLAUSE_CHAIN (c))
@@ -3036,7 +1534,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  	  {
  	  /* These clauses are allowed on task, move them there.  */
  	  case OMP_CLAUSE_SHARED:
-@@ -10271,21 +10317,157 @@
+@@ -10261,21 +10295,157 @@ gimplify_omp_for (tree *expr_p, gimple_seq *pre_p)
  	    gtask_clauses_ptr
  	      = &OMP_CLAUSE_CHAIN (*gtask_clauses_ptr);
  	    break;
@@ -3183,39 +1681,22 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
 +        gimple_omp_task_set_taskloop_p (g, true);
 +        g = gimple_build_bind (NULL_TREE, g, NULL_TREE);
 +	      gforo = gimple_build_omp_for (g, GF_OMP_FOR_KIND_TASKLOOP, outer_for_clauses,
- 				gimple_omp_for_collapse (gfor),
- 				gimple_omp_for_pre_body (gfor));
++				gimple_omp_for_collapse (gfor),
++				gimple_omp_for_pre_body (gfor));
 +      }
 +      else /* MPC WS FOR */
 +      {
 +        gimple_omp_task_set_ws_for_p (g, true);
 +        g = gimple_build_bind (NULL_TREE, g, NULL_TREE);
 +	      gforo = gimple_build_omp_for (g, GF_OMP_FOR_KIND_WS_FOR, outer_for_clauses,
-+				gimple_omp_for_collapse (gfor),
-+				gimple_omp_for_pre_body (gfor));
+ 				gimple_omp_for_collapse (gfor),
+ 				gimple_omp_for_pre_body (gfor));
 +      }
 +
        gimple_omp_for_set_pre_body (gfor, NULL);
        gimple_omp_for_set_combined_p (gforo, true);
        gimple_omp_for_set_combined_into_p (gfor, true);
-@@ -10294,13 +10476,16 @@
- 	  tree type = TREE_TYPE (gimple_omp_for_index (gfor, i));
- 	  tree v = create_tmp_var (type);
- 	  gimple_omp_for_set_index (gforo, i, v);
-+
- 	  t = unshare_expr (gimple_omp_for_initial (gfor, i));
- 	  gimple_omp_for_set_initial (gforo, i, t);
- 	  gimple_omp_for_set_cond (gforo, i,
- 				   gimple_omp_for_cond (gfor, i));
-+
- 	  t = unshare_expr (gimple_omp_for_final (gfor, i));
- 	  gimple_omp_for_set_final (gforo, i, t);
- 	  t = unshare_expr (gimple_omp_for_incr (gfor, i));
-+
- 	  gcc_assert (TREE_OPERAND (t, 0) == gimple_omp_for_index (gfor, i));
- 	  TREE_OPERAND (t, 0) = v;
- 	  gimple_omp_for_set_incr (gforo, i, t);
-@@ -10310,9 +10495,15 @@
+@@ -10300,9 +10470,15 @@ gimplify_omp_for (tree *expr_p, gimple_seq *pre_p)
  	  gimple_omp_for_set_clauses (gforo, t);
  	}
        gimplify_seq_add_stmt (pre_p, gforo);
@@ -3231,7 +1712,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
    if (ret != GS_ALL_DONE)
      return GS_ERROR;
    *expr_p = NULL_TREE;
-@@ -11730,6 +11921,7 @@
+@@ -11720,6 +11896,7 @@ gimplify_expr (tree *expr_p, gimple_seq *pre_p, gimple_seq *post_p,
  	case OMP_DISTRIBUTE:
  	case OMP_TASKLOOP:
  	case OACC_LOOP:
@@ -3239,7 +1720,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  	  ret = gimplify_omp_for (expr_p, pre_p);
  	  break;
  
-@@ -11771,6 +11963,7 @@
+@@ -11761,6 +11938,7 @@ gimplify_expr (tree *expr_p, gimple_seq *pre_p, gimple_seq *post_p,
  	case OMP_TASKGROUP:
  	case OMP_ORDERED:
  	case OMP_CRITICAL:
@@ -3247,7 +1728,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  	  {
  	    gimple_seq body = NULL;
  	    gimple *g;
-@@ -11801,6 +11994,7 @@
+@@ -11791,6 +11969,7 @@ gimplify_expr (tree *expr_p, gimple_seq *pre_p, gimple_seq *post_p,
  		g = gimplify_omp_ordered (*expr_p, body);
  		break;
  	      case OMP_CRITICAL:
@@ -3255,7 +1736,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  		gimplify_scan_omp_clauses (&OMP_CRITICAL_CLAUSES (*expr_p),
  					   pre_p, ORT_WORKSHARE, OMP_CRITICAL);
  		gimplify_adjust_omp_clauses (pre_p, body,
-@@ -11809,6 +12003,11 @@
+@@ -11799,6 +11978,11 @@ gimplify_expr (tree *expr_p, gimple_seq *pre_p, gimple_seq *post_p,
  		g = gimple_build_omp_critical (body,
  		    			       OMP_CRITICAL_NAME (*expr_p),
  		    			       OMP_CRITICAL_CLAUSES (*expr_p));
@@ -3267,7 +1748,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  		break;
  	      default:
  		gcc_unreachable ();
-@@ -12163,6 +12362,7 @@
+@@ -12153,6 +12337,7 @@ gimplify_expr (tree *expr_p, gimple_seq *pre_p, gimple_seq *post_p,
  		  && code != OACC_EXIT_DATA
  		  && code != OACC_CACHE
  		  && code != OMP_CRITICAL
@@ -3275,7 +1756,7 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
  		  && code != OMP_FOR
  		  && code != OACC_LOOP
  		  && code != OMP_MASTER
-@@ -12508,7 +12708,7 @@
+@@ -12498,7 +12683,7 @@ gimplify_body (tree fndecl, bool do_parms)
        nonlocal_vlas = NULL;
      }
  
@@ -3284,33 +1765,35 @@ diff -ru gcc/gimplify.c ../gcc/gimplify.c
        && gimplify_omp_ctxp)
      {
        delete_omp_context (gimplify_omp_ctxp);
-diff -ru gcc/omp-builtins.def ../gcc/omp-builtins.def
---- gcc/omp-builtins.def	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/omp-builtins.def	2020-07-15 17:12:39.000000000 +0200
-@@ -360,3 +360,19 @@
+diff --git a/gcc/omp-builtins.def b/gcc/omp-builtins.def
+index 69b73f4b8..958bd004f 100644
+--- a/gcc/omp-builtins.def
++++ b/gcc/omp-builtins.def
+@@ -360,3 +360,19 @@ DEF_GOMP_BUILTIN (BUILT_IN_GOMP_TEAMS, "GOMP_teams",
  		  BT_FN_VOID_UINT_UINT, ATTR_NOTHROW_LIST)
  DEF_GOACC_BUILTIN (BUILT_IN_GOACC_DECLARE, "GOACC_declare",
  		   BT_FN_VOID_INT_SIZE_PTR_PTR_PTR, ATTR_NOTHROW_LIST)
 +
-+DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_ATOMIC_START, "MPC_Workshare_atomic_start",
++DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_ATOMIC_START, "mpc_lowcomm_workshare_atomic_start",
 +		  BT_FN_VOID, ATTR_NOTHROW_LEAF_LIST)
-+DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_ATOMIC_END, "MPC_Workshare_atomic_end",
++DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_ATOMIC_END, "mpc_lowcomm_workshare_atomic_end",
 +		  BT_FN_VOID, ATTR_NOTHROW_LEAF_LIST)
-+DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_CRITICAL_START, "MPC_Workshare_critical_start",
++DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_CRITICAL_START, "mpc_lowcomm_workshare_critical_start",
 +		  BT_FN_VOID, ATTR_NOTHROW_LEAF_LIST)
-+DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_CRITICAL_END, "MPC_Workshare_critical_end",
++DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_CRITICAL_END, "mpc_lowcomm_workshare_critical_end",
 +		  BT_FN_VOID, ATTR_NOTHROW_LEAF_LIST)
-+DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_FOR, "MPC_Workshare_start",
++DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_FOR, "mpc_lowcomm_workshare_start",
 +		  BT_FN_VOID_OMPFN_PTR_LONG_LONG_LONG_INT_INT_INT_INT, ATTR_NOTHROW_LIST)
-+DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_STOPSTEAL, "MPC_Workshare_stop_stealing",
++DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_STOPSTEAL, "mpc_lowcomm_workshare_stop_stealing",
 +      BT_FN_VOID, ATTR_NOTHROW_LEAF_LIST)
-+DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_RESTEAL, "MPC_Workshare_resteal",
++DEF_MPC_WS_BUILTIN (BUILT_IN_MPC_WS_RESTEAL, "mpc_lowcomm_workshare_resteal",
 +      BT_FN_VOID, ATTR_NOTHROW_LEAF_LIST)
 +
-diff -ru gcc/omp-expand.c ../gcc/omp-expand.c
---- gcc/omp-expand.c	2020-07-15 18:05:47.000000000 +0200
-+++ ../gcc/omp-expand.c	2020-07-15 17:12:39.000000000 +0200
-@@ -731,6 +731,22 @@
+diff --git a/gcc/omp-expand.c b/gcc/omp-expand.c
+index a1e668d99..f1c265c38 100644
+--- a/gcc/omp-expand.c
++++ b/gcc/omp-expand.c
+@@ -731,6 +731,22 @@ expand_cilk_for_call (basic_block bb, gomp_parallel *entry_stmt,
  /* Build the function call to GOMP_task to actually
     generate the task operation.  BB is the block where to insert the code.  */
  
@@ -3333,7 +1816,7 @@ diff -ru gcc/omp-expand.c ../gcc/omp-expand.c
  static void
  expand_task_call (struct omp_region *region, basic_block bb,
  		  gomp_task *entry_stmt)
-@@ -754,14 +770,16 @@
+@@ -754,14 +770,16 @@ expand_task_call (struct omp_region *region, basic_block bb,
        | (depend ? GOMP_TASK_FLAG_DEPEND : 0);
  
    bool taskloop_p = gimple_omp_task_taskloop_p (entry_stmt);
@@ -3352,7 +1835,7 @@ diff -ru gcc/omp-expand.c ../gcc/omp-expand.c
        struct omp_for_data fd;
        omp_extract_for_data (as_a <gomp_for *> (g), &fd, NULL);
        startvar = omp_find_clause (clauses, OMP_CLAUSE__LOOPTEMP_);
-@@ -802,7 +820,7 @@
+@@ -802,7 +820,7 @@ expand_task_call (struct omp_region *region, basic_block bb,
    tree cond = boolean_true_node;
    if (ifc)
      {
@@ -3361,16 +1844,7 @@ diff -ru gcc/omp-expand.c ../gcc/omp-expand.c
  	{
  	  tree t = gimple_boolify (OMP_CLAUSE_IF_EXPR (ifc));
  	  t = fold_build3_loc (loc, COND_EXPR, unsigned_type_node, t,
-@@ -848,7 +866,7 @@
-   else
-     t3 = build_fold_addr_expr_loc (loc, t);
- 
--  if (taskloop_p)
-+  if (taskloop_p )
-     t = build_call_expr (ull
- 			 ? builtin_decl_explicit (BUILT_IN_GOMP_TASKLOOP_ULL)
- 			 : builtin_decl_explicit (BUILT_IN_GOMP_TASKLOOP),
-@@ -856,6 +874,93 @@
+@@ -856,6 +874,93 @@ expand_task_call (struct omp_region *region, basic_block bb,
  			 gimple_omp_task_arg_size (entry_stmt),
  			 gimple_omp_task_arg_align (entry_stmt), flags,
  			 num_tasks, priority, startvar, endvar, step);
@@ -3435,7 +1909,7 @@ diff -ru gcc/omp-expand.c ../gcc/omp-expand.c
 +
 +       if(flag_mpc_ws == 2) 
 +       {
-+         fprintf(stderr,"\033[1;36mCalling MPC_Workshare_init with arguments below !\n\033[0;0m");
++         fprintf(stderr,"\033[1;36mCalling mpc_lowcomm_workshare_init with arguments below !\n\033[0;0m");
 +         fprintf(stderr,"\nfunc : ");
 +         print_generic_expr(stderr,t1,TDF_SLIM);fprintf(stderr,"\n");
 +         fprintf(stderr,"\nshareds : ");
@@ -3464,7 +1938,7 @@ diff -ru gcc/omp-expand.c ../gcc/omp-expand.c
    else
      t = build_call_expr (builtin_decl_explicit (BUILT_IN_GOMP_TASK),
  			 9, t1, t2, t3,
-@@ -1122,6 +1227,8 @@
+@@ -1122,6 +1227,8 @@ expand_omp_taskreg (struct omp_region *region)
    else
      exit_bb = region->exit;
  
@@ -3473,7 +1947,7 @@ diff -ru gcc/omp-expand.c ../gcc/omp-expand.c
    bool is_cilk_for
      = (flag_cilkplus
         && gimple_code (entry_stmt) == GIMPLE_OMP_PARALLEL
-@@ -1312,6 +1419,25 @@
+@@ -1312,6 +1419,25 @@ expand_omp_taskreg (struct omp_region *region)
  	(*debug_hooks->early_global_decl) (cfun->decl);
  
        new_bb = move_sese_region_to_fn (child_cfun, entry_bb, exit_bb, block);
@@ -3499,7 +1973,7 @@ diff -ru gcc/omp-expand.c ../gcc/omp-expand.c
        if (exit_bb)
  	single_succ_edge (new_bb)->flags = EDGE_FALLTHRU;
        if (e2)
-@@ -1358,7 +1484,7 @@
+@@ -1358,7 +1484,7 @@ expand_omp_taskreg (struct omp_region *region)
        if (need_asm)
  	assign_assembler_name_if_needed (child_fn);
  
@@ -3508,7 +1982,7 @@ diff -ru gcc/omp-expand.c ../gcc/omp-expand.c
  	optimize_omp_library_calls (entry_stmt);
        cgraph_edge::rebuild_edges ();
  
-@@ -1390,11 +1516,17 @@
+@@ -1390,11 +1516,17 @@ expand_omp_taskreg (struct omp_region *region)
  	}
      }
  
@@ -3527,7 +2001,7 @@ diff -ru gcc/omp-expand.c ../gcc/omp-expand.c
      expand_parallel_call (region, new_bb,
  			  as_a <gomp_parallel *> (entry_stmt), ws_args);
    else
-@@ -4883,7 +5015,8 @@
+@@ -4883,7 +5015,8 @@ expand_omp_taskloop_for_outer (struct omp_region *region,
    gcc_assert (inner_stmt);
    gcc_assert (region->cont);
    gcc_assert (gimple_code (inner_stmt) == GIMPLE_OMP_TASK
@@ -3537,7 +2011,7 @@ diff -ru gcc/omp-expand.c ../gcc/omp-expand.c
    type = TREE_TYPE (fd->loop.v);
  
    /* See if we need to bias by LLONG_MIN.  */
-@@ -5826,7 +5959,7 @@
+@@ -5826,7 +5959,7 @@ expand_omp_for (struct omp_region *region, gimple *inner_stmt)
        gcc_assert (!inner_stmt);
        expand_oacc_for (region, &fd);
      }
@@ -3546,7 +2020,7 @@ diff -ru gcc/omp-expand.c ../gcc/omp-expand.c
      {
        if (gimple_omp_for_combined_into_p (fd.for_stmt))
  	expand_omp_taskloop_for_inner (region, &fd, inner_stmt);
-@@ -8158,7 +8291,7 @@
+@@ -8158,7 +8291,7 @@ public:
    virtual unsigned int execute (function *)
      {
        bool gate = ((flag_cilkplus != 0 || flag_openacc != 0 || flag_openmp != 0
@@ -3555,10 +2029,11 @@ diff -ru gcc/omp-expand.c ../gcc/omp-expand.c
  		   && !seen_error ());
  
        /* This pass always runs, to provide PROP_gimple_eomp.
-diff -ru gcc/omp-general.c ../gcc/omp-general.c
---- gcc/omp-general.c	2020-07-15 18:05:48.000000000 +0200
-+++ ../gcc/omp-general.c	2020-07-15 17:12:39.000000000 +0200
-@@ -128,7 +128,8 @@
+diff --git a/gcc/omp-general.c b/gcc/omp-general.c
+index 3f9aec8d6..fd3171abb 100644
+--- a/gcc/omp-general.c
++++ b/gcc/omp-general.c
+@@ -128,7 +128,8 @@ omp_extract_for_data (gomp_for *for_stmt, struct omp_for_data *fd,
    bool distribute = gimple_omp_for_kind (for_stmt)
  		    == GF_OMP_FOR_KIND_DISTRIBUTE;
    bool taskloop = gimple_omp_for_kind (for_stmt)
@@ -3568,10 +2043,11 @@ diff -ru gcc/omp-general.c ../gcc/omp-general.c
    tree iterv, countv;
  
    fd->for_stmt = for_stmt;
-diff -ru gcc/omp-low.c ../gcc/omp-low.c
---- gcc/omp-low.c	2020-07-15 18:05:48.000000000 +0200
-+++ ../gcc/omp-low.c	2020-07-15 17:12:39.000000000 +0200
-@@ -59,6 +59,7 @@
+diff --git a/gcc/omp-low.c b/gcc/omp-low.c
+index 2d1ba3f52..acd883996 100644
+--- a/gcc/omp-low.c
++++ b/gcc/omp-low.c
+@@ -59,6 +59,7 @@ along with GCC; see the file COPYING3.  If not see
  #include "gimple-pretty-print.h"
  #include "hsa-common.h"
  
@@ -3579,7 +2055,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  /* Lowering of OMP parallel and workshare constructs proceeds in two
     phases.  The first phase scans the function looking for OMP statements
     and then for variables that must be replaced to satisfy data sharing
-@@ -281,7 +282,23 @@
+@@ -281,7 +282,23 @@ is_taskloop_ctx (omp_context *ctx)
  	 && gimple_omp_for_kind (ctx->stmt) == GF_OMP_FOR_KIND_TASKLOOP;
  }
  
@@ -3590,28 +2066,20 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
 +  return gimple_code (ctx->stmt) == GIMPLE_OMP_FOR
 +	 && gimple_omp_for_kind (ctx->stmt) == GF_OMP_FOR_KIND_WS_FOR;
 +}
- 
++
 +/* Return true if CTX is the task context or the inner loop context of WS FOR */
 +static inline bool
 +is_in_ws_region (omp_context *ctx)
 +{
 +  if(is_ws_ctx(ctx) || (ctx->outer && is_ws_ctx(ctx->outer)))
 +    return true;
-+
+ 
 +  return false;
 +}
  /* Return true if CTX is for an omp parallel or omp task.  */
  
  static inline bool
-@@ -502,7 +529,6 @@
-   x = maybe_lookup_field (field, ctx);
-   if (x != NULL)
-     field = x;
--
-   x = build_simple_mem_ref (ctx->receiver_decl);
-   TREE_THIS_NOTRAP (x) = 1;
-   x = omp_build_component_ref (x, field);
-@@ -524,9 +550,16 @@
+@@ -524,9 +541,16 @@ build_outer_var_ref (tree var, omp_context *ctx,
  		     enum omp_clause_code code = OMP_CLAUSE_ERROR)
  {
    tree x;
@@ -3630,7 +2098,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
    else if (is_variable_sized (var))
      {
        x = TREE_OPERAND (DECL_VALUE_EXPR (var), 0);
-@@ -557,7 +590,7 @@
+@@ -557,7 +581,7 @@ build_outer_var_ref (tree var, omp_context *ctx,
        if (x == NULL_TREE)
  	x = var;
      }
@@ -3639,30 +2107,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
      {
        gcc_assert (ctx->outer);
        splay_tree_node n
-@@ -597,9 +630,12 @@
-       x = lookup_decl (var, outer);
-     }
-   else if (omp_is_reference (var))
-+  {
-+
-     /* This can happen with orphaned constructs.  If var is reference, it is
-        possible it is shared and as such valid.  */
-     x = var;
-+  }
-   else if (omp_member_access_dummy_var (var))
-     x = var;
-   else
-@@ -620,7 +656,9 @@
-     }
- 
-   if (omp_is_reference (var))
-+  {
-     x = build_simple_mem_ref (x);
-+  }
- 
-   return x;
- }
-@@ -1007,38 +1045,44 @@
+@@ -1007,38 +1031,44 @@ scan_sharing_clauses (tree clauses, omp_context *ctx,
    for (c = clauses; c; c = OMP_CLAUSE_CHAIN (c))
      {
        bool by_ref;
@@ -3716,15 +2161,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	    {
  	      use_pointer_for_field (decl, ctx);
  	      break;
-@@ -1063,6 +1107,7 @@
- 	  if (OMP_CLAUSE_CODE (c) == OMP_CLAUSE_REDUCTION
- 	      && TREE_CODE (decl) == MEM_REF)
- 	    {
-+        //omp_context* x = ctx;ctx=ctx->outer;
- 	      tree t = TREE_OPERAND (decl, 0);
- 	      if (TREE_CODE (t) == POINTER_PLUS_EXPR)
- 		t = TREE_OPERAND (t, 0);
-@@ -1070,9 +1115,14 @@
+@@ -1070,9 +1100,14 @@ scan_sharing_clauses (tree clauses, omp_context *ctx,
  		  || TREE_CODE (t) == ADDR_EXPR)
  		t = TREE_OPERAND (t, 0);
  	      install_var_local (t, ctx);
@@ -3740,7 +2177,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  		{
  		  by_ref = use_pointer_for_field (t, ctx);
  		  install_var_field (t, by_ref, 3, ctx);
-@@ -1112,9 +1162,8 @@
+@@ -1112,9 +1147,8 @@ scan_sharing_clauses (tree clauses, omp_context *ctx,
  	  else if (is_taskreg_ctx (ctx))
  	    {
  	      bool global
@@ -3751,7 +2188,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	      if (is_task_ctx (ctx)
  		  && (global || by_ref || omp_is_reference (decl)))
  		{
-@@ -1175,6 +1224,7 @@
+@@ -1175,6 +1209,7 @@ scan_sharing_clauses (tree clauses, omp_context *ctx,
  	case OMP_CLAUSE_THREAD_LIMIT:
  	case OMP_CLAUSE_DEVICE:
  	case OMP_CLAUSE_SCHEDULE:
@@ -3759,7 +2196,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	case OMP_CLAUSE_DIST_SCHEDULE:
  	case OMP_CLAUSE_DEPEND:
  	case OMP_CLAUSE_PRIORITY:
-@@ -1468,6 +1518,7 @@
+@@ -1468,6 +1503,7 @@ scan_sharing_clauses (tree clauses, omp_context *ctx,
  	case OMP_CLAUSE_THREAD_LIMIT:
  	case OMP_CLAUSE_DEVICE:
  	case OMP_CLAUSE_SCHEDULE:
@@ -3767,7 +2204,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	case OMP_CLAUSE_DIST_SCHEDULE:
  	case OMP_CLAUSE_NOWAIT:
  	case OMP_CLAUSE_ORDERED:
-@@ -1596,9 +1647,12 @@
+@@ -1596,9 +1632,12 @@ create_omp_child_function (omp_context *ctx, bool task_copy)
        ? omp_find_clause (gimple_omp_parallel_clauses (ctx->stmt),
  			 OMP_CLAUSE__CILK_FOR_COUNT_) : NULL_TREE;
    tree cilk_var_type = NULL_TREE;
@@ -3782,7 +2219,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
    if (task_copy)
      type = build_function_type_list (void_type_node, ptr_type_node,
  				     ptr_type_node, NULL_TREE);
-@@ -1609,6 +1663,8 @@
+@@ -1609,6 +1648,8 @@ create_omp_child_function (omp_context *ctx, bool task_copy)
        type = build_function_type_list (void_type_node, ptr_type_node,
  				       cilk_var_type, cilk_var_type, NULL_TREE);
      }
@@ -3791,7 +2228,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
    else
      type = build_function_type_list (void_type_node, ptr_type_node, NULL_TREE);
  
-@@ -1683,6 +1739,29 @@
+@@ -1683,6 +1724,29 @@ create_omp_child_function (omp_context *ctx, bool task_copy)
        DECL_ARGUMENTS (decl) = t;
      }
  
@@ -3821,7 +2258,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
    tree data_name = get_identifier (".omp_data_i");
    t = build_decl (DECL_SOURCE_LOCATION (decl), PARM_DECL, data_name,
  		  ptr_type_node);
-@@ -1692,7 +1771,7 @@
+@@ -1692,7 +1756,7 @@ create_omp_child_function (omp_context *ctx, bool task_copy)
    DECL_CONTEXT (t) = current_function_decl;
    TREE_USED (t) = 1;
    TREE_READONLY (t) = 1;
@@ -3830,7 +2267,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
      DECL_CHAIN (t) = DECL_ARGUMENTS (decl);
    DECL_ARGUMENTS (decl) = t;
    if (!task_copy)
-@@ -1871,6 +1950,8 @@
+@@ -1871,6 +1935,8 @@ scan_omp_task (gimple_stmt_iterator *gsi, omp_context *outer_ctx)
  
    if (gimple_omp_task_taskloop_p (stmt))
      add_taskreg_looptemp_clauses (GF_OMP_FOR_KIND_TASKLOOP, stmt, outer_ctx);
@@ -3839,7 +2276,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  
    ctx = new_omp_context (stmt, outer_ctx);
    taskreg_contexts.safe_push (ctx);
-@@ -1966,7 +2047,7 @@
+@@ -1966,7 +2032,7 @@ finish_taskreg_scan (omp_context *ctx)
  
  	    /* Global variables don't need to be copied,
  	       the receiver side will use them directly.  */
@@ -3848,7 +2285,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	      continue;
  	    if (!bitmap_bit_p (task_shared_vars, DECL_UID (decl))
  		|| !use_pointer_for_field (decl, ctx))
-@@ -2017,7 +2098,7 @@
+@@ -2017,7 +2083,7 @@ finish_taskreg_scan (omp_context *ctx)
  	else
  	  p = &DECL_CHAIN (*p);
        *p = vla_fields;
@@ -3857,7 +2294,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	{
  	  /* Move fields corresponding to first and second _looptemp_
  	     clause first.  There are filled by GOMP_taskloop
-@@ -2548,7 +2629,7 @@
+@@ -2548,7 +2614,7 @@ check_omp_nesting_restrictions (gimple *stmt, omp_context *ctx)
  	  return true;
  	}
        /* We split taskloop into task and nested taskloop in it.  */
@@ -3866,7 +2303,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	return true;
        if (gimple_omp_for_kind (stmt) == GF_OMP_FOR_KIND_OACC_LOOP)
  	{
-@@ -2730,7 +2811,7 @@
+@@ -2730,7 +2796,7 @@ check_omp_nesting_restrictions (gimple *stmt, omp_context *ctx)
  	  {
  	  case GIMPLE_OMP_FOR:
  	    if (gimple_omp_for_kind (ctx->stmt) != GF_OMP_FOR_KIND_FOR
@@ -3875,7 +2312,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	      break;
  	    /* FALLTHRU */
  	  case GIMPLE_OMP_SECTIONS:
-@@ -2774,7 +2855,7 @@
+@@ -2774,7 +2840,7 @@ check_omp_nesting_restrictions (gimple *stmt, omp_context *ctx)
  	  {
  	  case GIMPLE_OMP_FOR:
  	    if (gimple_omp_for_kind (ctx->stmt) != GF_OMP_FOR_KIND_FOR
@@ -3884,7 +2321,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	      break;
  	    /* FALLTHRU */
  	  case GIMPLE_OMP_SECTIONS:
-@@ -2883,7 +2964,7 @@
+@@ -2883,7 +2949,7 @@ check_omp_nesting_restrictions (gimple *stmt, omp_context *ctx)
  		      "%<taskloop%> region");
  	    return false;
  	  case GIMPLE_OMP_FOR:
@@ -3893,7 +2330,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	      goto ordered_in_taskloop;
  	    if (omp_find_clause (gimple_omp_for_clauses (ctx->stmt),
  				 OMP_CLAUSE_ORDERED) == NULL)
-@@ -3148,6 +3229,7 @@
+@@ -3148,6 +3214,7 @@ scan_omp_1_stmt (gimple_stmt_iterator *gsi, bool *handled_ops_p,
  	    switch (DECL_FUNCTION_CODE (fndecl))
  	      {
  	      case BUILT_IN_GOMP_BARRIER:
@@ -3901,23 +2338,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	      case BUILT_IN_GOMP_CANCEL:
  	      case BUILT_IN_GOMP_CANCELLATION_POINT:
  	      case BUILT_IN_GOMP_TASKYIELD:
-@@ -3594,6 +3676,7 @@
- lower_rec_input_clauses (tree clauses, gimple_seq *ilist, gimple_seq *dlist,
- 			 omp_context *ctx, struct omp_for_data *fd)
- {
-+
-   tree c, dtor, copyin_seq, x, ptr;
-   bool copyin_by_ref = false;
-   bool lastprivate_firstprivate = false;
-@@ -3744,6 +3827,7 @@
- 	    }
- 
- 	  new_var = var = OMP_CLAUSE_DECL (c);
-+    
- 	  if (c_kind == OMP_CLAUSE_REDUCTION && TREE_CODE (var) == MEM_REF)
- 	    {
- 	      var = TREE_OPERAND (var, 0);
-@@ -3765,6 +3849,12 @@
+@@ -3765,6 +3832,12 @@ lower_rec_input_clauses (tree clauses, gimple_seq *ilist, gimple_seq *dlist,
  	  if (c_kind != OMP_CLAUSE_COPYIN)
  	    new_var = lookup_decl (var, ctx);
  
@@ -3930,7 +2351,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	  if (c_kind == OMP_CLAUSE_SHARED || c_kind == OMP_CLAUSE_COPYIN)
  	    {
  	      if (pass != 0)
-@@ -4084,8 +4174,16 @@
+@@ -4084,8 +4157,16 @@ lower_rec_input_clauses (tree clauses, gimple_seq *ilist, gimple_seq *dlist,
  		continue;
  
  	      x = TYPE_SIZE_UNIT (TREE_TYPE (TREE_TYPE (new_var)));
@@ -3948,54 +2369,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  		  x = build_receiver_ref (var, false, ctx);
  		  x = build_fold_addr_expr_loc (clause_loc, x);
  		}
-@@ -4101,6 +4199,7 @@
- 		    {
- 		      x = create_tmp_var_raw (TREE_TYPE (TREE_TYPE (new_var)),
- 					      get_name (var));
-+
- 		      gimple_add_tmp_var (x);
- 		      TREE_ADDRESSABLE (x) = 1;
- 		      x = build_fold_addr_expr_loc (clause_loc, x);
-@@ -4122,7 +4221,9 @@
- 		}
- 
- 	      new_var = build_simple_mem_ref_loc (clause_loc, new_var);
--	    }
-+
-+      }
-+
- 	  else if (c_kind == OMP_CLAUSE_REDUCTION
- 		   && OMP_CLAUSE_REDUCTION_PLACEHOLDER (c))
- 	    {
-@@ -4139,8 +4240,9 @@
- 	      if (gimple_code (ctx->stmt) == GIMPLE_OMP_TEAMS)
- 		continue;
- 	      /* Shared global vars are just accessed directly.  */
--	      if (is_global_var (new_var))
--		break;
-+
-+        if(is_global_var(new_var))
-+		      break;
- 	      /* For taskloop firstprivate/lastprivate, represented
- 		 as firstprivate and shared clause on the task, new_var
- 		 is the firstprivate var.  */
-@@ -4339,6 +4441,7 @@
- 		}
- 	      x = lang_hooks.decls.omp_clause_copy_ctor
- 						(c, unshare_expr (new_var), x);
-+        //if(!is_global_var(var))
- 	      gimplify_and_add (x, ilist);
- 	      goto do_dtor;
- 
-@@ -4463,6 +4566,7 @@
- 		  gcc_assert (TREE_CODE (TREE_TYPE (new_var)) != ARRAY_TYPE);
- 		  enum tree_code code = OMP_CLAUSE_REDUCTION_CODE (c);
- 
-+
- 		  /* reduction(-:var) sums up the partial results, so it
- 		     acts identically to reduction(+:var).  */
- 		  if (code == MINUS_EXPR)
-@@ -4680,9 +4784,39 @@
+@@ -4680,9 +4761,39 @@ lower_rec_input_clauses (tree clauses, gimple_seq *ilist, gimple_seq *dlist,
  	  gimple_omp_for_set_clauses (ctx->stmt, c);
  	}
      }
@@ -4036,30 +2410,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  /* Generate code to implement the LASTPRIVATE clauses.  This is used for
     both parallel and workshare constructs.  PREDICATE may be NULL if it's
     always true.   */
-@@ -5146,6 +5280,7 @@
-   /* First see if there is exactly one reduction clause.  Use OMP_ATOMIC
-      update in that case, otherwise use a lock.  */
-   for (c = clauses; c && count < 2; c = OMP_CLAUSE_CHAIN (c))
-+  {
-     if (OMP_CLAUSE_CODE (c) == OMP_CLAUSE_REDUCTION)
-       {
- 	if (OMP_CLAUSE_REDUCTION_PLACEHOLDER (c)
-@@ -5157,12 +5292,14 @@
- 	  }
- 	count++;
-       }
-+  }
- 
-   if (count == 0)
-     return;
- 
-   for (c = clauses; c ; c = OMP_CLAUSE_CHAIN (c))
-     {
-+
-       tree var, ref, new_var, orig_var;
-       enum tree_code code;
-       location_t clause_loc = OMP_CLAUSE_LOCATION (c);
-@@ -5170,11 +5307,21 @@
+@@ -5170,11 +5281,21 @@ lower_reduction_clauses (tree clauses, gimple_seq *stmt_seqp, omp_context *ctx)
        if (OMP_CLAUSE_CODE (c) != OMP_CLAUSE_REDUCTION)
  	continue;
  
@@ -4081,35 +2432,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	  if (TREE_CODE (var) == POINTER_PLUS_EXPR)
  	    var = TREE_OPERAND (var, 0);
  	  if (TREE_CODE (var) == ADDR_EXPR)
-@@ -5199,12 +5346,15 @@
- 	      gcc_assert (DECL_P (var));
- 	    }
- 	}
-+      //tree type = TREE_TYPE (var);tree new_type = remap_type(type,&ctx->outer->cb);
-       new_var = lookup_decl (var, ctx);
-       if (var == OMP_CLAUSE_DECL (c) && omp_is_reference (var))
- 	new_var = build_simple_mem_ref_loc (clause_loc, new_var);
-+
-       ref = build_outer_var_ref (var, ctx, ccode);
--      code = OMP_CLAUSE_REDUCTION_CODE (c);
- 
-+
-+      code = OMP_CLAUSE_REDUCTION_CODE (c);
-       /* reduction(-:var) sums up the partial results, so it acts
- 	 identically to reduction(+:var).  */
-       if (code == MINUS_EXPR)
-@@ -5212,8 +5362,8 @@
- 
-       if (count == 1)
- 	{
--	  tree addr = build_fold_addr_expr_loc (clause_loc, ref);
--
-+    tree addr;
-+	  addr = build_fold_addr_expr_loc (clause_loc, ref);
- 	  addr = save_expr (addr);
- 	  ref = build1 (INDIRECT_REF, TREE_TYPE (TREE_TYPE (addr)), addr);
- 	  x = fold_build2_loc (clause_loc, code, TREE_TYPE (ref), ref, new_var);
-@@ -5354,21 +5504,42 @@
+@@ -5354,21 +5475,42 @@ lower_reduction_clauses (tree clauses, gimple_seq *stmt_seqp, omp_context *ctx)
  	}
        else
  	{
@@ -4156,7 +2479,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  }
  
  
-@@ -5434,7 +5605,7 @@
+@@ -5434,7 +5576,7 @@ lower_send_clauses (tree clauses, gimple_seq *ilist, gimple_seq *olist,
  
    /* For taskloop, ignore first two _looptemp_ clauses, those are initialized
       by GOMP_taskloop.  */
@@ -4165,7 +2488,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
      {
        ignored_looptemp = 2;
        is_taskloop = true;
-@@ -5497,7 +5668,7 @@
+@@ -5497,7 +5639,7 @@ lower_send_clauses (tree clauses, gimple_seq *ilist, gimple_seq *olist,
        var = lookup_decl_in_outer_ctx (val, ctx_for_o);
  
        if (OMP_CLAUSE_CODE (c) != OMP_CLAUSE_COPYIN
@@ -4174,7 +2497,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	continue;
  
        t = omp_member_access_dummy_var (var);
-@@ -6650,29 +6821,38 @@
+@@ -6646,29 +6788,38 @@ lower_omp_critical (gimple_stmt_iterator *gsi_p, omp_context *ctx)
        if (cgraph_node::get (current_function_decl)->offloadable)
  	varpool_node::get_create (decl)->offloadable = 1;
        else
@@ -4225,7 +2548,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  
    push_gimplify_context ();
  
-@@ -6757,7 +6937,7 @@
+@@ -6753,7 +6904,7 @@ lower_omp_for_lastprivate (struct omp_for_data *fd, gimple_seq *body_p,
  		      n2 = fold_convert (TREE_TYPE (n2), outer_fd.loop.n2);
  		    }
  		}
@@ -4234,7 +2557,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  		taskreg_ctx = ctx->outer->outer;
  	    }
  	  else if (is_taskreg_ctx (ctx->outer))
-@@ -6867,7 +7047,8 @@
+@@ -6863,7 +7014,8 @@ lower_omp_for (gimple_stmt_iterator *gsi_p, omp_context *ctx)
  	count += fd.collapse - 1;
        bool taskreg_for
  	= (gimple_omp_for_kind (stmt) == GF_OMP_FOR_KIND_FOR
@@ -4244,25 +2567,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
        tree outerc = NULL, *pc = gimple_omp_for_clauses_ptr (stmt);
        tree simtc = NULL;
        tree clauses = *pc;
-@@ -7319,6 +7500,7 @@
-   t = build1 (RETURN_EXPR, void_type_node, NULL);
-   append_to_statement_list (t, &list);
- 
-+
-   if (tcctx.cb.decl_map)
-     delete tcctx.cb.decl_map;
-   pop_gimplify_context (NULL);
-@@ -7390,9 +7572,6 @@
-   gimple_seq_add_stmt (oseq, g);
- }
- 
--/* Lower the OpenMP parallel or task directive in the current statement
--   in GSI_P.  CTX holds context information for the directive.  */
--
- static void
- lower_omp_taskreg (gimple_stmt_iterator *gsi_p, omp_context *ctx)
- {
-@@ -7400,7 +7579,7 @@
+@@ -7396,7 +7548,7 @@ lower_omp_taskreg (gimple_stmt_iterator *gsi_p, omp_context *ctx)
    tree child_fn, t;
    gimple *stmt = gsi_stmt (*gsi_p);
    gbind *par_bind, *bind, *dep_bind = NULL;
@@ -4271,16 +2576,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
    location_t loc = gimple_location (stmt);
  
    clauses = gimple_omp_taskreg_clauses (stmt);
-@@ -7430,7 +7609,7 @@
-       dep_bind = gimple_build_bind (NULL, NULL, make_node (BLOCK));
-       lower_depend_clauses (gimple_omp_task_clauses_ptr (stmt),
- 			    &dep_ilist, &dep_olist);
--    }
-+  }
- 
-   if (ctx->srecord_type)
-     create_task_copyfn (as_a <gomp_task *> (stmt), ctx);
-@@ -7440,6 +7619,8 @@
+@@ -7436,6 +7588,8 @@ lower_omp_taskreg (gimple_stmt_iterator *gsi_p, omp_context *ctx)
    par_olist = NULL;
    par_ilist = NULL;
    par_rlist = NULL;
@@ -4289,11 +2585,9 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
    bool phony_construct = gimple_code (stmt) == GIMPLE_OMP_PARALLEL
      && gimple_omp_parallel_grid_phony (as_a <gomp_parallel *> (stmt));
    if (phony_construct && ctx->record_type)
-@@ -7448,16 +7629,18 @@
-       ctx->receiver_decl = create_tmp_var
+@@ -7447,8 +7599,10 @@ lower_omp_taskreg (gimple_stmt_iterator *gsi_p, omp_context *ctx)
  	(build_reference_type (ctx->record_type), ".omp_rec");
      }
-+
    lower_rec_input_clauses (clauses, &par_ilist, &par_olist, ctx, NULL);
 +  if(is_in_ws_region(ctx))
 +    lower_ws_global_vars(clauses,&ws_ilist,&ws_olist,ctx);
@@ -4303,22 +2597,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
      lower_reduction_clauses (clauses, &par_rlist, ctx);
  
    /* Declare all the variables created by mapping and the variables
-      declared in the scope of the parallel body.  */
-   record_vars_into (ctx->block_vars, child_fn);
-   record_vars_into (gimple_bind_vars (par_bind), child_fn);
--
-   if (ctx->record_type)
-     {
-       ctx->sender_decl
-@@ -7473,6 +7656,7 @@
-   lower_send_clauses (clauses, &ilist, &olist, ctx);
-   lower_send_shared_vars (&ilist, &olist, ctx);
- 
-+
-   if (ctx->record_type)
-     {
-       tree clobber = build_constructor (TREE_TYPE (ctx->sender_decl), NULL);
-@@ -7483,7 +7667,13 @@
+@@ -7479,7 +7633,13 @@ lower_omp_taskreg (gimple_stmt_iterator *gsi_p, omp_context *ctx)
  
    /* Once all the expansions are done, sequence all the different
       fragments inside gimple_omp_body.  */
@@ -4332,7 +2611,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
    new_body = NULL;
  
    if (ctx->record_type)
-@@ -7496,8 +7686,10 @@
+@@ -7492,8 +7652,10 @@ lower_omp_taskreg (gimple_stmt_iterator *gsi_p, omp_context *ctx)
      }
  
    gimple_seq_add_seq (&new_body, par_ilist);
@@ -4343,35 +2622,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
    if (ctx->cancellable)
      gimple_seq_add_stmt (&new_body, gimple_build_label (ctx->cancel_label));
    gimple_seq_add_seq (&new_body, par_olist);
-@@ -7513,16 +7705,16 @@
-     }
- 
-   bind = gimple_build_bind (NULL, NULL, gimple_bind_block (par_bind));
-+
-   gsi_replace (gsi_p, dep_bind ? dep_bind : bind, true);
-+
-   gimple_bind_add_seq (bind, ilist);
-   if (!phony_construct)
-     gimple_bind_add_stmt (bind, stmt);
-   else
-     gimple_bind_add_seq (bind, new_body);
-   gimple_bind_add_seq (bind, olist);
--
-   pop_gimplify_context (NULL);
--
-   if (dep_bind)
-     {
-       gimple_bind_add_seq (dep_bind, dep_ilist);
-@@ -7530,6 +7722,8 @@
-       gimple_bind_add_seq (dep_bind, dep_olist);
-       pop_gimplify_context (dep_bind);
-     }
-+  //fprintf(stderr,"Final TASKREG bind !!!!!\n");
-+  //print_gimple_seq(stderr,bind,1,TDF_SLIM);fprintf(stderr,"\n");
- }
- 
- /* Lower the GIMPLE_OMP_TARGET in the current statement
-@@ -8894,6 +9088,7 @@
+@@ -8890,6 +9052,7 @@ lower_omp_1 (gimple_stmt_iterator *gsi_p, omp_context *ctx)
  	switch (DECL_FUNCTION_CODE (fndecl))
  	  {
  	  case BUILT_IN_GOMP_BARRIER:
@@ -4379,17 +2630,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
  	    if (ctx == NULL)
  	      break;
  	    /* FALLTHRU */
-@@ -8966,7 +9161,9 @@
-   location_t saved_location = input_location;
-   gimple_stmt_iterator gsi;
-   for (gsi = gsi_start (*body); !gsi_end_p (gsi); gsi_next (&gsi))
-+  {
-     lower_omp_1 (&gsi, ctx);
-+  }
-   /* During gimplification, we haven't folded statments inside offloading
-      or taskreg regions (gimplify.c:maybe_fold_stmt); do that now.  */
-   if (target_nesting_level || taskreg_nesting_level)
-@@ -8987,7 +9184,7 @@
+@@ -8983,7 +9146,7 @@ execute_lower_omp (void)
    /* This pass always runs, to provide PROP_gimple_lomp.
       But often, there is nothing to do.  */
    if (flag_cilkplus == 0 && flag_openacc == 0 && flag_openmp == 0
@@ -4398,7 +2639,7 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
      return 0;
  
    all_contexts = splay_tree_new (splay_tree_compare_pointers, 0,
-@@ -9359,7 +9556,7 @@
+@@ -9355,7 +9518,7 @@ public:
    /* opt_pass methods: */
    virtual bool gate (function *)
    {
@@ -4407,41 +2648,11 @@ diff -ru gcc/omp-low.c ../gcc/omp-low.c
    }
    virtual unsigned int execute (function *)
      {
-diff -ru gcc/print-tree.c ../gcc/print-tree.c
---- gcc/print-tree.c	2020-07-15 18:05:48.000000000 +0200
-+++ ../gcc/print-tree.c	2020-07-15 17:12:39.000000000 +0200
-@@ -442,6 +442,8 @@
- 	      case TLS_MODEL_HLS_CORE:
- 		fputs (" MPC tls-mpc-hls-core", file);
- 		break;
-+        default:
-+    break;
- 		/* MPC END */
- 	}
- 
-diff -ru gcc/tree.c ../gcc/tree.c
---- gcc/tree.c	2020-07-15 18:05:48.000000000 +0200
-+++ ../gcc/tree.c	2020-07-15 17:12:39.000000000 +0200
-@@ -62,6 +62,7 @@
- #include "print-tree.h"
- #include "ipa-utils.h"
- #include "selftest.h"
-+#include "gimple-pretty-print.h"
- 
- /* Tree code classes.  */
- 
-@@ -11996,6 +11997,7 @@
- 	case OMP_CLAUSE__LOOPTEMP_:
- 	case OMP_CLAUSE__SIMDUID_:
- 	case OMP_CLAUSE__CILK_FOR_COUNT_:
-+  case OMP_CLAUSE_STEAL_SCHEDULE:
- 	  WALK_SUBTREE (OMP_CLAUSE_OPERAND (*tp, 0));
- 	  /* FALLTHRU */
- 
-diff -ru gcc/tree-core.h ../gcc/tree-core.h
---- gcc/tree-core.h	2020-07-15 18:05:48.000000000 +0200
-+++ ../gcc/tree-core.h	2020-07-15 17:12:39.000000000 +0200
-@@ -435,6 +435,9 @@
+diff --git a/gcc/tree-core.h b/gcc/tree-core.h
+index a646ecb5c..4e2947bcd 100644
+--- a/gcc/tree-core.h
++++ b/gcc/tree-core.h
+@@ -435,6 +435,9 @@ enum omp_clause_code {
    /* OpenMP clause: defaultmap (tofrom: scalar).  */
    OMP_CLAUSE_DEFAULTMAP,
  
@@ -4451,59 +2662,11 @@ diff -ru gcc/tree-core.h ../gcc/tree-core.h
    /* Internally used only clause, holding SIMD uid.  */
    OMP_CLAUSE__SIMDUID_,
  
-diff -ru gcc/tree.def ../gcc/tree.def
---- gcc/tree.def	2020-07-15 18:05:48.000000000 +0200
-+++ ../gcc/tree.def	2020-07-15 17:12:39.000000000 +0200
-@@ -1143,6 +1143,10 @@
-    Operands like for OMP_FOR.  */
- DEFTREECODE (OMP_TASKLOOP, "omp_taskloop", tcc_statement, 7)
- 
-+/* MPC Workshare - #pragma ws for [clause1 ... clauseN]
-+   Operands like for OMP_FOR.  */
-+DEFTREECODE (WS_FOR, "ws_for", tcc_statement, 7)
-+
- /* OpenMP - #pragma acc loop [clause1 ... clauseN]
-    Operands like for OMP_FOR.  */
- DEFTREECODE (OACC_LOOP, "oacc_loop", tcc_statement, 7)
-@@ -1178,6 +1182,10 @@
-    Operand 2: OMP_CRITICAL_NAME: Identifier for critical section.  */
- DEFTREECODE (OMP_CRITICAL, "omp_critical", tcc_statement, 3)
- 
-+/* MPC Workshare - #pragma ws critical [name]
-+   Operands like for omp critical. */
-+DEFTREECODE (WS_CRITICAL, "ws_critical", tcc_statement, 3)
-+
- /* OpenMP - #pragma omp single
-    Operand 0: OMP_SINGLE_BODY: Single section body.
-    Operand 1: OMP_SINGLE_CLAUSES: List of clauses.  */
-diff -ru gcc/tree.h ../gcc/tree.h
---- gcc/tree.h	2020-07-15 18:05:48.000000000 +0200
-+++ ../gcc/tree.h	2020-07-15 17:12:39.000000000 +0200
-@@ -1485,6 +1485,7 @@
-   OMP_CLAUSE_OPERAND (OMP_CLAUSE_SUBCODE_CHECK (NODE, OMP_CLAUSE_NUM_THREADS),0)
- #define OMP_CLAUSE_SCHEDULE_CHUNK_EXPR(NODE) \
-   OMP_CLAUSE_OPERAND (OMP_CLAUSE_SUBCODE_CHECK (NODE, OMP_CLAUSE_SCHEDULE), 0)
-+
- #define OMP_CLAUSE_NUM_TASKS_EXPR(NODE) \
-   OMP_CLAUSE_OPERAND (OMP_CLAUSE_SUBCODE_CHECK (NODE, OMP_CLAUSE_NUM_TASKS), 0)
- #define OMP_CLAUSE_HINT_EXPR(NODE) \
-@@ -1667,6 +1668,12 @@
- #define OMP_CLAUSE__GRIDDIM__GROUP(NODE) \
-   OMP_CLAUSE_OPERAND (OMP_CLAUSE_SUBCODE_CHECK (NODE, OMP_CLAUSE__GRIDDIM_), 1)
- 
-+#define OMP_CLAUSE_STEAL_SCHEDULE_KIND(NODE) \
-+  (OMP_CLAUSE_SUBCODE_CHECK (NODE, OMP_CLAUSE_STEAL_SCHEDULE)->omp_clause.subcode.schedule_kind)
-+#define OMP_CLAUSE_STEAL_SCHEDULE_SIMD(NODE) \
-+  (OMP_CLAUSE_SUBCODE_CHECK (NODE, OMP_CLAUSE_STEAL_SCHEDULE)->base.public_flag)
-+#define OMP_CLAUSE_STEAL_SCHEDULE_CHUNK_EXPR(NODE) \
-+  OMP_CLAUSE_OPERAND (OMP_CLAUSE_SUBCODE_CHECK (NODE, OMP_CLAUSE_STEAL_SCHEDULE), 0)
- /* SSA_NAME accessors.  */
- 
- /* Whether SSA_NAME NODE is a virtual operand.  This simply caches the
-diff -ru gcc/tree-pretty-print.c ../gcc/tree-pretty-print.c
---- gcc/tree-pretty-print.c	2020-07-15 18:05:48.000000000 +0200
-+++ ../gcc/tree-pretty-print.c	2020-07-15 17:12:39.000000000 +0200
-@@ -559,6 +559,53 @@
+diff --git a/gcc/tree-pretty-print.c b/gcc/tree-pretty-print.c
+index d823c2e12..ba32f6f13 100644
+--- a/gcc/tree-pretty-print.c
++++ b/gcc/tree-pretty-print.c
+@@ -559,6 +559,53 @@ dump_omp_clause (pretty_printer *pp, tree clause, int spc, int flags)
        pp_right_paren (pp);
        break;
  
@@ -4557,10 +2720,11 @@ diff -ru gcc/tree-pretty-print.c ../gcc/tree-pretty-print.c
      case OMP_CLAUSE_UNTIED:
        pp_string (pp, "untied");
        break;
-diff -ru gcc/tree-ssa-alias.c ../gcc/tree-ssa-alias.c
---- gcc/tree-ssa-alias.c	2020-07-15 18:05:49.000000000 +0200
-+++ ../gcc/tree-ssa-alias.c	2020-07-15 17:12:39.000000000 +0200
-@@ -1816,6 +1816,7 @@
+diff --git a/gcc/tree-ssa-alias.c b/gcc/tree-ssa-alias.c
+index 4cedcb239..6de19b421 100644
+--- a/gcc/tree-ssa-alias.c
++++ b/gcc/tree-ssa-alias.c
+@@ -1816,6 +1816,7 @@ ref_maybe_used_by_call_p_1 (gcall *call, ao_ref *ref)
  	case BUILT_IN_GOMP_ATOMIC_START:
  	case BUILT_IN_GOMP_ATOMIC_END:
  	case BUILT_IN_GOMP_BARRIER:
@@ -4568,7 +2732,7 @@ diff -ru gcc/tree-ssa-alias.c ../gcc/tree-ssa-alias.c
  	case BUILT_IN_GOMP_BARRIER_CANCEL:
  	case BUILT_IN_GOMP_TASKWAIT:
  	case BUILT_IN_GOMP_TASKGROUP_END:
-@@ -2204,6 +2205,7 @@
+@@ -2204,6 +2205,7 @@ call_may_clobber_ref_p_1 (gcall *call, ao_ref *ref)
  	case BUILT_IN_GOMP_ATOMIC_START:
  	case BUILT_IN_GOMP_ATOMIC_END:
  	case BUILT_IN_GOMP_BARRIER:
@@ -4576,3 +2740,66 @@ diff -ru gcc/tree-ssa-alias.c ../gcc/tree-ssa-alias.c
  	case BUILT_IN_GOMP_BARRIER_CANCEL:
  	case BUILT_IN_GOMP_TASKWAIT:
  	case BUILT_IN_GOMP_TASKGROUP_END:
+diff --git a/gcc/tree.c b/gcc/tree.c
+index 698213c35..71c09cac6 100644
+--- a/gcc/tree.c
++++ b/gcc/tree.c
+@@ -62,6 +62,7 @@ along with GCC; see the file COPYING3.  If not see
+ #include "print-tree.h"
+ #include "ipa-utils.h"
+ #include "selftest.h"
++#include "gimple-pretty-print.h"
+ 
+ /* Tree code classes.  */
+ 
+@@ -11981,6 +11982,7 @@ walk_tree_1 (tree *tp, walk_tree_fn func, void *data,
+ 	case OMP_CLAUSE__LOOPTEMP_:
+ 	case OMP_CLAUSE__SIMDUID_:
+ 	case OMP_CLAUSE__CILK_FOR_COUNT_:
++  case OMP_CLAUSE_STEAL_SCHEDULE:
+ 	  WALK_SUBTREE (OMP_CLAUSE_OPERAND (*tp, 0));
+ 	  /* FALLTHRU */
+ 
+diff --git a/gcc/tree.def b/gcc/tree.def
+index 0ec805903..b520faaee 100644
+--- a/gcc/tree.def
++++ b/gcc/tree.def
+@@ -1143,6 +1143,10 @@ DEFTREECODE (OMP_DISTRIBUTE, "omp_distribute", tcc_statement, 7)
+    Operands like for OMP_FOR.  */
+ DEFTREECODE (OMP_TASKLOOP, "omp_taskloop", tcc_statement, 7)
+ 
++/* MPC Workshare - #pragma ws for [clause1 ... clauseN]
++   Operands like for OMP_FOR.  */
++DEFTREECODE (WS_FOR, "ws_for", tcc_statement, 7)
++
+ /* OpenMP - #pragma acc loop [clause1 ... clauseN]
+    Operands like for OMP_FOR.  */
+ DEFTREECODE (OACC_LOOP, "oacc_loop", tcc_statement, 7)
+@@ -1178,6 +1182,10 @@ DEFTREECODE (OMP_ORDERED, "omp_ordered", tcc_statement, 2)
+    Operand 2: OMP_CRITICAL_NAME: Identifier for critical section.  */
+ DEFTREECODE (OMP_CRITICAL, "omp_critical", tcc_statement, 3)
+ 
++/* MPC Workshare - #pragma ws critical [name]
++   Operands like for omp critical. */
++DEFTREECODE (WS_CRITICAL, "ws_critical", tcc_statement, 3)
++
+ /* OpenMP - #pragma omp single
+    Operand 0: OMP_SINGLE_BODY: Single section body.
+    Operand 1: OMP_SINGLE_CLAUSES: List of clauses.  */
+diff --git a/gcc/tree.h b/gcc/tree.h
+index f20b77f17..cca5e2b92 100644
+--- a/gcc/tree.h
++++ b/gcc/tree.h
+@@ -1667,6 +1667,12 @@ extern void protected_set_expr_location (tree, location_t);
+ #define OMP_CLAUSE__GRIDDIM__GROUP(NODE) \
+   OMP_CLAUSE_OPERAND (OMP_CLAUSE_SUBCODE_CHECK (NODE, OMP_CLAUSE__GRIDDIM_), 1)
+ 
++#define OMP_CLAUSE_STEAL_SCHEDULE_KIND(NODE) \
++  (OMP_CLAUSE_SUBCODE_CHECK (NODE, OMP_CLAUSE_STEAL_SCHEDULE)->omp_clause.subcode.schedule_kind)
++#define OMP_CLAUSE_STEAL_SCHEDULE_SIMD(NODE) \
++  (OMP_CLAUSE_SUBCODE_CHECK (NODE, OMP_CLAUSE_STEAL_SCHEDULE)->base.public_flag)
++#define OMP_CLAUSE_STEAL_SCHEDULE_CHUNK_EXPR(NODE) \
++  OMP_CLAUSE_OPERAND (OMP_CLAUSE_SUBCODE_CHECK (NODE, OMP_CLAUSE_STEAL_SCHEDULE), 0)
+ /* SSA_NAME accessors.  */
+ 
+ /* Whether SSA_NAME NODE is a virtual operand.  This simply caches the
