@@ -11,26 +11,26 @@
 #define WS_SUCCESS() do {printf("SUCCESS !\n"); }while(0)
 
 int x=0;
-void MPC_Workshare_start(void (*func) (void*,long long,long long) , void* shareds,long long lb, long long ub, long long incr, int chunk_size, int steal_chunk_size, int scheduling_types, int nowait)
+void mpc_lowcomm_workshare_start(void (*func) (void*,long long,long long) , void* shareds,long long lb, long long ub, long long incr, int chunk_size, int steal_chunk_size, int scheduling_types, int nowait)
 {
   x++;
 }
-void MPC_Workshare_stop_stealing()
-{
-  x++;
-}
-
-void MPC_Workshare_resteal()
+void mpc_lowcomm_workshare_stop_stealing()
 {
   x++;
 }
 
-void MPC_Workshare_critical_start()
+void mpc_lowcomm_workshare_resteal()
 {
   x++;
 }
 
-void MPC_Workshare_critical_end()
+void mpc_lowcomm_workshare_critical_start()
+{
+  x++;
+}
+
+void mpc_lowcomm_workshare_critical_end()
 {
 
 }
