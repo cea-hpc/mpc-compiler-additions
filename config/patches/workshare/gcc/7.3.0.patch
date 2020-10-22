@@ -1303,6 +1303,78 @@ index 460011c87..20342f394 100644
  
  /* Return the child function used to hold the body of OMP_TASK GS.  */
  
+diff --git a/gcc/fortran/f95-lang.c b/gcc/fortran/f95-lang.c
+index 44bd8dcc2..7cb0f3dbe 100644
+--- a/gcc/fortran/f95-lang.c
++++ b/gcc/fortran/f95-lang.c
+@@ -1193,8 +1193,30 @@ gfc_init_builtin_functions (void)
+ #include "../sync-builtins.def"
+ #undef DEF_SYNC_BUILTIN
+ 
++  if (flag_mpc_ws)
++  {
++#undef DEF_MPC_WS_BUILTIN
++#define DEF_MPC_WS_BUILTIN(code, name, type, attr) \
++   gfc_define_builtin ("__builtin_" name, builtin_types[type], \
++       code, name, attr);
++#undef DEF_GOMP_BUILTIN
++#define DEF_GOMP_BUILTIN(code, name, type, attr) /* ignore */
++#undef DEF_GOACC_BUILTIN
++#define DEF_GOACC_BUILTIN(code, name, type, attr) /* ignore */
++#undef DEF_GOACC_BUILTIN_COMPILER
++#define DEF_GOACC_BUILTIN_COMPILER(code, name, type, attr)  /* ignore */
++
++#include "../omp-builtins.def"
++#undef DEF_GOACC_BUILTIN
++#undef DEF_GOACC_BUILTIN_COMPILER
++#undef DEF_GOMP_BUILTIN
++#undef DEF_MPC_WS_BUILTIN
++  }
++
+   if (flag_openacc)
+     {
++#undef DEF_MPC_WS_BUILTIN
++#define DEF_MPC_WS_BUILTIN(code, name, type, attr) /* ignore */
+ #undef DEF_GOACC_BUILTIN
+ #define DEF_GOACC_BUILTIN(code, name, type, attr) \
+       gfc_define_builtin ("__builtin_" name, builtin_types[type], \
+@@ -1241,6 +1265,7 @@ gfc_init_builtin_functions (void)
+ #undef DEF_GOMP_BUILTIN
+ #define DEF_GOMP_BUILTIN(code, name, type, attr) /* ignore */
+ #include "../omp-builtins.def"
++#undef DEF_MPC_WS_BUILTIN
+ #undef DEF_GOACC_BUILTIN
+ #undef DEF_GOACC_BUILTIN_COMPILER
+ #undef DEF_GOMP_BUILTIN
+@@ -1244,6 +1265,8 @@ gfc_init_builtin_functions (void)
+ #define DEF_GOACC_BUILTIN(code, name, type, attr) /* ignore */
+ #undef DEF_GOACC_BUILTIN_COMPILER
+ #define DEF_GOACC_BUILTIN_COMPILER(code, name, type, attr)  /* ignore */
++#undef DEF_MPC_WS_BUILTIN
++#define DEF_MPC_WS_BUILTIN(code, name, type, attr) /* ignore */
+ #undef DEF_GOMP_BUILTIN
+ #define DEF_GOMP_BUILTIN(code, name, type, attr) \
+       gfc_define_builtin ("__builtin_" name, builtin_types[type], \
+@@ -1249,6 +1269,7 @@ gfc_init_builtin_functions (void)
+ #undef DEF_GOACC_BUILTIN
+ #undef DEF_GOACC_BUILTIN_COMPILER
+ #undef DEF_GOMP_BUILTIN
++#undef DEF_MPC_WS_BUILTIN
+     }
+
+ #ifdef ENABLE_HSA
+diff --git a/gcc/fortran/types.def b/gcc/fortran/types.def
+index 1f8a5a127..9445c30b9 100644
+--- a/gcc/fortran/types.def
++++ b/gcc/fortran/types.def
+@@ -252,3 +252,7 @@ DEF_FUNCTION_TYPE_VAR_7 (BT_FN_VOID_INT_SIZE_PTR_PTR_PTR_INT_INT_VAR,
+ DEF_FUNCTION_TYPE_VAR_6 (BT_FN_VOID_INT_OMPFN_SIZE_PTR_PTR_PTR_VAR,
+ 			  BT_VOID, BT_INT, BT_PTR_FN_VOID_PTR, BT_SIZE,
+ 			  BT_PTR, BT_PTR, BT_PTR)
++
++DEF_FUNCTION_TYPE_9 (BT_FN_VOID_OMPFN_PTR_LONG_LONG_LONG_INT_INT_INT_INT,
++		     BT_VOID, BT_PTR_FN_VOID_PTR, BT_PTR,
++		     BT_LONG, BT_LONG, BT_LONG, BT_INT, BT_INT, BT_INT, BT_INT)
 diff --git a/gcc/gimplify.c b/gcc/gimplify.c
 index 5264a4f3d..e3a28e52e 100644
 --- a/gcc/gimplify.c
