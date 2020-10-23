@@ -40,7 +40,19 @@ int plugin_is_GPL_compatible;
 
 
 /* EXTERNAL FUNCTIONS USED */
-tree fix_string_type (tree value);
+
+/* We need to define this helper function as weak
+  as it is not defined in the lto1 driver
+  it is ok to make it a noop as the objects
+  are already compiled when passed to lto1
+  meaning that in the later case the actual
+  function is called reason for the 'weak' symbol here */
+#pragma weak _Z15fix_string_typeP9tree_node
+tree fix_string_type (tree value)
+{
+	return value;
+}
+
 tree alloc_stmt_list (void);
 void append_to_statement_list_force (tree, tree *);
 tree build_binary_op (location_t location, enum tree_code code,
