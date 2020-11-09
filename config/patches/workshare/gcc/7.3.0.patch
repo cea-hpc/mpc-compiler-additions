@@ -1192,6 +1192,48 @@ index 5687bb212..68bbc32fe 100644
        {
  	tree clauses, body, pre_body;
  	tree declv = NULL_TREE, initv = NULL_TREE, condv = NULL_TREE;
+diff --git a/gcc/cp/semantics.c b/gcc/cp/semantics.c
+index e06637646..825f6abe6 100644
+--- a/gcc/cp/semantics.c
++++ b/gcc/cp/semantics.c
+@@ -6417,6 +6426,37 @@ finish_omp_clauses (tree clauses, enum c_omp_region_type ort)
+ 	    }
+ 	  break;
+ 
++ case OMP_CLAUSE_STEAL_SCHEDULE:
++   t = OMP_CLAUSE_STEAL_SCHEDULE_CHUNK_EXPR (c);
++   if (t == NULL)
++     ;
++   else if (t == error_mark_node)
++     remove = true;
++   else if (!type_dependent_expression_p (t)
++      && !INTEGRAL_TYPE_P (TREE_TYPE (t)))
++     {
++       error ("schedule chunk size expression must be integral");
++       remove = true;
++     }
++   else
++     {
++       t = mark_rvalue_use (t);
++       if (!processing_template_decl)
++   {
++         t = maybe_constant_value (t);
++         if (TREE_CODE (t) == INTEGER_CST
++       && tree_int_cst_sgn (t) != 1)
++     {
++       warning_at (OMP_CLAUSE_LOCATION (c), 0,
++             "chunk size value must be positive");
++       t = integer_one_node;
++     }
++     t = fold_build_cleanup_point_expr (TREE_TYPE (t), t);
++   }
++       OMP_CLAUSE_STEAL_SCHEDULE_CHUNK_EXPR (c) = t;
++     }
++   break;
++
+ 	case OMP_CLAUSE_SIMDLEN:
+ 	case OMP_CLAUSE_SAFELEN:
+ 	  t = OMP_CLAUSE_OPERAND (c, 0);
 diff --git a/gcc/gimple-low.c b/gcc/gimple-low.c
 index 619b9d7bf..2c3ffb0e6 100644
 --- a/gcc/gimple-low.c
