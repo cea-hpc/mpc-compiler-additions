@@ -48,6 +48,41 @@ AM_COND_IF([HAVE_DOXYGEN],
 		   AC_MSG_WARN([Doxygen not found - continuing without Documentation support]))
 
 #################
+#### RPATH ######
+#################
+
+#
+# Try to add a given PKGCONFIG pkg in rpath
+#
+# - $1 : package name
+#
+pkg_config_rpath()
+{
+		# Now atempt to extract HWLOC prefix
+		pkg_rpath=""
+		pkg_prefix=$(pkg-config --variable=prefix ${1})
+		
+		# Did we get something from pkg-config ?
+		if test "x$?" = "x0"; then
+			# See if there is a libdir
+			if test -d "${pkg_prefix}/lib"; then
+				pkg_rpath=" -Wl,-rpath=${pkg_prefix}/lib"
+			fi
+	
+			# Try lib64 dir for existency
+			if test -d "${pkg_prefix}/lib64"; then
+				pkg_rpath="${HWLOC_RPATH} -Wl,-rpath=${pkg_prefix}/lib64"
+			fi
+		
+			# Add to cflags if elements found
+			if test -n "${pkg_rpath}"; then
+				CFLAGS="${CFLAGS} ${pkg_rpath}"
+			fi	
+		fi
+}
+
+
+#################
 ##### HWLOC #####
 #################
 AC_ARG_WITH([hwloc], AS_HELP_STRING([--with-hwloc=PATH], [Provide hwloc installation path]))
@@ -58,7 +93,7 @@ if test -n "$with_hwloc" ; then
 		fi
 		HWLOC_LDFLAGS="-lhwloc"
 		LIBS="-L$with_hwloc/lib -L$with_hwloc/lib64 $LIBS"
-		CFLAGS="-I$with_hwloc/include $CFLAGS"
+		CFLAGS="-I$with_hwloc/include -Wl,-rpath=${with_hwloc}/lib64 -Wl,-rpath=${with_hwloc}/lib $CFLAGS"
 		CPPFLAGS="-I$with_hwloc/include $CPPFLAGS"
 else
 	# First try with PKG config
@@ -66,8 +101,10 @@ else
 
 	if test "x$pkg_found" = "x1"
 	then
+		pkg_config_rpath "hwloc"
+
 		HWLOC_LDFLAGS="${HWLOC_LIBS}"
-		CFLAGS="-I${HWLOC_CFLAGS} $CFLAGS"
+		CFLAGS="-I${HWLOC_CFLAGS} ${HWLOC_RPATH} $CFLAGS"
 		CPPFLAGS="-I${HWLOC_CFLAGS} $CPPFLAGS"
 	fi
 fi
@@ -102,6 +139,8 @@ else
 
 	if test "x$pkg_found" = "x1"
 	then
+		pkg_config_rpath "openpa"
+		
 		LIBS="${OPENPA_LIBS} ${LIBS}"
 		CFLAGS="-I${OPENPA_CFLAGS} $CFLAGS"
 		CPPFLAGS="-I${OPENPA_CFLAGS} $CPPFLAGS"
@@ -135,6 +174,8 @@ else
 
 	if test "x$pkg_found" = "x1"
 	then
+		pkg_config_rpath "libelf"
+		
 		LIBELF_LDFLAGS="${LIBELF_LIBS}"
 		CFLAGS="-I${LIBELF_CFLAGS} $CFLAGS"
 		CPPFLAGS="-I${LIBELF_CFLAGS} $CPPFLAGS"
