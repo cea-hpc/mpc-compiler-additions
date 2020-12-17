@@ -37,8 +37,8 @@ class Autopriv(AutotoolsPackage):
 
     homepage = "http://mpc.hpcframework.com"
     url = "https://france.paratools.com/autopriv/autopriv-0.5.0.tar.gz"
-    version('0.6.0',
-            sha256='d7b4fd011e6220ec41596786216e4e28265ece6ac7206964c53433c7584908ce')
+    version('0.6.2',
+            sha256='b857a78c5725ca93c4a84f7cdf1f3c4b91197101afe1f40712973c7f77dfb948')
 
     depends_on("hwloc@1.11.11")
     depends_on("openpa")
@@ -48,7 +48,7 @@ class Autopriv(AutotoolsPackage):
     variant("libelf", default=True, description="Use libelf for symbol introspection")
     variant("ccpatch", default=True,
             description="Install and deploy embedded GNU GCC privatizing compiler")
-    variant("gcc_version", default="7.3.0",
+    variant("gcc_version", default="10.2.0",
             description='GCC version to be deployed',
             values=_gcc_version())
     

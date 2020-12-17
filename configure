@@ -115,9 +115,10 @@ done
 #
 # Set defaults if needed
 #
+DEFAULT_GCC_VERSION="$(get_default_gcc_version)"
 
 if test -z "${GCC_VERSION}"; then
-	GCC_VERSION="$(get_default_gcc_version)"
+	GCC_VERSION="${DEFAULT_GCC_VERSION}"
 	echo "# GCC version not set with --gcc-version=X.X.X, using default ${GCC_VERSION}"
 fi
 
@@ -147,9 +148,21 @@ else
 		if variant_supports_gcc_version "$v" "$GCC_VERSION"; then
 			echo "# Enabling $v for gcc $GCC_VERSION"
 		else
-			exit_error "Variant $v is not compatible with gcc $GCC_VERSION (see config/variants.txt)"
+			# If the default version does not support the variant
+			# Choose to disable by default if using default version
+			if test "x${GCC_VERSION}" = "x${DEFAULT_GCC_VERSION}"; then
+				echo "# Variant $v not supported by default GCC ${GCC_VERSION}"
+				echo "# Disabling $v for gcc $GCC_VERSION"
+				DISABLED_VARIANTS="${DISABLED_VARIANTS} $v"
+			else
+				exit_error "Variant $v is not compatible with gcc $GCC_VERSION (see config/variants.txt)"
+			fi
 		fi
 	done
+
+	# As we checked all the variants we update the enabled variants array
+	# as they could have been skiped due to the default GCC version
+	ENABLED_VARIANTS=$(enabled_variants "${DISABLED_VARIANTS}")
 
 fi
 

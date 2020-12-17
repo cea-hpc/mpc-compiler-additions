@@ -48,7 +48,7 @@ class Autopriv(AutotoolsPackage):
     variant("libelf", default=True, description="Use libelf for symbol introspection")
     variant("ccpatch", default=True,
             description="Install and deploy embedded GNU GCC privatizing compiler")
-    variant("gcc_version", default="7.3.0",
+    variant("gcc_version", default="@DEFAULT_GCC@",
             description='GCC version to be deployed',
             values=_gcc_version())
     @SPACK_VARIANT_FLAGS@
