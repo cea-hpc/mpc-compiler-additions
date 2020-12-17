@@ -38,8 +38,8 @@ class MpcCompilerAdditions(AutotoolsPackage):
 
     homepage = "http://mpc.hpcframework.com"
     url = "https://france.paratools.com/mpc/releases/mpc-compiler-additions-0.6.2.tar.gz"
-    version('0.6.3',
-            sha256='61e2e6f7a15642190c6e757ad456cfbef522938a7dae37f0e2997ef50808d5e9')
+    version('0.7.0',
+            sha256='7078435c551e9578827d984c182f50169bd6e431b176ab71d0f0713525f61fd6')
 
     depends_on("hwloc@2.2.0")
     depends_on("openpa")
@@ -49,7 +49,7 @@ class MpcCompilerAdditions(AutotoolsPackage):
     variant("libelf", default=True, description="Use libelf for symbol introspection")
     variant("ccpatch", default=True,
             description="Install and deploy embedded GNU GCC privatizing compiler")
-    variant("gcc_version", default="7.3.0",
+    variant("gcc_version", default="10.2.0",
             description='GCC version to be deployed',
             values=_gcc_version())
     
