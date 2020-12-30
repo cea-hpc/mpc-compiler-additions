@@ -124,13 +124,16 @@ static int extls_lookfor_tls_segment(struct dl_phdr_info* info, size_t sz, void*
 		/* check if our table need a reallocation (by default, we can handle TLS_SEGS_NB_MAX without reallocation) 
 		 * In this case, if tls_segs_nb % TLS_SEGS_NB_MAX == 0,
 		 * it means that we have to allocate one more TLS array
+		 *
+		 * Note: This function should not be called in a multithreaded context
+		 * or a race may appear on tls_segs_nb and the condition below.
 		 */
 		if((tls_segs_nb % TLS_SEGS_NB_MAX) == 0 && tls_segs_nb != 0)
 		{
 			/* how many TLS arrays already filled */
 			size_t nb_blocks = (int)(tls_segs_nb/TLS_SEGS_NB_MAX);
-			/* allocate one more */
-			tls_segs_tab = realloc(tls_segs_tab, sizeof(extls_tls_seg_t)*(nb_blocks + 1));
+			/* allocate one more array (=> times an array length) */
+			tls_segs_tab = realloc(tls_segs_tab, sizeof(extls_tls_seg_t) * TLS_SEGS_NB_MAX * (nb_blocks + 1));
 			if(!tls_segs_tab) return EXTLS_ENOMEM;
 		}
 
