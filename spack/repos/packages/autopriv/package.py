@@ -38,7 +38,7 @@ class Autopriv(AutotoolsPackage):
     homepage = "http://mpc.hpcframework.com"
     url = "https://france.paratools.com/autopriv/autopriv-0.5.0.tar.gz"
     version('0.6.2',
-            sha256='807e12fd9e3e9b5034255fb2fb3bd5927c579d9c9155532b7b1f22bcf698ba44')
+            sha256='6054c9531f0545f0ce843fad03a1c6852305bf95b84e2971811b6c3ae5621a77')
 
     depends_on("hwloc@1.11.11")
     depends_on("openpa")
