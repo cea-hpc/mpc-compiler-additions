@@ -6,19 +6,19 @@ set -e
 SCRIPTPATH=$(dirname "$(readlink -f "$0")")
 
 if test ! -f "$(basename "$0")"; then
-    echo "==================================================="
-    echo "Please run this script from autopriv root directory"
-    echo "==================================================="
+    echo "=================================================================="
+    echo "Please run this script from mpc-compiler-additions' root directory"
+    echo "=================================================================="
     exit 1
 fi
 
 set -x
 
-VERSION="`./.autopriv_version`"
-FILE="${PWD}/autopriv-${VERSION}.tar.gz"
+VERSION="`./.mpc_comp_additions_version`"
+FILE="${PWD}/mpc-compiler-additions-${VERSION}.tar.gz"
 
 echo -n "Generating archive for autopriv-${VERSION}... "
-git archive --format=tar.gz --prefix=autopriv-${VERSION}/ HEAD > $FILE
+git archive --format=tar.gz --prefix=mpc-compiler-additions-${VERSION}/ HEAD > $FILE
 echo "OK"
 
 

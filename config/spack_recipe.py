@@ -31,12 +31,13 @@ def _gcc_version():
     return {@GCC_VERSIONS_LIST@}
 
 
-class Autopriv(AutotoolsPackage):
-    """Privatized compiler, relying over GCC to provide the privatization
-    process, allowing process-based codes to run inside threads."""
+class MpcCompilerAdditions(AutotoolsPackage):
+    """Patched compiler and its driver for the MPC runtime. This includes
+    extended TLS support to convert programs to user-level threads and
+    workshare extensions."""
 
     homepage = "http://mpc.hpcframework.com"
-    url = "https://france.paratools.com/autopriv/autopriv-0.5.0.tar.gz"
+    url = "https://france.paratools.com/autopriv/mpc-compiler-additions-0.6.2.tar.gz"
     version('@AUTOPRIV_VERSION@',
             sha256='@SHA256SUM@')
 

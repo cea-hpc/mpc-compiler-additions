@@ -27,7 +27,7 @@ assert_file_exists "$VERSIONS_CONF"
 PKG_TEMPLATE="${SCRIPTPATH}/config/spack_recipe.py"
 assert_file_exists "$PKG_TEMPLATE"
 
-PKG_OUTPUT="${SCRIPTPATH}/spack/repos/packages/autopriv/package.py"
+PKG_OUTPUT="${SCRIPTPATH}/spack/repos/packages/mpc-compiler-additions/package.py"
 assert_file_exists "$PKG_OUTPUT"
 
 GCC_VERSIONS_LIST=""
@@ -75,9 +75,9 @@ do
     done
 done
 
-AUTOPRIV_VERSION=$(${SCRIPTPATH}/.autopriv_version)
+AUTOPRIV_VERSION=$(${SCRIPTPATH}/.mpc_comp_additions_version)
 
-TARBALL="${SCRIPTPATH}/autopriv-${AUTOPRIV_VERSION}.tar.gz"
+TARBALL="${SCRIPTPATH}/mpc-compiler-additions-${AUTOPRIV_VERSION}.tar.gz"
 
 if test ! -f "${TARBALL}"; then
     ${SCRIPTPATH}/gen_archive.sh

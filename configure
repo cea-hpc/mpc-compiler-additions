@@ -42,7 +42,7 @@ CONTRIB_OPTIONS=""
 help()
 {
 cat << EOF
-$0 configure the autopriv projet and its variants
+$0 configure the mpc-compiler-additions projet and its variants
 
 $0 --prefix=DIR [OPTS]
 
@@ -57,7 +57,7 @@ Options:
 	--prefix=XX     Where to install the package
 	--gcc-version=  Version of GCC to deploy
 	--opts="XX"     Option to be passed to contribs' configure
-	-v|--verbose   Show verbose output
+	-v|--verbose    Show verbose output
 	--download      Only download dependencies
 	--disable-gcc   Do not build the patched GCC
 	--disable-[V]   Disable a given variant [V] (see Variants list)
