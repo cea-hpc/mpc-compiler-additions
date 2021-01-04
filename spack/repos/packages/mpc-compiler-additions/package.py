@@ -37,7 +37,7 @@ class MpcCompilerAdditions(AutotoolsPackage):
     workshare extensions."""
 
     homepage = "http://mpc.hpcframework.com"
-    url = "https://france.paratools.com/autopriv/mpc-compiler-additions-0.6.2.tar.gz"
+    url = "https://france.paratools.com/mpc/releases/mpc-compiler-additions-0.6.2.tar.gz"
     version('0.6.3',
             sha256='d8016f16c1d7391fbeaf79846fb53a0c9dee19b0682fbee026f41be20ffd4fb5')
 
