@@ -12,6 +12,13 @@ if test ! -f "$(basename "$0")"; then
     exit 1
 fi
 
+if test -d ~/.autopriv/; then
+	echo "============================================================"
+	echo "Please temporarilly remove ~/.autopriv/ to build the tarball"
+	echo "============================================================"
+	exit 1
+fi
+
 set -x
 
 VERSION="`./.mpc_comp_additions_version`"
@@ -28,7 +35,7 @@ TMPDIR=$(mktemp -d)
 cd "${TMPDIR}" || exit 42
 
 tar xf "${FILE}"
-cd ./autopriv-* || exit 42
+cd ./mpc-compiler-additions-* || exit 42
 
 echo "Downloading dependencies.."
 
@@ -38,7 +45,7 @@ echo "Inserting dependencies ..."
 
 cd .. || exit 42
 
-tar czf "${FILE}" ./autopriv-*
+tar czf "${FILE}" ./mpc-compiler-additions-*
 
 rm -fr ${TMPDIR}
 
