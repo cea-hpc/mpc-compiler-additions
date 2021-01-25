@@ -134,6 +134,16 @@ static int __extls_lookfor_dsos(struct dl_phdr_info* info, size_t sz, void* data
 		first_dso = 0;
 		new->name = __extls_program_path();
 	}
+	else
+	{
+		/* Make sure we do not catch
+		 * DSOs without name */
+		if(!strlen(new->name))
+		{
+			free(new);
+			return 0;
+		}
+	}
 
 	new->next = _extls_dsos;
 	_extls_dsos = new;
