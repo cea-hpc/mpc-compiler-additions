@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <link.h>
 #include <linux/limits.h>
+#include <sys/auxv.h>
 
 #include "config.h"
 
@@ -114,11 +115,62 @@ static inline char* __extls_program_path()
 	return program;
 
 }
+
+static inline int __is_vdso(struct dl_phdr_info *info)
+{
+	if(strlen(info->dlpi_name))
+	{
+		char * vdso_names[] = {"linux-vdso.so.1",
+							   "linux-gate.so.1",
+							   "linux-vdso32.so.1",
+							   "linux-vdso64.so.1",
+							   NULL};
+
+		int i = 0;
+
+		while(vdso_names[i])
+		{
+
+			if(!strcmp(info->dlpi_name, vdso_names[i]))
+			{
+				return 1;
+			}
+
+			i++;
+		}
+
+	}
+	else
+	{
+		/* On older libcs the VSDO could have an empty name */
+		if(1 <= info->dlpi_phnum)
+		{
+			void * base_mod_addr = (void *)info->dlpi_addr + info->dlpi_phdr[0].p_vaddr;
+			void * vdso = (void *)getauxval(AT_SYSINFO_EHDR);
+
+			if(base_mod_addr == vdso)
+			{
+				return 1;
+			}
+
+		}
+	}
+
+	return 0;
+}
+
 static int __extls_lookfor_dsos(struct dl_phdr_info* info, size_t sz, void* data)
 {
 	static char first_dso = 1;
 	UNUSED(data);
 	UNUSED(sz);
+
+	/* We skip the VDSO */
+	if(__is_vdso(info))
+	{
+		return 0;
+	}
+
 	struct dsos_s *new = malloc(sizeof(struct dsos_s));
 	new->name = (char*)info->dlpi_name;
 	new->cdtor_start = NULL;
@@ -140,6 +192,7 @@ static int __extls_lookfor_dsos(struct dl_phdr_info* info, size_t sz, void* data
 		 * DSOs without name */
 		if(!strlen(new->name))
 		{
+			extls_warn("EXTLS: a DSO with empty name was found @ %p", new->dso_start);
 			free(new);
 			return 0;
 		}
