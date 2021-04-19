@@ -2147,7 +2147,7 @@ index fadf6ec..8b3e375 100644
  extern int cp_tree_operand_length		(const_tree);
  extern int cp_tree_code_length			(enum tree_code);
 diff --git a/gcc/cp/decl.c b/gcc/cp/decl.c
-index 6bb7f6e..b55f0f5 100644
+index 6bb7f6e..0db7b4b 100644
 --- a/gcc/cp/decl.c
 +++ b/gcc/cp/decl.c
 @@ -244,6 +244,9 @@ struct GTY(()) incomplete_var {
@@ -2250,7 +2250,7 @@ index 6bb7f6e..b55f0f5 100644
 +	!TREE_CONSTANT( decl ) &&
 +	DECL_TLS_MODEL(decl) != TLS_MODEL_MPC_TASK &&
 +	!DECL_THREAD_LOCAL_P(decl) &&
-+  !(DECL_EXTERNAL (decl) && strncmp(IDENTIFIER_POINTER(DECL_NAME(decl)),"environ",7) == 0)
++ !(DECL_EXTERNAL (decl) && strncmp(IDENTIFIER_POINTER(DECL_NAME(decl)),"environ",7) == 0)
 +	/*strncmp(basename(DECL_SOURCE_FILE(decl)), "mpcmp.h", 7 ) != 0 &&*/
 +	/*strncmp(basename(DECL_SOURCE_FILE(decl)), "mpcmicrothread.h", 16 ) != 0*/
 +  ) {
@@ -2418,7 +2418,7 @@ index 6bb7f6e..b55f0f5 100644
        if (DECL_EXTERNAL (decl) || TREE_STATIC (decl))
  	{
 diff --git a/gcc/cp/decl2.c b/gcc/cp/decl2.c
-index b1c3c30..9dd0950 100644
+index b1c3c30..b401359 100644
 --- a/gcc/cp/decl2.c
 +++ b/gcc/cp/decl2.c
 @@ -51,6 +51,8 @@ along with GCC; see the file COPYING3.  If not see
@@ -2480,7 +2480,7 @@ index b1c3c30..9dd0950 100644
 +      !TREE_READONLY(value) &&
 +      !TREE_CONSTANT(value) &&
 +      !DECL_THREAD_LOCAL_P(value) &&
-+			!(DECL_EXTERNAL (value) && strncmp(IDENTIFIER_POINTER(DECL_NAME(value)),"environ",7) == 0))
++			 !(DECL_EXTERNAL (value) && strncmp(IDENTIFIER_POINTER(DECL_NAME(value)),"environ",7) == 0))
 +  {
 +    fprintf(stderr,
 +            "(Front-end C++) Automatic privatization to MPC task "
@@ -2750,33 +2750,6 @@ index b1c3c30..9dd0950 100644
  	{
  	  /* Does it need synthesizing?  */
  	  if (DECL_DEFAULTED_FN (decl) && ! DECL_INITIAL (decl)
-diff --git a/gcc/cp/name-lookup.c b/gcc/cp/name-lookup.c
-index dc8e82c..f710bd1 100644
---- a/gcc/cp/name-lookup.c
-+++ b/gcc/cp/name-lookup.c
-@@ -831,7 +831,21 @@ pushdecl_maybe_friend_1 (tree x, bool is_friend)
- 	      return t;
- 	    }
- 	  else
--	    {
-+		{
-+				if(flag_mpc_privatize &&(CP_DECL_THREAD_LOCAL_P(x) != CP_DECL_THREAD_LOCAL_P(t)))
-+				{
-+					fprintf( stderr,
-+							"(Front-end C++) Automatic un-privatization from MPC task "
-+							"(variable %s in file %s line %d)\n",
-+							lang_decl_name( x, 2 , 0),
-+							DECL_SOURCE_FILE(x),
-+							DECL_SOURCE_LINE(x) ) ;
-+					CP_DECL_THREAD_LOCAL_P (t) = false;
-+					CP_DECL_THREAD_LOCAL_P (x) = false;
-+					set_decl_tls_model (t, TLS_MODEL_NONE);
-+					set_decl_tls_model (x, TLS_MODEL_NONE);
-+				}
-+
- 	      tree olddecl = duplicate_decls (x, t, is_friend);
- 
- 	      /* If the redeclaration failed, we can stop at this
 diff --git a/gcc/cp/parser.c b/gcc/cp/parser.c
 index 29aa76b..0ff115a 100644
 --- a/gcc/cp/parser.c

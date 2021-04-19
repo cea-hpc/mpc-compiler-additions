@@ -1,7 +1,7 @@
-diff --git c/gcc/Makefile.in w/gcc/Makefile.in
-index 5f43d9de00..da926a35f4 100644
---- c/gcc/Makefile.in
-+++ w/gcc/Makefile.in
+diff --git a/gcc/Makefile.in b/gcc/Makefile.in
+index 5f43d9d..da926a3 100644
+--- a/gcc/Makefile.in
++++ b/gcc/Makefile.in
 @@ -931,7 +931,7 @@ READ_MD_H = $(OBSTACK_H) $(HASHTAB_H) read-md.h
  PARAMS_H = params.h params-enum.h params.def
  BUILTINS_DEF = builtins.def sync-builtins.def omp-builtins.def \
@@ -39,10 +39,10 @@ index 5f43d9de00..da926a35f4 100644
    $(srcdir)/targhooks.c $(out_file) $(srcdir)/passes.c $(srcdir)/cgraphunit.c \
    $(srcdir)/cgraphclones.c \
    $(srcdir)/tree-phinodes.c \
-diff --git c/gcc/builtin-types.def w/gcc/builtin-types.def
-index e5c9e063c4..1955c7e5df 100644
---- c/gcc/builtin-types.def
-+++ w/gcc/builtin-types.def
+diff --git a/gcc/builtin-types.def b/gcc/builtin-types.def
+index e5c9e06..1955c7e 100644
+--- a/gcc/builtin-types.def
++++ b/gcc/builtin-types.def
 @@ -297,6 +297,7 @@ DEF_FUNCTION_TYPE_1 (BT_FN_UINT32_UINT32, BT_UINT32, BT_UINT32)
  DEF_FUNCTION_TYPE_1 (BT_FN_UINT64_UINT64, BT_UINT64, BT_UINT64)
  DEF_FUNCTION_TYPE_1 (BT_FN_UINT64_FLOAT, BT_UINT64, BT_FLOAT)
@@ -67,10 +67,10 @@ index e5c9e063c4..1955c7e5df 100644
  DEF_FUNCTION_TYPE_9 (BT_FN_VOID_INT_OMPFN_SIZE_PTR_PTR_PTR_UINT_PTR_PTR,
  		     BT_VOID, BT_INT, BT_PTR_FN_VOID_PTR, BT_SIZE, BT_PTR,
  		     BT_PTR, BT_PTR, BT_UINT, BT_PTR, BT_PTR)
-diff --git c/gcc/builtins.def w/gcc/builtins.def
-index c92292aeab..33b46e6ba3 100644
---- c/gcc/builtins.def
-+++ w/gcc/builtins.def
+diff --git a/gcc/builtins.def b/gcc/builtins.def
+index c92292a..33b46e6 100644
+--- a/gcc/builtins.def
++++ b/gcc/builtins.def
 @@ -222,6 +222,17 @@ along with GCC; see the file COPYING3.  If not see
  	       (false))
  #endif
@@ -109,10 +109,10 @@ index c92292aeab..33b46e6ba3 100644
  /* Heterogeneous Systems Architecture.  */
  #include "hsa-builtins.def"
  
-diff --git c/gcc/c-family/c-common.c w/gcc/c-family/c-common.c
-index d220e81356..ce93951ff1 100644
---- c/gcc/c-family/c-common.c
-+++ w/gcc/c-family/c-common.c
+diff --git a/gcc/c-family/c-common.c b/gcc/c-family/c-common.c
+index d220e81..ce93951 100644
+--- a/gcc/c-family/c-common.c
++++ b/gcc/c-family/c-common.c
 @@ -436,6 +436,12 @@ const struct c_common_resword c_common_reswords[] =
    { "__signed",		RID_SIGNED,	0 },
    { "__signed__",	RID_SIGNED,	0 },
@@ -148,10 +148,10 @@ index d220e81356..ce93951ff1 100644
        return true;
      default:
        return false;
-diff --git c/gcc/c-family/c-common.h w/gcc/c-family/c-common.h
-index 1cf2cae639..8f59674a7a 100644
---- c/gcc/c-family/c-common.h
-+++ w/gcc/c-family/c-common.h
+diff --git a/gcc/c-family/c-common.h b/gcc/c-family/c-common.h
+index 1cf2cae..8f59674 100644
+--- a/gcc/c-family/c-common.h
++++ b/gcc/c-family/c-common.h
 @@ -70,6 +70,9 @@ enum rid
    RID_VOLATILE, RID_SIGNED,  RID_AUTO,  RID_RESTRICT,
    RID_NORETURN, RID_ATOMIC,
@@ -162,10 +162,10 @@ index 1cf2cae639..8f59674a7a 100644
    /* C extensions */
    RID_COMPLEX, RID_THREAD, RID_SAT,
  
-diff --git c/gcc/c-family/c-cppbuiltin.c w/gcc/c-family/c-cppbuiltin.c
-index d389f8ca4a..10e9d9e534 100644
---- c/gcc/c-family/c-cppbuiltin.c
-+++ w/gcc/c-family/c-cppbuiltin.c
+diff --git a/gcc/c-family/c-cppbuiltin.c b/gcc/c-family/c-cppbuiltin.c
+index d389f8c..10e9d9e 100644
+--- a/gcc/c-family/c-cppbuiltin.c
++++ b/gcc/c-family/c-cppbuiltin.c
 @@ -1406,11 +1406,10 @@ c_cpp_builtins (cpp_reader *pfile)
    else if (flag_stack_protect == 1)
      cpp_define (pfile, "__SSP__=1");
@@ -181,10 +181,10 @@ index d389f8ca4a..10e9d9e534 100644
  
    for (i = 0; i < NUM_INT_N_ENTS; i ++)
      if (int_n_enabled_p[i])
-diff --git c/gcc/c-family/c-omp.c w/gcc/c-family/c-omp.c
-index 1f288a6fbb..0a7de73ad2 100644
---- c/gcc/c-family/c-omp.c
-+++ w/gcc/c-family/c-omp.c
+diff --git a/gcc/c-family/c-omp.c b/gcc/c-family/c-omp.c
+index 1f288a6..0a7de73 100644
+--- a/gcc/c-family/c-omp.c
++++ b/gcc/c-family/c-omp.c
 @@ -140,6 +140,7 @@ c_finish_omp_barrier (location_t loc)
    tree x;
  
@@ -213,10 +213,10 @@ index 1f288a6fbb..0a7de73ad2 100644
    x = build_call_expr_loc (loc, x, 0);
    add_stmt (x);
  }
-diff --git c/gcc/c-family/c-opts.c w/gcc/c-family/c-opts.c
-index 51ac3916fe..754bd6ab55 100644
---- c/gcc/c-family/c-opts.c
-+++ w/gcc/c-family/c-opts.c
+diff --git a/gcc/c-family/c-opts.c b/gcc/c-family/c-opts.c
+index 51ac391..754bd6a 100644
+--- a/gcc/c-family/c-opts.c
++++ b/gcc/c-family/c-opts.c
 @@ -42,6 +42,8 @@ along with GCC; see the file COPYING3.  If not see
  #include "dumpfile.h"
  #include "file-prefix-map.h"    /* add_*_prefix_map()  */
@@ -293,10 +293,10 @@ index 51ac3916fe..754bd6ab55 100644
  }
  
  /* Give CPP the next file given by -include, if any.  */
-diff --git c/gcc/c-family/c-pragma.c w/gcc/c-family/c-pragma.c
-index fbc734a047..9727b7120d 100644
---- c/gcc/c-family/c-pragma.c
-+++ w/gcc/c-family/c-pragma.c
+diff --git a/gcc/c-family/c-pragma.c b/gcc/c-family/c-pragma.c
+index fbc734a..9727b71 100644
+--- a/gcc/c-family/c-pragma.c
++++ b/gcc/c-family/c-pragma.c
 @@ -1520,6 +1520,30 @@ init_pragma (void)
  				      omp_pragmas_simd[i].id, true, true);
      }
@@ -328,10 +328,10 @@ index fbc734a047..9727b7120d 100644
    if (!flag_preprocess_only)
      cpp_register_deferred_pragma (parse_in, "GCC", "pch_preprocess",
  				  PRAGMA_GCC_PCH_PREPROCESS, false, false);
-diff --git c/gcc/c-family/c-pragma.h w/gcc/c-family/c-pragma.h
-index 2bbb279752..5fed709857 100644
---- c/gcc/c-family/c-pragma.h
-+++ w/gcc/c-family/c-pragma.h
+diff --git a/gcc/c-family/c-pragma.h b/gcc/c-family/c-pragma.h
+index 2bbb279..5fed709 100644
+--- a/gcc/c-family/c-pragma.h
++++ b/gcc/c-family/c-pragma.h
 @@ -69,6 +69,15 @@ enum pragma_kind {
    PRAGMA_OMP_THREADPRIVATE,
    PRAGMA_OMP_TEAMS,
@@ -348,10 +348,10 @@ index 2bbb279752..5fed709857 100644
    PRAGMA_GCC_PCH_PREPROCESS,
    PRAGMA_IVDEP,
    PRAGMA_UNROLL,
-diff --git c/gcc/c-family/c.opt w/gcc/c-family/c.opt
-index 916cc67b45..1be1d38254 100644
---- c/gcc/c-family/c.opt
-+++ w/gcc/c-family/c.opt
+diff --git a/gcc/c-family/c.opt b/gcc/c-family/c.opt
+index 916cc67..1be1d38 100644
+--- a/gcc/c-family/c.opt
++++ b/gcc/c-family/c.opt
 @@ -736,6 +736,12 @@ Wmissing-declarations
  C ObjC C++ ObjC++ Var(warn_missing_declarations) Warning
  Warn about global functions without previous declarations.
@@ -393,10 +393,10 @@ index 916cc67b45..1be1d38254 100644
  fms-extensions
  C ObjC C++ ObjC++ Var(flag_ms_extensions)
  Don't warn about uses of Microsoft extensions.
-diff --git c/gcc/c/c-decl.c w/gcc/c/c-decl.c
-index 04e0f4dc19..a47f8145af 100644
---- c/gcc/c/c-decl.c
-+++ w/gcc/c/c-decl.c
+diff --git a/gcc/c/c-decl.c b/gcc/c/c-decl.c
+index 04e0f4d..a47f814 100644
+--- a/gcc/c/c-decl.c
++++ b/gcc/c/c-decl.c
 @@ -216,6 +216,9 @@ struct GTY(()) lang_identifier {
    struct c_binding *label_binding;  /* labels */
  };
@@ -670,10 +670,10 @@ index 04e0f4dc19..a47f8145af 100644
  {
    tree t;
    tree decls;
-diff --git c/gcc/c/c-parser.c w/gcc/c/c-parser.c
-index f8d1fb3fa7..05a039d1ee 100644
---- c/gcc/c/c-parser.c
-+++ w/gcc/c/c-parser.c
+diff --git a/gcc/c/c-parser.c b/gcc/c/c-parser.c
+index f8d1fb3..05a039d1 100644
+--- a/gcc/c/c-parser.c
++++ b/gcc/c/c-parser.c
 @@ -654,6 +654,11 @@ c_token_starts_declspecs (c_token *token)
  	case RID_NORETURN:
  	case RID_AUTO:
@@ -1054,10 +1054,10 @@ index f8d1fb3fa7..05a039d1ee 100644
  /* Parse a single source file.  */
  
  void
-diff --git c/gcc/c/c-tree.h w/gcc/c/c-tree.h
-index 7e35ab1f0b..af22f1b4d0 100644
---- c/gcc/c/c-tree.h
-+++ w/gcc/c/c-tree.h
+diff --git a/gcc/c/c-tree.h b/gcc/c/c-tree.h
+index 7e35ab1..af22f1b 100644
+--- a/gcc/c/c-tree.h
++++ b/gcc/c/c-tree.h
 @@ -275,6 +275,11 @@ enum c_declspec_word {
    cdw_inline,
    cdw_noreturn,
@@ -1085,10 +1085,10 @@ index 7e35ab1f0b..af22f1b4d0 100644
    /* Whether "const" was specified.  */
    BOOL_BITFIELD const_p : 1;
    /* Whether "volatile" was specified.  */
-diff --git c/gcc/c/c-typeck.c w/gcc/c/c-typeck.c
-index 4a4eb08b73..ef12416e4e 100644
---- c/gcc/c/c-typeck.c
-+++ w/gcc/c/c-typeck.c
+diff --git a/gcc/c/c-typeck.c b/gcc/c/c-typeck.c
+index 4a4eb08..ef12416 100644
+--- a/gcc/c/c-typeck.c
++++ b/gcc/c/c-typeck.c
 @@ -4804,6 +4804,7 @@ build_unary_op (location_t location, enum tree_code code, tree xarg,
  	  goto return_build_unary_op;
  	}
@@ -1190,10 +1190,10 @@ index 4a4eb08b73..ef12416e4e 100644
  		share_name = "threadprivate";
  	      else switch (c_omp_predetermined_sharing (t))
  		{
-diff --git c/gcc/cgraph.h w/gcc/cgraph.h
-index 9a19d83fff..1035bdeba6 100644
---- c/gcc/cgraph.h
-+++ w/gcc/cgraph.h
+diff --git a/gcc/cgraph.h b/gcc/cgraph.h
+index 9a19d83..1035bde 100644
+--- a/gcc/cgraph.h
++++ b/gcc/cgraph.h
 @@ -1961,7 +1961,11 @@ public:
       function local statics.   */
    unsigned dynamically_initialized : 1;
@@ -1206,10 +1206,10 @@ index 9a19d83fff..1035bdeba6 100644
  
    /* Set if the variable is known to be used by single function only.
       This is computed by ipa_signle_use pass and used by late optimizations
-diff --git c/gcc/cgraphbuild.c w/gcc/cgraphbuild.c
-index 97c010531b..c67ec4230d 100644
---- c/gcc/cgraphbuild.c
-+++ w/gcc/cgraphbuild.c
+diff --git a/gcc/cgraphbuild.c b/gcc/cgraphbuild.c
+index 97c0105..c67ec42 100644
+--- a/gcc/cgraphbuild.c
++++ b/gcc/cgraphbuild.c
 @@ -60,6 +60,10 @@ record_reference (tree *tp, int *walk_subtrees, void *data)
    switch (TREE_CODE (t))
      {
@@ -1221,10 +1221,10 @@ index 97c010531b..c67ec4230d 100644
      case FUNCTION_DECL:
        gcc_unreachable ();
        break;
-diff --git c/gcc/common.opt w/gcc/common.opt
-index d342c4f374..4bb22b5dd3 100644
---- c/gcc/common.opt
-+++ w/gcc/common.opt
+diff --git a/gcc/common.opt b/gcc/common.opt
+index d342c4f..4bb22b5 100644
+--- a/gcc/common.opt
++++ b/gcc/common.opt
 @@ -2892,6 +2892,12 @@ fverbose-asm
  Common Report Var(flag_verbose_asm)
  Add extra commentary to assembler output.
@@ -1238,10 +1238,10 @@ index d342c4f374..4bb22b5dd3 100644
  fvisibility=
  Common Joined RejectNegative Enum(symbol_visibility) Var(default_visibility) Init(VISIBILITY_DEFAULT)
  -fvisibility=[default|internal|hidden|protected]	Set the default symbol visibility.
-diff --git c/gcc/config/i386/i386-protos.h w/gcc/config/i386/i386-protos.h
-index 83645e89a8..868d1256a6 100644
---- c/gcc/config/i386/i386-protos.h
-+++ w/gcc/config/i386/i386-protos.h
+diff --git a/gcc/config/i386/i386-protos.h b/gcc/config/i386/i386-protos.h
+index 83645e8..868d125 100644
+--- a/gcc/config/i386/i386-protos.h
++++ b/gcc/config/i386/i386-protos.h
 @@ -226,6 +226,24 @@ extern rtx ix86_tls_module_base (void);
  extern bool ix86_tls_address_pattern_p (rtx);
  extern rtx ix86_rewrite_tls_address (rtx);
@@ -1267,10 +1267,10 @@ index 83645e89a8..868d1256a6 100644
  extern void ix86_expand_vector_init (bool, rtx, rtx);
  extern void ix86_expand_vector_set (bool, rtx, rtx, int);
  extern void ix86_expand_vector_extract (bool, rtx, rtx, int);
-diff --git c/gcc/config/i386/i386.c w/gcc/config/i386/i386.c
-index 2b37296e53..369511cc16 100644
---- c/gcc/config/i386/i386.c
-+++ w/gcc/config/i386/i386.c
+diff --git a/gcc/config/i386/i386.c b/gcc/config/i386/i386.c
+index 2b37296..369511c 100644
+--- a/gcc/config/i386/i386.c
++++ b/gcc/config/i386/i386.c
 @@ -16213,7 +16213,11 @@ static GTY(()) rtx ix86_tls_symbol;
  static rtx
  ix86_tls_get_addr (void)
@@ -1541,10 +1541,10 @@ index 2b37296e53..369511cc16 100644
      case TLS_MODEL_GLOBAL_DYNAMIC:
        dest = gen_reg_rtx (Pmode);
  
-diff --git c/gcc/config/i386/i386.md w/gcc/config/i386/i386.md
-index f8915440ff..589e2ede2c 100644
---- c/gcc/config/i386/i386.md
-+++ w/gcc/config/i386/i386.md
+diff --git a/gcc/config/i386/i386.md b/gcc/config/i386/i386.md
+index f891544..589e2ed 100644
+--- a/gcc/config/i386/i386.md
++++ b/gcc/config/i386/i386.md
 @@ -14314,6 +14314,344 @@
    ""
    "ix86_tls_descriptor_calls_expanded_in_cfun = true;")
@@ -2085,10 +2085,10 @@ index f8915440ff..589e2ede2c 100644
  (define_insn "*tls_local_dynamic_base_32_gnu"
    [(set (match_operand:SI 0 "register_operand" "=a")
  	(unspec:SI
-diff --git c/gcc/coretypes.h w/gcc/coretypes.h
-index 2f6b8599d7..6c22852518 100644
---- c/gcc/coretypes.h
-+++ w/gcc/coretypes.h
+diff --git a/gcc/coretypes.h b/gcc/coretypes.h
+index 2f6b859..6c22852 100644
+--- a/gcc/coretypes.h
++++ b/gcc/coretypes.h
 @@ -185,7 +185,23 @@ enum tls_model {
    TLS_MODEL_GLOBAL_DYNAMIC = TLS_MODEL_REAL,
    TLS_MODEL_LOCAL_DYNAMIC,
@@ -2114,10 +2114,10 @@ index 2f6b8599d7..6c22852518 100644
  };
  
  /* Types of ABI for an offload compiler.  */
-diff --git c/gcc/cp/cp-tree.h w/gcc/cp/cp-tree.h
-index ff4ce068a8..ffefc7ce1b 100644
---- c/gcc/cp/cp-tree.h
-+++ w/gcc/cp/cp-tree.h
+diff --git a/gcc/cp/cp-tree.h b/gcc/cp/cp-tree.h
+index ff4ce06..ffefc7c 100644
+--- a/gcc/cp/cp-tree.h
++++ b/gcc/cp/cp-tree.h
 @@ -5807,6 +5807,11 @@ enum cp_decl_spec {
    ds_constexpr,
    ds_complex,
@@ -2141,10 +2141,10 @@ index ff4ce068a8..ffefc7ce1b 100644
  /* in tree.c */
  extern int cp_tree_operand_length		(const_tree);
  extern int cp_tree_code_length			(enum tree_code);
-diff --git c/gcc/cp/decl.c w/gcc/cp/decl.c
-index b57ded813b..d25e546aa1 100644
---- c/gcc/cp/decl.c
-+++ w/gcc/cp/decl.c
+diff --git a/gcc/cp/decl.c b/gcc/cp/decl.c
+index b57ded8..efe6660 100644
+--- a/gcc/cp/decl.c
++++ b/gcc/cp/decl.c
 @@ -243,6 +243,9 @@ struct GTY(()) incomplete_var {
    tree incomplete_type;
  };
@@ -2210,7 +2210,7 @@ index b57ded813b..d25e546aa1 100644
        else if (saw_typedef)
  	warning_at (declspecs->locations[ds_typedef], 0,
  		    "%<typedef%> was ignored in this declaration");
-@@ -5129,6 +5164,51 @@ start_decl (const cp_declarator *declarator,
+@@ -5129,6 +5164,53 @@ start_decl (const cp_declarator *declarator,
      warning_at (DECL_SOURCE_LOCATION (decl), 0,
  		"inline function %qD given attribute noinline", decl);
  
@@ -2236,6 +2236,7 @@ index b57ded813b..d25e546aa1 100644
 +    if (!processing_template_decl)
 +	    set_decl_tls_model (decl, decl_default_tls_model (decl));
 +  }
++
 +  if ( flag_mpc_privatize &&
 +	TREE_CODE(decl) == VAR_DECL &&
 +	( TREE_STATIC( decl ) || DECL_EXTERNAL(decl) ) &&
@@ -2243,7 +2244,8 @@ index b57ded813b..d25e546aa1 100644
 +	!TREE_READONLY( decl ) &&
 +	!TREE_CONSTANT( decl ) &&
 +	DECL_TLS_MODEL(decl) != TLS_MODEL_MPC_TASK &&
-+	!DECL_THREAD_LOCAL_P(decl)
++	!DECL_THREAD_LOCAL_P(decl) &&
++ !(DECL_EXTERNAL (decl) && strncmp(IDENTIFIER_POINTER(DECL_NAME(decl)),"environ",7) == 0)
 +	/*strncmp(basename(DECL_SOURCE_FILE(decl)), "mpcmp.h", 7 ) != 0 &&*/
 +	/*strncmp(basename(DECL_SOURCE_FILE(decl)), "mpcmicrothread.h", 16 ) != 0*/
 +  ) {
@@ -2262,7 +2264,22 @@ index b57ded813b..d25e546aa1 100644
    if (TYPE_P (context) && COMPLETE_TYPE_P (complete_type (context)))
      {
        bool this_tmpl = (processing_template_decl
-@@ -6983,6 +7063,22 @@ cp_finish_decl (tree decl, tree init, bool init_const_expr_p,
+@@ -5136,6 +5218,14 @@ start_decl (const cp_declarator *declarator,
+       if (VAR_P (decl))
+ 	{
+ 	  tree field = lookup_field (context, DECL_NAME (decl), 0, false);
++		/* MPC TLS BEGIN */
++		if(flag_mpc_privatize && CP_DECL_THREAD_LOCAL_P (field) != CP_DECL_THREAD_LOCAL_P(decl))
++		{
++			CP_DECL_THREAD_LOCAL_P(decl) = false;
++			CP_DECL_THREAD_LOCAL_P(field) = false;
++		}
++		/* MPC TLS END */
++
+ 	  if (field == NULL_TREE
+ 	      || !(VAR_P (field) || variable_template_p (field)))
+ 	    error ("%q+#D is not a static data member of %q#T", decl, context);
+@@ -6983,6 +7073,22 @@ cp_finish_decl (tree decl, tree init, bool init_const_expr_p,
        && (DECL_INITIAL (decl) || init))
      DECL_INITIALIZED_IN_CLASS_P (decl) = 1;
  
@@ -2285,7 +2302,7 @@ index b57ded813b..d25e546aa1 100644
    /* Do auto deduction unless decl is a function or an uninstantiated
       template specialization.  */
    if (TREE_CODE (decl) != FUNCTION_DECL
-@@ -7418,6 +7514,24 @@ cp_finish_decl (tree decl, tree init, bool init_const_expr_p,
+@@ -7418,6 +7524,24 @@ cp_finish_decl (tree decl, tree init, bool init_const_expr_p,
      }
  
    invoke_plugin_callbacks (PLUGIN_FINISH_DECL, decl);
@@ -2310,7 +2327,7 @@ index b57ded813b..d25e546aa1 100644
  }
  
  /* For class TYPE return itself or some its bases that contain
-@@ -8089,6 +8203,24 @@ get_thread_atexit_node (void)
+@@ -8089,6 +8213,24 @@ get_thread_atexit_node (void)
    return decay_conversion (atexit_fndecl, tf_warning_or_error);
  }
  
@@ -2335,7 +2352,7 @@ index b57ded813b..d25e546aa1 100644
  /* Returns the __dso_handle VAR_DECL.  */
  
  static tree
-@@ -8236,11 +8368,21 @@ register_dtor_fn (tree decl)
+@@ -8236,11 +8378,21 @@ register_dtor_fn (tree decl)
    /* Call atexit with the cleanup function.  */
    mark_used (cleanup);
    cleanup = build_address (cleanup);
@@ -2358,7 +2375,7 @@ index b57ded813b..d25e546aa1 100644
  
    if (use_dtor)
      {
-@@ -9434,7 +9576,36 @@ grokvardecl (tree type,
+@@ -9434,7 +9586,36 @@ grokvardecl (tree type,
        TREE_PUBLIC (decl) = DECL_EXTERNAL (decl);
      }
  
@@ -2396,10 +2413,10 @@ index b57ded813b..d25e546aa1 100644
      {
        if (DECL_EXTERNAL (decl) || TREE_STATIC (decl))
  	{
-diff --git c/gcc/cp/decl2.c w/gcc/cp/decl2.c
-index 6f23ee1cd3..565722609f 100644
---- c/gcc/cp/decl2.c
-+++ w/gcc/cp/decl2.c
+diff --git a/gcc/cp/decl2.c b/gcc/cp/decl2.c
+index 6f23ee1..55158d2 100644
+--- a/gcc/cp/decl2.c
++++ b/gcc/cp/decl2.c
 @@ -54,6 +54,8 @@ int raw_dump_id;
   
  extern cpp_reader *parse_in;
@@ -2427,7 +2444,7 @@ index 6f23ee1cd3..565722609f 100644
    /* Pass friend decls back.  */
    if ((TREE_CODE (value) == FUNCTION_DECL
         || TREE_CODE (value) == TEMPLATE_DECL)
-@@ -961,7 +963,47 @@ grokfield (const cp_declarator *declarator,
+@@ -961,7 +963,48 @@ grokfield (const cp_declarator *declarator,
    if (VAR_P (value))
      DECL_CONTEXT (value) = current_class_type;
  
@@ -2458,7 +2475,8 @@ index 6f23ee1cd3..565722609f 100644
 +      !mpc_decl_match_invalid_header(value) &&
 +      !TREE_READONLY(value) &&
 +      !TREE_CONSTANT(value) &&
-+      !DECL_THREAD_LOCAL_P(value))
++      !DECL_THREAD_LOCAL_P(value) &&
++			 !(DECL_EXTERNAL (value) && strncmp(IDENTIFIER_POINTER(DECL_NAME(value)),"environ",7) == 0))
 +  {
 +    fprintf(stderr,
 +            "(Front-end C++) Automatic privatization to MPC task "
@@ -2476,7 +2494,7 @@ index 6f23ee1cd3..565722609f 100644
      {
        value = push_template_decl (value);
        if (error_operand_p (value))
-@@ -980,8 +1022,25 @@ grokfield (const cp_declarator *declarator,
+@@ -980,8 +1023,25 @@ grokfield (const cp_declarator *declarator,
      {
      case VAR_DECL:
        finish_static_data_member_decl (value, init, init_const_expr_p,
@@ -2504,7 +2522,7 @@ index 6f23ee1cd3..565722609f 100644
  
      case FIELD_DECL:
        if (asmspec)
-@@ -3677,8 +3736,27 @@ static splay_tree priority_info_map;
+@@ -3677,8 +3737,27 @@ static splay_tree priority_info_map;
     translation unit.  */
  
  static tree
@@ -2533,7 +2551,7 @@ index 6f23ee1cd3..565722609f 100644
    tree type;
    tree body;
    char id[sizeof (SSDF_IDENTIFIER) + 1 /* '\0' */ + 32];
-@@ -3715,7 +3793,16 @@ start_static_storage_duration_function (unsigned count)
+@@ -3715,7 +3794,16 @@ start_static_storage_duration_function (unsigned count)
  	 DEFAULT_INIT_PRIORITY so enter it now.  That way when we walk
  	 priorities later, we'll be sure to find the
  	 DEFAULT_INIT_PRIORITY.  */
@@ -2551,7 +2569,7 @@ index 6f23ee1cd3..565722609f 100644
      }
  
    vec_safe_push (ssdf_decls, ssdf_decl);
-@@ -3748,6 +3835,24 @@ start_static_storage_duration_function (unsigned count)
+@@ -3748,6 +3836,24 @@ start_static_storage_duration_function (unsigned count)
    /* Set up the scope of the outermost block in the function.  */
    body = begin_compound_stmt (BCS_FN_BODY);
  
@@ -2576,7 +2594,7 @@ index 6f23ee1cd3..565722609f 100644
    return body;
  }
  
-@@ -4455,7 +4560,7 @@ clear_decl_external (struct cgraph_node *node, void * /*data*/)
+@@ -4455,7 +4561,7 @@ clear_decl_external (struct cgraph_node *node, void * /*data*/)
  /* Build up the function to run dynamic initializers for thread_local
     variables in this translation unit and alias the init functions for the
     individual variables to it.  */
@@ -2585,7 +2603,7 @@ index 6f23ee1cd3..565722609f 100644
  static void
  handle_tls_init (void)
  {
-@@ -4467,51 +4572,68 @@ handle_tls_init (void)
+@@ -4467,51 +4573,68 @@ handle_tls_init (void)
  
    write_out_vars (vars);
  
@@ -2681,7 +2699,7 @@ index 6f23ee1cd3..565722609f 100644
  
  /* We're at the end of compilation, so generate any mangling aliases that
     we've been saving up, if DECL is going to be output and ID2 isn't
-@@ -4847,6 +4969,8 @@ c_parse_final_cleanups (void)
+@@ -4847,6 +4970,8 @@ c_parse_final_cleanups (void)
  	    unemitted_tinfo_decls->unordered_remove (i);
  	  }
  
@@ -2690,7 +2708,7 @@ index 6f23ee1cd3..565722609f 100644
        /* The list of objects with static storage duration is built up
  	 in reverse order.  We clear STATIC_AGGREGATES so that any new
  	 aggregates added during the initialization of these will be
-@@ -4854,7 +4978,7 @@ c_parse_final_cleanups (void)
+@@ -4854,7 +4979,7 @@ c_parse_final_cleanups (void)
  	 loop.  */
        vars = prune_vars_needing_no_initialization (&static_aggregates);
  
@@ -2699,7 +2717,7 @@ index 6f23ee1cd3..565722609f 100644
  	{
  	  /* We need to start a new initialization function each time
  	     through the loop.  That's because we need to know which
-@@ -4871,7 +4995,7 @@ c_parse_final_cleanups (void)
+@@ -4871,7 +4996,7 @@ c_parse_final_cleanups (void)
  	  /* Set the line and file, so that it is obviously not from
  	     the source file.  */
  	  input_location = locus_at_end_of_parsing;
@@ -2708,7 +2726,7 @@ index 6f23ee1cd3..565722609f 100644
  
  	  /* First generate code to do all the initializations.  */
  	  if (vars)
-@@ -4904,13 +5028,14 @@ c_parse_final_cleanups (void)
+@@ -4904,13 +5029,14 @@ c_parse_final_cleanups (void)
  	  /* ??? was:  locus_at_end_of_parsing.line++; */
  	}
  
@@ -2727,10 +2745,10 @@ index 6f23ee1cd3..565722609f 100644
  	{
  	  /* Does it need synthesizing?  */
  	  if (DECL_DEFAULTED_FN (decl) && ! DECL_INITIAL (decl)
-diff --git c/gcc/cp/parser.c w/gcc/cp/parser.c
-index a7218e752b..54af107560 100644
---- c/gcc/cp/parser.c
-+++ w/gcc/cp/parser.c
+diff --git a/gcc/cp/parser.c b/gcc/cp/parser.c
+index a7218e7..54af107 100644
+--- a/gcc/cp/parser.c
++++ b/gcc/cp/parser.c
 @@ -942,6 +942,11 @@ cp_keyword_starts_decl_specifier_p (enum rid keyword)
      case RID_EXTERN:
      case RID_MUTABLE:
@@ -3093,10 +3111,10 @@ index a7218e752b..54af107560 100644
        {
  	if (context == pragma_external)
  	  {
-diff --git c/gcc/cp/semantics.c w/gcc/cp/semantics.c
-index 6d40b145fc..160b9b0aef 100644
---- c/gcc/cp/semantics.c
-+++ w/gcc/cp/semantics.c
+diff --git a/gcc/cp/semantics.c b/gcc/cp/semantics.c
+index 6d40b14..160b9b0 100644
+--- a/gcc/cp/semantics.c
++++ b/gcc/cp/semantics.c
 @@ -3796,9 +3796,20 @@ finish_id_expression_1 (tree id_expression,
  	}
  
@@ -3155,10 +3173,10 @@ index 6d40b145fc..160b9b0aef 100644
  	      /* If rtl has been already set for this var, call
  		 make_decl_rtl once again, so that encode_section_info
  		 has a chance to look at the new decl flags.  */
-diff --git c/gcc/fortran/Make-lang.in w/gcc/fortran/Make-lang.in
-index 80016a387e..3b6b6c8b3f 100644
---- c/gcc/fortran/Make-lang.in
-+++ w/gcc/fortran/Make-lang.in
+diff --git a/gcc/fortran/Make-lang.in b/gcc/fortran/Make-lang.in
+index 80016a3..3b6b6c8 100644
+--- a/gcc/fortran/Make-lang.in
++++ b/gcc/fortran/Make-lang.in
 @@ -58,7 +58,7 @@ F95_PARSER_OBJS = fortran/arith.o fortran/array.o fortran/bbt.o \
      fortran/iresolve.o fortran/match.o fortran/matchexp.o fortran/misc.o \
      fortran/module.o fortran/openmp.o fortran/options.o fortran/parse.o \
@@ -3168,10 +3186,10 @@ index 80016a387e..3b6b6c8b3f 100644
  
  F95_OBJS = $(F95_PARSER_OBJS) $(FORTRAN_TARGET_OBJS) \
      fortran/convert.o fortran/dependency.o fortran/f95-lang.o \
-diff --git c/gcc/fortran/f95-lang.c w/gcc/fortran/f95-lang.c
-index 3e3d3046bd..8980f612f0 100644
---- c/gcc/fortran/f95-lang.c
-+++ w/gcc/fortran/f95-lang.c
+diff --git a/gcc/fortran/f95-lang.c b/gcc/fortran/f95-lang.c
+index 3e3d304..8980f61 100644
+--- a/gcc/fortran/f95-lang.c
++++ b/gcc/fortran/f95-lang.c
 @@ -1206,14 +1206,30 @@ gfc_init_builtin_functions (void)
  #define DEF_GOACC_BUILTIN_ONLY(code, name, type, attr) \
        gfc_define_builtin ("__builtin_" name, builtin_types[type], code, NULL, \
@@ -3211,10 +3229,10 @@ index 3e3d3046bd..8980f612f0 100644
  #include "../omp-builtins.def"
  #undef DEF_GOACC_BUILTIN
  #undef DEF_GOACC_BUILTIN_COMPILER
-diff --git c/gcc/fortran/gfortran.h w/gcc/fortran/gfortran.h
-index 2bb82980e8..7a7af5630b 100644
---- c/gcc/fortran/gfortran.h
-+++ w/gcc/fortran/gfortran.h
+diff --git a/gcc/fortran/gfortran.h b/gcc/fortran/gfortran.h
+index 2bb8298..7a7af56 100644
+--- a/gcc/fortran/gfortran.h
++++ b/gcc/fortran/gfortran.h
 @@ -239,6 +239,12 @@ enum gfc_statement
    ST_OMP_END_PARALLEL_DO_SIMD, ST_OMP_DECLARE_SIMD, ST_OMP_DECLARE_REDUCTION,
    ST_OMP_TARGET, ST_OMP_END_TARGET, ST_OMP_TARGET_DATA, ST_OMP_END_TARGET_DATA,
@@ -3320,11 +3338,11 @@ index 2bb82980e8..7a7af5630b 100644
  bool gfc_add_in_common (symbol_attribute *, const char *, locus *);
  bool gfc_add_in_equivalence (symbol_attribute *, const char *, locus *);
  bool gfc_add_data (symbol_attribute *, const char *, locus *);
-diff --git c/gcc/fortran/hls.c w/gcc/fortran/hls.c
+diff --git a/gcc/fortran/hls.c b/gcc/fortran/hls.c
 new file mode 100644
-index 0000000000..ce52bb7471
+index 0000000..ce52bb7
 --- /dev/null
-+++ w/gcc/fortran/hls.c
++++ b/gcc/fortran/hls.c
 @@ -0,0 +1,445 @@
 +#include "config.h"
 +#include "system.h"
@@ -3771,10 +3789,10 @@ index 0000000000..ce52bb7471
 +      gcc_unreachable ();
 +    }
 +}
-diff --git c/gcc/fortran/lang.opt w/gcc/fortran/lang.opt
-index 90b09f99f7..946b35e693 100644
---- c/gcc/fortran/lang.opt
-+++ w/gcc/fortran/lang.opt
+diff --git a/gcc/fortran/lang.opt b/gcc/fortran/lang.opt
+index 90b09f9..946b35e 100644
+--- a/gcc/fortran/lang.opt
++++ b/gcc/fortran/lang.opt
 @@ -253,6 +253,12 @@ Wfunction-elimination
  Fortran Warning Var(warn_function_elimination) LangEnabledBy(Fortran,Wextra)
  Warn about function call elimination.
@@ -3818,10 +3836,10 @@ index 90b09f99f7..946b35e693 100644
  fopenacc
  Fortran LTO
  ; Documented in C
-diff --git c/gcc/fortran/match.h w/gcc/fortran/match.h
-index ac47d992f4..c680cac689 100644
---- c/gcc/fortran/match.h
-+++ w/gcc/fortran/match.h
+diff --git a/gcc/fortran/match.h b/gcc/fortran/match.h
+index ac47d99..c680cac 100644
+--- a/gcc/fortran/match.h
++++ b/gcc/fortran/match.h
 @@ -264,6 +264,17 @@ match gfc_match_target (void);
  match gfc_match_value (void);
  match gfc_match_volatile (void);
@@ -3840,10 +3858,10 @@ index ac47d992f4..c680cac689 100644
  /* decl.c.  */
  
  /* Fortran 2003 c interop.
-diff --git c/gcc/fortran/options.c w/gcc/fortran/options.c
-index 02970d5906..9c607376f8 100644
---- c/gcc/fortran/options.c
-+++ w/gcc/fortran/options.c
+diff --git a/gcc/fortran/options.c b/gcc/fortran/options.c
+index 02970d5..9c60737 100644
+--- a/gcc/fortran/options.c
++++ b/gcc/fortran/options.c
 @@ -154,6 +154,17 @@ gfc_init_options (unsigned int decoded_options_count,
    gfc_option.fpe_summary = GFC_FPE_INVALID | GFC_FPE_DENORMAL
  			   | GFC_FPE_ZERO | GFC_FPE_OVERFLOW
@@ -3917,10 +3935,10 @@ index 02970d5906..9c607376f8 100644
      case OPT_static_libgfortran:
  #ifndef HAVE_LD_STATIC_DYNAMIC
        gfc_fatal_error ("%<-static-libgfortran%> is not supported in this "
-diff --git c/gcc/fortran/parse.c w/gcc/fortran/parse.c
-index 66d84b4118..7d74de90ef 100644
---- c/gcc/fortran/parse.c
-+++ w/gcc/fortran/parse.c
+diff --git a/gcc/fortran/parse.c b/gcc/fortran/parse.c
+index 66d84b4..7d74de9 100644
+--- a/gcc/fortran/parse.c
++++ b/gcc/fortran/parse.c
 @@ -1065,6 +1065,69 @@ decode_omp_directive (void)
    return ST_GET_FCN_CHARACTERISTICS;
  }
@@ -4161,10 +4179,10 @@ index 66d84b4118..7d74de90ef 100644
  	default:
  	  return st;
  	}
-diff --git c/gcc/fortran/parse.h w/gcc/fortran/parse.h
-index 800f2f4411..1b19037c4a 100644
---- c/gcc/fortran/parse.h
-+++ w/gcc/fortran/parse.h
+diff --git a/gcc/fortran/parse.h b/gcc/fortran/parse.h
+index 800f2f4..1b19037 100644
+--- a/gcc/fortran/parse.h
++++ b/gcc/fortran/parse.h
 @@ -30,7 +30,8 @@ enum gfc_compile_state
    COMP_DERIVED_CONTAINS, COMP_BLOCK, COMP_ASSOCIATE, COMP_IF,
    COMP_STRUCTURE, COMP_UNION, COMP_MAP,
@@ -4175,10 +4193,10 @@ index 800f2f4411..1b19037c4a 100644
  };
  
  /* Stack element for the current compilation state.  These structures
-diff --git c/gcc/fortran/resolve.c w/gcc/fortran/resolve.c
-index afa4e5c2cc..2ee7313dc6 100644
---- c/gcc/fortran/resolve.c
-+++ w/gcc/fortran/resolve.c
+diff --git a/gcc/fortran/resolve.c b/gcc/fortran/resolve.c
+index afa4e5c..2ee7313 100644
+--- a/gcc/fortran/resolve.c
++++ b/gcc/fortran/resolve.c
 @@ -10414,7 +10414,13 @@ gfc_resolve_blocks (gfc_code *b, gfc_namespace *ns)
  	case EXEC_OMP_TEAMS_DISTRIBUTE_SIMD:
  	case EXEC_OMP_WORKSHARE:
@@ -4228,10 +4246,10 @@ index afa4e5c2cc..2ee7313dc6 100644
    /* If we have come this far we can apply default-initializers, as
       described in 14.7.5, to those variables that have not already
       been assigned one.  */
-diff --git c/gcc/fortran/scanner.c w/gcc/fortran/scanner.c
-index e54d483baf..e0a43f0dce 100644
---- c/gcc/fortran/scanner.c
-+++ w/gcc/fortran/scanner.c
+diff --git a/gcc/fortran/scanner.c b/gcc/fortran/scanner.c
+index e54d483..e0a43f0 100644
+--- a/gcc/fortran/scanner.c
++++ b/gcc/fortran/scanner.c
 @@ -54,10 +54,14 @@ along with GCC; see the file COPYING3.  If not see
  gfc_directorylist *include_dirs, *intrinsic_modules_dirs;
  
@@ -4532,10 +4550,10 @@ index e54d483baf..e0a43f0dce 100644
        c = next_char ();
        if (c == '0' || c == ' ' || c == '\n')
  	goto not_continuation;
-diff --git c/gcc/fortran/st.c w/gcc/fortran/st.c
-index ade2fce06a..d0cb9406cf 100644
---- c/gcc/fortran/st.c
-+++ w/gcc/fortran/st.c
+diff --git a/gcc/fortran/st.c b/gcc/fortran/st.c
+index ade2fce..d0cb940 100644
+--- a/gcc/fortran/st.c
++++ b/gcc/fortran/st.c
 @@ -272,7 +272,14 @@ gfc_free_statement (gfc_code *p)
      case EXEC_OMP_TASKWAIT:
      case EXEC_OMP_TASKYIELD:
@@ -4552,10 +4570,10 @@ index ade2fce06a..d0cb9406cf 100644
      default:
        gfc_internal_error ("gfc_free_statement(): Bad statement");
      }
-diff --git c/gcc/fortran/symbol.c w/gcc/fortran/symbol.c
-index 2b8f86e088..ab06b1cb2a 100644
---- c/gcc/fortran/symbol.c
-+++ w/gcc/fortran/symbol.c
+diff --git a/gcc/fortran/symbol.c b/gcc/fortran/symbol.c
+index 2b8f86e..ab06b1c 100644
+--- a/gcc/fortran/symbol.c
++++ b/gcc/fortran/symbol.c
 @@ -434,8 +434,11 @@ check_conflict (symbol_attribute *attr, const char *name, locus *where)
    static const char *oacc_declare_copyin = "OACC DECLARE COPYIN";
    static const char *oacc_declare_create = "OACC DECLARE CREATE";
@@ -4710,10 +4728,10 @@ index 2b8f86e088..ab06b1cb2a 100644
    if (src->result && !gfc_add_result (dest, NULL, where))
      goto fail;
    if (src->entry)
-diff --git c/gcc/fortran/trans-common.c w/gcc/fortran/trans-common.c
-index debdbd98ac..314c326dd9 100644
---- c/gcc/fortran/trans-common.c
-+++ w/gcc/fortran/trans-common.c
+diff --git a/gcc/fortran/trans-common.c b/gcc/fortran/trans-common.c
+index debdbd9..314c326 100644
+--- a/gcc/fortran/trans-common.c
++++ b/gcc/fortran/trans-common.c
 @@ -126,6 +126,9 @@ static segment_info * current_segment;
     tree is the identifier.  */
  static std::map<tree, tree> gfc_map_of_all_commons;
@@ -4812,10 +4830,10 @@ index debdbd98ac..314c326dd9 100644
  
        if (com->omp_declare_target_link)
  	DECL_ATTRIBUTES (decl)
-diff --git c/gcc/fortran/trans-decl.c w/gcc/fortran/trans-decl.c
-index 9538dee573..a42275180f 100644
---- c/gcc/fortran/trans-decl.c
-+++ w/gcc/fortran/trans-decl.c
+diff --git a/gcc/fortran/trans-decl.c b/gcc/fortran/trans-decl.c
+index 9538dee..a422751 100644
+--- a/gcc/fortran/trans-decl.c
++++ b/gcc/fortran/trans-decl.c
 @@ -31,6 +31,7 @@ along with GCC; see the file COPYING3.  If not see
  #include "trans.h"
  #include "stringpool.h"
@@ -4964,10 +4982,10 @@ index 9538dee573..a42275180f 100644
  
    current_procedure_symbol = previous_procedure_symbol;
  }
-diff --git c/gcc/fortran/trans-stmt.h w/gcc/fortran/trans-stmt.h
-index 9cb0f68a63..135b26357b 100644
---- c/gcc/fortran/trans-stmt.h
-+++ w/gcc/fortran/trans-stmt.h
+diff --git a/gcc/fortran/trans-stmt.h b/gcc/fortran/trans-stmt.h
+index 9cb0f68..135b263 100644
+--- a/gcc/fortran/trans-stmt.h
++++ b/gcc/fortran/trans-stmt.h
 @@ -73,6 +73,11 @@ void gfc_trans_omp_declare_simd (gfc_namespace *);
  tree gfc_trans_oacc_directive (gfc_code *);
  tree gfc_trans_oacc_declare (gfc_namespace *);
@@ -4980,10 +4998,10 @@ index 9cb0f68a63..135b26357b 100644
  /* trans-io.c */
  tree gfc_trans_open (gfc_code *);
  tree gfc_trans_close (gfc_code *);
-diff --git c/gcc/fortran/trans.c w/gcc/fortran/trans.c
-index e7844c9bf1..d057ba22c0 100644
---- c/gcc/fortran/trans.c
-+++ w/gcc/fortran/trans.c
+diff --git a/gcc/fortran/trans.c b/gcc/fortran/trans.c
+index e7844c9..d057ba2 100644
+--- a/gcc/fortran/trans.c
++++ b/gcc/fortran/trans.c
 @@ -2097,7 +2097,15 @@ trans_code (gfc_code * code, tree cond)
  	case EXEC_OMP_WORKSHARE:
  	  res = gfc_trans_omp_directive (code);
@@ -5001,10 +5019,10 @@ index e7844c9bf1..d057ba22c0 100644
  	case EXEC_OACC_CACHE:
  	case EXEC_OACC_WAIT:
  	case EXEC_OACC_UPDATE:
-diff --git c/gcc/fortran/types.def w/gcc/fortran/types.def
-index b96e292fc8..ce1905d481 100644
---- c/gcc/fortran/types.def
-+++ w/gcc/fortran/types.def
+diff --git a/gcc/fortran/types.def b/gcc/fortran/types.def
+index b96e292..ce1905d 100644
+--- a/gcc/fortran/types.def
++++ b/gcc/fortran/types.def
 @@ -90,6 +90,7 @@ DEF_FUNCTION_TYPE_1 (BT_FN_VOID_BOOL, BT_VOID, BT_BOOL)
  DEF_FUNCTION_TYPE_1 (BT_FN_BOOL_INT, BT_BOOL, BT_INT)
  
@@ -5021,10 +5039,10 @@ index b96e292fc8..ce1905d481 100644
  DEF_FUNCTION_TYPE_7 (BT_FN_VOID_OMPFN_PTR_UINT_LONG_LONG_LONG_UINT,
                       BT_VOID, BT_PTR_FN_VOID_PTR, BT_PTR, BT_UINT,
  		     BT_LONG, BT_LONG, BT_LONG, BT_UINT)
-diff --git c/gcc/gcc.c w/gcc/gcc.c
-index 4f57765b01..a3ede694f8 100644
---- c/gcc/gcc.c
-+++ w/gcc/gcc.c
+diff --git a/gcc/gcc.c b/gcc/gcc.c
+index 4f57765..a3ede69 100644
+--- a/gcc/gcc.c
++++ b/gcc/gcc.c
 @@ -1032,6 +1032,9 @@ proper position among the other output files.  */
  /* We pass any -flto flags on to the linker, which is expected
     to understand them.  In practice, this means it had better be collect2.  */
@@ -5062,10 +5080,10 @@ index 4f57765b01..a3ede694f8 100644
  
  #ifndef LINK_LIBGCC_SPEC
  /* Generate -L options for startfile prefix list.  */
-diff --git c/gcc/gimplify.c w/gcc/gimplify.c
-index 98408b981d..b04d59f5ee 100644
---- c/gcc/gimplify.c
-+++ w/gcc/gimplify.c
+diff --git a/gcc/gimplify.c b/gcc/gimplify.c
+index 98408b9..b04d59f 100644
+--- a/gcc/gimplify.c
++++ b/gcc/gimplify.c
 @@ -7237,14 +7237,24 @@ omp_notice_variable (struct gimplify_omp_ctx *ctx, tree decl, bool in_code)
    if (is_global_var (decl))
      {
@@ -5091,11 +5109,11 @@ index 98408b981d..b04d59f5ee 100644
  	    return omp_notice_threadprivate_variable (ctx, decl, value);
  	}
  
-diff --git c/gcc/hls-builtins.def w/gcc/hls-builtins.def
+diff --git a/gcc/hls-builtins.def b/gcc/hls-builtins.def
 new file mode 100644
-index 0000000000..ab8a85eb9f
+index 0000000..ab8a85e
 --- /dev/null
-+++ w/gcc/hls-builtins.def
++++ b/gcc/hls-builtins.def
 @@ -0,0 +1,8 @@
 +DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_BARRIER, "__extls_hls_barrier",
 +		  BT_FN_VOID_INT, ATTR_NOTHROW_LIST)
@@ -5105,11 +5123,11 @@ index 0000000000..ab8a85eb9f
 +		  BT_FN_VOID_INT, ATTR_NOTHROW_LIST)
 +DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_SINGLE_NOWAIT, "__extls_hls_single_nowait",
 +		  BT_FN_BOOL_INT, ATTR_NOTHROW_LIST)
-diff --git c/gcc/mpc-pass.c w/gcc/mpc-pass.c
+diff --git a/gcc/mpc-pass.c b/gcc/mpc-pass.c
 new file mode 100644
-index 0000000000..6fc56ff6ad
+index 0000000..6fc56ff
 --- /dev/null
-+++ w/gcc/mpc-pass.c
++++ b/gcc/mpc-pass.c
 @@ -0,0 +1,420 @@
 +#include "config.h"
 +#include "system.h"
@@ -5531,10 +5549,10 @@ index 0000000000..6fc56ff6ad
 +
 +
 +
-diff --git c/gcc/omp-low.c w/gcc/omp-low.c
-index f9ab91aafa..fc894df54a 100644
---- c/gcc/omp-low.c
-+++ w/gcc/omp-low.c
+diff --git a/gcc/omp-low.c b/gcc/omp-low.c
+index f9ab91a..fc894df 100644
+--- a/gcc/omp-low.c
++++ b/gcc/omp-low.c
 @@ -8026,7 +8026,11 @@ lower_omp_critical (gimple_stmt_iterator *gsi_p, omp_context *ctx)
  	  DECL_COMMON (decl) = 1;
  	  DECL_ARTIFICIAL (decl) = 1;
@@ -5548,10 +5566,10 @@ index f9ab91aafa..fc894df54a 100644
  	  varpool_node::finalize_decl (decl);
  
  	  critical_name_mutexes->put (name, decl);
-diff --git c/gcc/print-tree.c w/gcc/print-tree.c
-index 81b66a1891..12da6a126c 100644
---- c/gcc/print-tree.c
-+++ w/gcc/print-tree.c
+diff --git a/gcc/print-tree.c b/gcc/print-tree.c
+index 81b66a1..12da6a1 100644
+--- a/gcc/print-tree.c
++++ b/gcc/print-tree.c
 @@ -453,9 +453,48 @@ print_node (FILE *file, const char *prefix, tree node, int indent,
        if ((code == VAR_DECL || code == PARM_DECL) && DECL_READ_P (node))
  	fputs (" read", file);
@@ -5602,10 +5620,10 @@ index 81b66a1891..12da6a126c 100644
  	}
  
        if (CODE_CONTAINS_STRUCT (code, TS_DECL_COMMON))
-diff --git c/gcc/rtl.h w/gcc/rtl.h
-index b4a906f918..d4e3d42056 100644
---- c/gcc/rtl.h
-+++ w/gcc/rtl.h
+diff --git a/gcc/rtl.h b/gcc/rtl.h
+index b4a906f..d4e3d42 100644
+--- a/gcc/rtl.h
++++ b/gcc/rtl.h
 @@ -2731,28 +2731,55 @@ do {								        \
  #define SYMBOL_FLAG_SMALL	(1 << 2)
  #define SYMBOL_REF_SMALL_P(RTX) \
@@ -5668,10 +5686,10 @@ index b4a906f918..d4e3d42056 100644
  
  /* If SYMBOL_REF_HAS_BLOCK_INFO_P (RTX), this is the object_block
     structure to which the symbol belongs, or NULL if it has not been
-diff --git c/gcc/stor-layout.c w/gcc/stor-layout.c
-index 5d6f2e0166..e2f74f0981 100644
---- c/gcc/stor-layout.c
-+++ w/gcc/stor-layout.c
+diff --git a/gcc/stor-layout.c b/gcc/stor-layout.c
+index 5d6f2e0..e2f74f0 100644
+--- a/gcc/stor-layout.c
++++ b/gcc/stor-layout.c
 @@ -750,6 +750,7 @@ layout_decl (tree decl, unsigned int known_align)
    /* Evaluate nonconstant size only once, either now or as soon as safe.  */
    if (DECL_SIZE (decl) != 0 && TREE_CODE (DECL_SIZE (decl)) != INTEGER_CST)
@@ -5680,10 +5698,10 @@ index 5d6f2e0166..e2f74f0981 100644
    if (DECL_SIZE_UNIT (decl) != 0
        && TREE_CODE (DECL_SIZE_UNIT (decl)) != INTEGER_CST)
      DECL_SIZE_UNIT (decl) = variable_size (DECL_SIZE_UNIT (decl));
-diff --git c/gcc/tree-core.h w/gcc/tree-core.h
-index fbed0c379b..23892349b1 100644
---- c/gcc/tree-core.h
-+++ w/gcc/tree-core.h
+diff --git a/gcc/tree-core.h b/gcc/tree-core.h
+index fbed0c3..2389234 100644
+--- a/gcc/tree-core.h
++++ b/gcc/tree-core.h
 @@ -1764,7 +1764,9 @@ struct GTY(()) tree_decl_with_vis {
   /* Used for FUNCTION_DECL, VAR_DECL and in C++ for TYPE_DECL.  */
   ENUM_BITFIELD(symbol_visibility) visibility : 2;
@@ -5695,10 +5713,10 @@ index fbed0c379b..23892349b1 100644
   /* Belong to FUNCTION_DECL exclusively.  */
   unsigned init_priority_p : 1;
   /* Used by C++ only.  Might become a generic decl flag.  */
-diff --git c/gcc/tree-ssa-dse.c w/gcc/tree-ssa-dse.c
-index aa998f416c..2cc9f8a6ed 100644
---- c/gcc/tree-ssa-dse.c
-+++ w/gcc/tree-ssa-dse.c
+diff --git a/gcc/tree-ssa-dse.c b/gcc/tree-ssa-dse.c
+index aa998f4..2cc9f8a 100644
+--- a/gcc/tree-ssa-dse.c
++++ b/gcc/tree-ssa-dse.c
 @@ -343,7 +343,7 @@ maybe_trim_constructor_store (ao_ref *ref, sbitmap live, gimple *stmt)
  
    /* This is the only case we currently handle.  It actually seems to
@@ -5708,10 +5726,10 @@ index aa998f416c..2cc9f8a6ed 100644
  
    int head_trim = 0;
    int tail_trim = 0;
-diff --git c/gcc/tree-ssa-operands.c w/gcc/tree-ssa-operands.c
-index 899d47ff58..d0497d4560 100644
---- c/gcc/tree-ssa-operands.c
-+++ w/gcc/tree-ssa-operands.c
+diff --git a/gcc/tree-ssa-operands.c b/gcc/tree-ssa-operands.c
+index 899d47f..d0497d4 100644
+--- a/gcc/tree-ssa-operands.c
++++ b/gcc/tree-ssa-operands.c
 @@ -364,12 +364,10 @@ finalize_ssa_uses (struct function *fn, gimple *stmt)
    if (build_vuse != NULL_TREE)
      {
@@ -5729,10 +5747,10 @@ index 899d47ff58..d0497d4560 100644
        build_uses.safe_insert (0, gimple_vuse_ptr (stmt));
      }
  
-diff --git c/gcc/tree.c w/gcc/tree.c
-index 73102c4e75..ac1907ddde 100644
---- c/gcc/tree.c
-+++ w/gcc/tree.c
+diff --git a/gcc/tree.c b/gcc/tree.c
+index 73102c4..ac1907d 100644
+--- a/gcc/tree.c
++++ b/gcc/tree.c
 @@ -3387,23 +3387,38 @@ staticp (tree arg)
        return arg;
  
@@ -5896,10 +5914,10 @@ index 73102c4e75..ac1907ddde 100644
 +	return invalid;
 +}
 +/* MPC END */
-diff --git c/gcc/tree.h w/gcc/tree.h
-index d650511c66..40e4544ffa 100644
---- c/gcc/tree.h
-+++ w/gcc/tree.h
+diff --git a/gcc/tree.h b/gcc/tree.h
+index d650511..40e4544 100644
+--- a/gcc/tree.h
++++ b/gcc/tree.h
 @@ -2860,6 +2860,13 @@ extern void decl_value_expr_insert (tree, tree);
     thread-local storage.  */
  #define DECL_THREAD_LOCAL_P(NODE) \
@@ -5914,10 +5932,10 @@ index d650511c66..40e4544ffa 100644
  
  /* In a non-local VAR_DECL with static storage duration, true if the
     variable has an initialization priority.  If false, the variable
-diff --git c/gcc/varasm.c w/gcc/varasm.c
-index cb43248ec4..215327dc2e 100644
---- c/gcc/varasm.c
-+++ w/gcc/varasm.c
+diff --git a/gcc/varasm.c b/gcc/varasm.c
+index cb43248..55d8e27 100644
+--- a/gcc/varasm.c
++++ b/gcc/varasm.c
 @@ -2140,11 +2140,37 @@ assemble_variable_contents (tree decl, const char *name,
        if (DECL_INITIAL (decl)
  	  && DECL_INITIAL (decl) != error_mark_node
@@ -5935,7 +5953,7 @@ index cb43248ec4..215327dc2e 100644
 +		  }
 +		  else
 +		  {
-+			  if( initializer_constant_valid_p (DECL_INITIAL (decl), TREE_TYPE (DECL_INITIAL (decl))) ) 
++			  if( initializer_constant_valid_p (DECL_INITIAL (decl), TREE_TYPE (DECL_INITIAL (decl))) || TREE_CODE(DECL_INITIAL(decl)) == CONSTRUCTOR )  
 +			  {
 +				/* Output the actual data.  */
 +				output_constant (DECL_INITIAL (decl),
@@ -5972,10 +5990,10 @@ index cb43248ec4..215327dc2e 100644
    return kind;
  }
  
-diff --git c/libcpp/mkdeps.c w/libcpp/mkdeps.c
-index e506200627..cec787dd42 100644
---- c/libcpp/mkdeps.c
-+++ w/libcpp/mkdeps.c
+diff --git a/libcpp/mkdeps.c b/libcpp/mkdeps.c
+index e506200..cec787d 100644
+--- a/libcpp/mkdeps.c
++++ b/libcpp/mkdeps.c
 @@ -255,6 +255,15 @@ deps_add_default_target (struct deps *d, const char *tgt)
  void
  deps_add_dep (struct deps *d, const char *t)
@@ -5992,10 +6010,10 @@ index e506200627..cec787dd42 100644
    t = munge (apply_vpath (d, t));  /* Also makes permanent copy.  */
  
    if (d->ndeps == d->deps_size)
-diff --git c/libgfortran/Makefile.am w/libgfortran/Makefile.am
-index 295a2d4356..5a9f537582 100644
---- c/libgfortran/Makefile.am
-+++ w/libgfortran/Makefile.am
+diff --git a/libgfortran/Makefile.am b/libgfortran/Makefile.am
+index 295a2d4..5a9f537 100644
+--- a/libgfortran/Makefile.am
++++ b/libgfortran/Makefile.am
 @@ -38,12 +38,15 @@ LTLDFLAGS = $(shell $(SHELL) $(top_srcdir)/../libtool-ldflags $(LDFLAGS)) \
  
  toolexeclib_LTLIBRARIES = libgfortran.la
@@ -6077,10 +6095,10 @@ index 295a2d4356..5a9f537582 100644
  endif
  
  I_M4_DEPS=m4/iparm.m4
-diff --git c/libgfortran/Makefile.in w/libgfortran/Makefile.in
-index 6e9612df8b..49c0ea8310 100644
---- c/libgfortran/Makefile.in
-+++ w/libgfortran/Makefile.in
+diff --git a/libgfortran/Makefile.in b/libgfortran/Makefile.in
+index 6e9612d..49c0ea8 100644
+--- a/libgfortran/Makefile.in
++++ b/libgfortran/Makefile.in
 @@ -1,8 +1,8 @@
 -# Makefile.in generated by automake 1.15.1 from Makefile.am.
 +# Makefile.in generated by automake 1.9.6 from Makefile.am.
@@ -13963,10 +13981,10 @@ index 6e9612df8b..49c0ea8310 100644
  # Tell versions [3.59,3.63) of GNU make to not export all variables.
  # Otherwise a system limit (for SysV at least) may be exceeded.
  .NOEXPORT:
-diff --git c/libgfortran/aclocal.m4 w/libgfortran/aclocal.m4
-index 7604f56fc3..880243a1b0 100644
---- c/libgfortran/aclocal.m4
-+++ w/libgfortran/aclocal.m4
+diff --git a/libgfortran/aclocal.m4 b/libgfortran/aclocal.m4
+index 7604f56..880243a 100644
+--- a/libgfortran/aclocal.m4
++++ b/libgfortran/aclocal.m4
 @@ -1,7 +1,7 @@
 -# generated automatically by aclocal 1.15.1 -*- Autoconf -*-
 -
@@ -15403,10 +15421,10 @@ index 7604f56fc3..880243a1b0 100644
  AC_SUBST([am__tar])
  AC_SUBST([am__untar])
  ]) # _AM_PROG_TAR
-diff --git c/libgfortran/config.h.in w/libgfortran/config.h.in
-index 4478639998..01a7506cb9 100644
---- c/libgfortran/config.h.in
-+++ w/libgfortran/config.h.in
+diff --git a/libgfortran/config.h.in b/libgfortran/config.h.in
+index 4478639..01a7506 100644
+--- a/libgfortran/config.h.in
++++ b/libgfortran/config.h.in
 @@ -874,6 +874,9 @@
     */
  #undef LT_OBJDIR
@@ -15417,10 +15435,10 @@ index 4478639998..01a7506cb9 100644
  /* Define to the address where bug reports for this package should be sent. */
  #undef PACKAGE_BUGREPORT
  
-diff --git c/libgfortran/configure w/libgfortran/configure
-index 60867b93d0..faee069801 100755
---- c/libgfortran/configure
-+++ w/libgfortran/configure
+diff --git a/libgfortran/configure b/libgfortran/configure
+index 60867b9..faee069 100755
+--- a/libgfortran/configure
++++ b/libgfortran/configure
 @@ -632,9 +632,7 @@ ac_header_list=
  ac_func_list=
  ac_c_werror_flag=
@@ -16981,10 +16999,10 @@ index 60867b93d0..faee069801 100755
   ;;
      "libtool":C)
  
-diff --git c/libgfortran/gfortran.map w/libgfortran/gfortran.map
-index 2b2243b4fd..0fb741cdcf 100644
---- c/libgfortran/gfortran.map
-+++ w/libgfortran/gfortran.map
+diff --git a/libgfortran/gfortran.map b/libgfortran/gfortran.map
+index 2b2243b..0fb741c 100644
+--- a/libgfortran/gfortran.map
++++ b/libgfortran/gfortran.map
 @@ -122,6 +122,7 @@ GFORTRAN_8 {
      _gfortran_chmod_func;
      _gfortran_chmod_i4_sub;
@@ -17009,10 +17027,10 @@ index 2b2243b4fd..0fb741cdcf 100644
    local:
      *;
  };
-diff --git c/libgfortran/io/unit.c w/libgfortran/io/unit.c
-index c0dbfad2c7..0cde43aed7 100644
---- c/libgfortran/io/unit.c
-+++ w/libgfortran/io/unit.c
+diff --git a/libgfortran/io/unit.c b/libgfortran/io/unit.c
+index c0dbfad..0cde43a 100644
+--- a/libgfortran/io/unit.c
++++ b/libgfortran/io/unit.c
 @@ -28,6 +28,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
  #include "format.h"
  #include "unix.h"
@@ -17064,10 +17082,10 @@ index c0dbfad2c7..0cde43aed7 100644
  
  /* Free a previously allocated newunit= unit number.  unit_lock must
     be held when calling.  */
-diff --git c/libgfortran/libgfortran.h w/libgfortran/libgfortran.h
-index c0db96f02a..744fb49f16 100644
---- c/libgfortran/libgfortran.h
-+++ w/libgfortran/libgfortran.h
+diff --git a/libgfortran/libgfortran.h b/libgfortran/libgfortran.h
+index c0db96f..744fb49 100644
+--- a/libgfortran/libgfortran.h
++++ b/libgfortran/libgfortran.h
 @@ -886,11 +886,11 @@ internal_proto(flush_all_units);
  
  /* io.c */
@@ -17084,10 +17102,10 @@ index c0db96f02a..744fb49f16 100644
  
  extern int unit_to_fd (int);
  internal_proto(unit_to_fd);
-diff --git c/libgfortran/runtime/main.c w/libgfortran/runtime/main.c
-index 76eaf2e113..7934e93197 100644
---- c/libgfortran/runtime/main.c
-+++ w/libgfortran/runtime/main.c
+diff --git a/libgfortran/runtime/main.c b/libgfortran/runtime/main.c
+index 76eaf2e..7934e93 100644
+--- a/libgfortran/runtime/main.c
++++ b/libgfortran/runtime/main.c
 @@ -66,8 +66,9 @@ init (void)
  {
    /* Must be first */
@@ -17108,10 +17126,10 @@ index 76eaf2e113..7934e93197 100644
 +  //Deported to mpc with TLS context
 +  //close_units ();
  }
-diff --git c/libstdc++-v3/include/bits/regex_executor.tcc w/libstdc++-v3/include/bits/regex_executor.tcc
-index c69ebda61c..0865db5507 100644
---- c/libstdc++-v3/include/bits/regex_executor.tcc
-+++ w/libstdc++-v3/include/bits/regex_executor.tcc
+diff --git a/libstdc++-v3/include/bits/regex_executor.tcc b/libstdc++-v3/include/bits/regex_executor.tcc
+index c69ebda..0865db5 100644
+--- a/libstdc++-v3/include/bits/regex_executor.tcc
++++ b/libstdc++-v3/include/bits/regex_executor.tcc
 @@ -124,10 +124,10 @@ namespace __detail
  	    break;
  	  std::fill_n(_M_states._M_visited_states.get(), _M_nfa.size(), false);
@@ -17126,3 +17144,20 @@ index c69ebda61c..0865db5507 100644
  	    }
  	  if (__match_mode == _Match_mode::_Prefix)
  	    __ret |= _M_has_sol;
+diff --git a/libstdc++-v3/include/std/thread b/libstdc++-v3/include/std/thread
+index 4eb744d..ecfbdd7 100644
+--- a/libstdc++-v3/include/std/thread
++++ b/libstdc++-v3/include/std/thread
+@@ -343,7 +343,11 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+       // programs, because this_thread::get_id() != thread::id{} must be true.
+       // We know that pthread_t is an integral type in the GNU C library.
+       if (!__gthread_active_p())
+-	return thread::id(1);
++#ifdef __MPC_PTHREAD_API_H_
++    return thread::id((void*)1);
++#else
++    return thread::id(1);
++#endif
+ #endif
+       return thread::id(__gthread_self());
+     }
