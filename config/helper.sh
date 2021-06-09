@@ -100,7 +100,7 @@ assert_package()
 #
 package_download_address()
 {
-	_config_file_clean "${SOURCES_CONF}" | grep "$1" | cut -d " " -f 2 | sed "s/VERSION/${2}/g"
+	_config_file_clean "${SOURCES_CONF}" | grep "^$1" | cut -d " " -f 2 | sed "s/VERSION/${2}/g"
 }
 
 # Package Filename

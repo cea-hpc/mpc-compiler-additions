@@ -1,540 +1,248 @@
+default:
+  before_script:
+      # Fix git timestamp mismatch in autotools
+      - cd ${CI_PROJECT_DIR} && (find . | xargs touch -r ./configure)
+
+
+
 #Available stages to run in 'automatic' processing:
 # For convenience, implicit stages have been made explicit here...
 stages:
-  - Initialization
-  - Setup
-  - Privatization Tests 7.3.0
-  - Privatization Tests 7.5.0
-  - Privatization Tests 8.1.0
-  - Privatization Tests 8.2.0
-  - Privatization Tests 8.3.0
-  - Privatization Tests 8.4.0
-  - Privatization Tests 9.1.0
-  - Privatization Tests 9.2.0
-  - Privatization Tests 9.3.0
-  - Privatization Tests 10.1.0
-  - Privatization Tests 10.2.0
-  - Workshare Tests
+  - Validation
   - Finalization
-
-.run_by_main: &run_by_main
-  only:
-  - devel
-  - master
-  - merge_requests
-  - web
 
 ############################
 ##### EXTRA ACTIONS ########
 ############################
-#these actions should herit from implicit stages ".pre" and ".post"
-
-# pre-actions to cleanup the machine before the run
-# this job will be run in ANY pipeline -> ensure to enable all proper tags
-# CAUTION : Otherwise tag-specific runners won't allow to run the whole pipeline because
-# both .pre and .post cannot be scheduled (thus, why not using user-defined pre and post
-# to avoid them to be run systematically ?)
-Env Sanitize:
-  <<: *run_by_main
-  stage: Initialization
-  script:
-    - mkdir -p $HOME/GL_$CI_PIPELINE_ID/{build_730,build_750,build_810,build_820,build_830,build_840,build_910,build_920,build_930,build_1010,build_1020,build_730-nogcc}
-    - echo "Environment Cleaned !"
 
 # post-actions to cleanup the machine after the run
 # The last line may not be necessary as a pipeline start run something like a "git clean" before running
 # This implies a probable issue when multiple piplines are run concurrently on the same project :(
 # Please read the CAUTION above !
 Artifact Deletion:
-  <<: *run_by_main
   stage: Finalization
   allow_failure: true
   when: on_success
   script:
     - $HOME/clean_old_pipelines.sh
-    - rm -rf $HOME/$CI_PIPELINE_ID/
+    - rm -rf $HOME/GL_$CI_PIPELINE_ID/
 
 ############################
 ####### BUILD STAGE ########
 ############################
 
-Build-nogcc:
-  <<: *run_by_main
-  stage: Setup
+nogcc:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:11
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_730-nogcc
-  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_730-nogcc --enable-debug --enable-color --disable-gcc
-  - make -j8
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --disable-gcc --prefix=/INSTALL
+    - make -j8 install
 
-Build 7.3.0 priv:
-  <<: *run_by_main
-  stage: Setup
+
+7.3.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:9
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_730
-  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_730 --enable-debug --enable-color --gcc-version=7.3.0
-  - make -j8
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=7.3.0 --prefix=/INSTALL
+    - make -j8 install
+    - make check
 
-Build 7.5.0 priv:
-  <<: *run_by_main
-  stage: Setup
+
+7.4.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:9
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_750
-  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_750 --enable-debug --enable-color --disable-workshare --gcc-version=7.5.0
-  - make -j8
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=7.4.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
 
 
-Build 8.1.0 priv:
-  <<: *run_by_main
-  stage: Setup
+7.5.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:9
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_810
-  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_810 --enable-debug --enable-color --disable-workshare --gcc-version=8.1.0
-  - make -j8
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=7.5.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
 
-Build 8.2.0 priv:
-  <<: *run_by_main
-  stage: Setup
+
+8.1.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:9
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_820
-  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_820 --enable-debug --enable-color --disable-workshare --gcc-version=8.2.0
-  - make -j8
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=8.1.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
 
-Build 8.3.0 priv:
-  <<: *run_by_main
-  stage: Setup
+8.2.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:9
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_830
-  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_830 --enable-debug --enable-color --disable-workshare --gcc-version=8.3.0
-  - make -j8
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=8.2.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
 
-Build 8.4.0 priv:
-  <<: *run_by_main
-  stage: Setup
+8.3.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:9
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_840
-  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_840 --enable-debug --enable-color --disable-workshare --gcc-version=8.4.0
-  - make -j8
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=8.3.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
 
-Build 9.1.0 priv:
-  <<: *run_by_main
-  stage: Setup
+8.4.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:9
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_910
-  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_910 --enable-debug --enable-color --disable-workshare --gcc-version=9.1.0
-  - make -j8
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=8.4.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
 
-Build 9.2.0 priv:
-  <<: *run_by_main
-  stage: Setup
+9.1.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:9
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_920
-  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_920 --enable-debug --enable-color --disable-workshare --gcc-version=9.2.0
-  - make -j8
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=9.1.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
 
-Build 9.3.0 priv:
-  <<: *run_by_main
-  stage: Setup
+
+9.2.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:9
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_930
-  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_930 --enable-debug --enable-color --disable-workshare --gcc-version=9.3.0
-  - make -j8
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=9.2.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
 
-Build 10.1.0 priv:
-  <<: *run_by_main
-  stage: Setup
+
+9.3.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:9
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_1010
-  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_1010 --enable-debug --enable-color --disable-workshare --gcc-version=10.1.0
-  - make -j8
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=9.3.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
 
-Build 10.2.0 priv:
-  <<: *run_by_main
-  stage: Setup
+10.1.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:11
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_1020
-  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install_1020 --enable-debug --enable-color --disable-workshare --gcc-version=10.2.0
-  - make -j8
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=10.1.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
 
-#################################
-####### PRIV TESTS 7.3.0 ########
-#################################
 
-
-No-privatization:
-  <<: *run_by_main
-  stage: Privatization Tests 7.3.0
+10.2.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:11
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_730/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=10.2.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
 
-With-privatization:
-  <<: *run_by_main
-  stage: Privatization Tests 7.3.0
+10.3.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:11
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_730/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=10.3.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
 
-Compil Wrappers:
-  <<: *run_by_main
-  stage: Privatization Tests 7.3.0
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_730/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
-
-Not supported:
-  <<: *run_by_main
-  stage: Privatization Tests 7.3.0
-  allow_failure: true
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_730/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
-
-#################################
-####### PRIV TESTS 7.5.0 ########
-#################################
-
-
-No-privatization 750:
-  <<: *run_by_main
-  stage: Privatization Tests 7.5.0
+11.1.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:11
   script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_750/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
-
-With-privatization 750:
-  <<: *run_by_main
-  stage: Privatization Tests 7.5.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_750/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
-
-Compil Wrappers 750:
-  <<: *run_by_main
-  stage: Privatization Tests 7.5.0
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_750/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
-
-Not supported 750:
-  <<: *run_by_main
-  stage: Privatization Tests 7.5.0
-  allow_failure: true
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_750/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
-
-#################################
-####### PRIV TESTS 8.1.0 ########
-#################################
-
-
-No-privatization 810:
-  <<: *run_by_main
-  stage: Privatization Tests 8.1.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_810/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
-
-With-privatization 810:
-  <<: *run_by_main
-  stage: Privatization Tests 8.1.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_810/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
-
-Compil Wrappers 810:
-  <<: *run_by_main
-  stage: Privatization Tests 8.1.0
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_810/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
-
-Not supported 810:
-  <<: *run_by_main
-  stage: Privatization Tests 8.1.0
-  allow_failure: true
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_810/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
-
-
-#################################
-####### PRIV TESTS 8.2.0 ########
-#################################
-
-
-No-privatization 820:
-  <<: *run_by_main
-  stage: Privatization Tests 8.2.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_820/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
-
-With-privatization 820:
-  <<: *run_by_main
-  stage: Privatization Tests 8.2.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_820/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
-
-Compil Wrappers 820:
-  <<: *run_by_main
-  stage: Privatization Tests 8.2.0
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_820/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
-
-Not supported 820:
-  <<: *run_by_main
-  stage: Privatization Tests 8.2.0
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_820/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
-
-#################################
-####### PRIV TESTS 8.3.0 ########
-#################################
-
-
-No-privatization 830:
-  <<: *run_by_main
-  stage: Privatization Tests 8.3.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_830/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
-
-With-privatization 830:
-  <<: *run_by_main
-  stage: Privatization Tests 8.3.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_830/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
-
-Compil Wrappers 830:
-  <<: *run_by_main
-  stage: Privatization Tests 8.3.0
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_830/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
-
-Not supported 830:
-  <<: *run_by_main
-  stage: Privatization Tests 8.3.0
-  allow_failure: true
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_830/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
-
-#################################
-####### PRIV TESTS 8.4.0 ########
-#################################
-
-
-No-privatization 840:
-  <<: *run_by_main
-  stage: Privatization Tests 8.4.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_840/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
-
-With-privatization 840:
-  <<: *run_by_main
-  stage: Privatization Tests 8.4.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_840/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
-
-Compil Wrappers 840:
-  <<: *run_by_main
-  stage: Privatization Tests 8.4.0
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_840/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
-
-Not supported 840:
-  <<: *run_by_main
-  stage: Privatization Tests 8.4.0
-  allow_failure: true
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_840/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
-
-#################################
-####### PRIV TESTS 9.1.0 ########
-#################################
-
-
-No-privatization 910:
-  <<: *run_by_main
-  stage: Privatization Tests 9.1.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_910/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
-
-With-privatization 910:
-  <<: *run_by_main
-  stage: Privatization Tests 9.1.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_910/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
-
-Compil Wrappers 910:
-  <<: *run_by_main
-  stage: Privatization Tests 9.1.0
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_910/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
-
-Not supported 910:
-  <<: *run_by_main
-  stage: Privatization Tests 9.1.0
-  allow_failure: true
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_910/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
-
-#################################
-####### PRIV TESTS 9.2.0 ########
-#################################
-
-No-privatization 920:
-  <<: *run_by_main
-  stage: Privatization Tests 9.2.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_920/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
-
-With-privatization 920:
-  <<: *run_by_main
-  stage: Privatization Tests 9.2.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_920/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
-
-Compil Wrappers 920:
-  <<: *run_by_main
-  stage: Privatization Tests 9.2.0
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_920/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
-
-Not supported 920:
-  <<: *run_by_main
-  stage: Privatization Tests 9.2.0
-  allow_failure: true
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_920/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
-
-#################################
-####### PRIV TESTS 9.3.0 ########
-#################################
-
-No-privatization 930:
-  <<: *run_by_main
-  stage: Privatization Tests 9.3.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_930/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
-
-With-privatization 930:
-  <<: *run_by_main
-  stage: Privatization Tests 9.3.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_930/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
-
-Compil Wrappers 930:
-  <<: *run_by_main
-  stage: Privatization Tests 9.3.0
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_930/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
-
-Not supported 930:
-  <<: *run_by_main
-  stage: Privatization Tests 9.3.0
-  allow_failure: true
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_930/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
-
-##################################
-####### PRIV TESTS 10.1.0 ########
-##################################
-
-No-privatization 1010:
-  <<: *run_by_main
-  stage: Privatization Tests 10.1.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_1010/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
-
-With-privatization 1010:
-  <<: *run_by_main
-  stage: Privatization Tests 10.1.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_1010/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
-
-Compil Wrappers 1010:
-  <<: *run_by_main
-  stage: Privatization Tests 10.1.0
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_1010/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
-
-Not supported 1010:
-  <<: *run_by_main
-  stage: Privatization Tests 10.1.0
-  allow_failure: true
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_1010/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
-
-##################################
-####### PRIV TESTS 10.2.0 ########
-##################################
-
-No-privatization 1020:
-  <<: *run_by_main
-  stage: Privatization Tests 10.2.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_1020/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/nopriv VERBOSE=1
-
-With-privatization 1020:
-  <<: *run_by_main
-  stage: Privatization Tests 10.2.0
-  script:
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_1020/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/priv VERBOSE=1
-
-Compil Wrappers 1020:
-  <<: *run_by_main
-  stage: Privatization Tests 10.2.0
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_1020/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/wrappers VERBOSE=1
-
-Not supported 1020:
-  <<: *run_by_main
-  stage: Privatization Tests 10.2.0
-  allow_failure: true
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_1020/BUILD_autopriv
-  - EXTLS_VERBOSE=debug make check -C tests/unsupported VERBOSE=1
-
-
-#################################
-####### WORKSHARE TESTS  ########
-#################################
-
-
-Simple Tests:
-  <<: *run_by_main
-  stage: Workshare Tests
-  allow_failure: false
-  script: 
-  - cd $HOME/GL_$CI_PIPELINE_ID/build_730/BUILD_workshare
-  - make check -C tests/simple VERBOSE=1
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=11.1.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check

@@ -201,6 +201,23 @@ echo "" > ./Makefile
 
 if test "x${COMPILE_GCC}" = "xyes"; then
 
+	if test -f "${PWD}/gcc/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.cc"; then
+		GLIBC=$(ldd --version | head -n 1 | rev | cut -d " " -f 1 | rev | sed "s/\.//g")
+		GVERSION=$(echo "${GCC_VERSION}" | sed "s/\.//g")
+		# For GCC before 9.3.0 there is an issue with sys/ipc.h on GLIBC 2.31 and next
+		if test "$GLIBC" -ge 231 -a "${GVERSION}" -lt 1010; then
+			echo "# GLIBC is more recent than 2.31 and GCC is prior to 9.3.0"
+			echo "# You need to use versions starting from 9.3.0"
+			exit 1
+		fi
+		# GCC 7.3.0 does not compile after Glibc 2.27
+		if test "$GLIBC" -gt 227 -a "${GVERSION}" = 730; then
+			echo "# GLIBC older than 2.27 are not compatible with GCC 7.3.0"
+			echo "# You need to use versions more recent than 7.3.0"
+			exit 1
+		fi
+	fi
+
 	# Prepare GCC's sources
 	download_dep "gcc" "${GCC_VERSION}"
 	GCC_TB="${TARBALL_PATH}"
