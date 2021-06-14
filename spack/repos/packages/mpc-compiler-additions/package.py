@@ -39,7 +39,7 @@ class MpcCompilerAdditions(AutotoolsPackage):
     homepage = "http://mpc.hpcframework.com"
     url = "https://france.paratools.com/mpc/releases/mpc-compiler-additions-0.6.2.tar.gz"
     version('0.7.0',
-            sha256='7078435c551e9578827d984c182f50169bd6e431b176ab71d0f0713525f61fd6')
+            sha256='dbdad88fc2f1a27eec003061157a9d67c0d109a464aeb0df27a3b1045c7528dc')
 
     depends_on("hwloc@2.2.0")
     depends_on("openpa")
