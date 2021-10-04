@@ -18,7 +18,7 @@ AC_PROG_FC
 AM_PROG_AR
 
 ############################
-##### COIMPILER FAMILY #####
+###### COMPILER FAMILY #####
 ############################
 
 EXTLS_COMPILER_FAMILY="notset"

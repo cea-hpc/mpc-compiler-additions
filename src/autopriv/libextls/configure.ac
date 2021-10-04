@@ -58,29 +58,67 @@ AM_COND_IF([HAVE_DOXYGEN],
 #
 pkg_config_rpath()
 {
-		# Now atempt to extract HWLOC prefix
-		pkg_rpath=""
-		pkg_prefix=$(pkg-config --variable=prefix ${1})
-		
-		# Did we get something from pkg-config ?
-		if test "x$?" = "x0"; then
-			# See if there is a libdir
-			if test -d "${pkg_prefix}/lib"; then
-				pkg_rpath=" -Wl,-rpath=${pkg_prefix}/lib"
-			fi
+	# Now atempt to extract prefix
+	pkg_rpath=""
+	pkg_prefix=$(pkg-config --variable=prefix ${1})
 	
-			# Try lib64 dir for existency
-			if test -d "${pkg_prefix}/lib64"; then
-				pkg_rpath="${HWLOC_RPATH} -Wl,-rpath=${pkg_prefix}/lib64"
-			fi
-		
-			# Add to cflags if elements found
-			if test -n "${pkg_rpath}"; then
-				CFLAGS="${CFLAGS} ${pkg_rpath}"
-			fi	
+	# Did we get something from pkg-config ?
+	if test "x$?" = "x0"; then
+		# See if there is a libdir
+		if test -d "${pkg_prefix}/lib"; then
+			pkg_rpath=" -Wl,-rpath=${pkg_prefix}/lib"
 		fi
+
+		# Try lib64 dir for existency
+		if test -d "${pkg_prefix}/lib64"; then
+			pkg_rpath="${pkg_rpath} -Wl,-rpath=${pkg_prefix}/lib64"
+		fi
+	
+		# Add to cflags if elements found
+		if test -n "${pkg_rpath}"; then
+			CFLAGS="${CFLAGS} ${pkg_rpath}"
+		fi
+	fi
 }
 
+#
+# Try to add a given prefix in RPATH
+#
+#  $1: Prefix to register to rpath
+#
+prefix_add_rpath_and_compute_flags()
+{
+	RET_LIBS=""
+
+	pkg_prefix="$1"
+	pkg_prefix_rpath=""
+	pkg_prefix_lib_path=""
+
+	if test -d "${pkg_prefix}/lib"; then
+		pkg_prefix_rpath=" -Wl,-rpath=${pkg_prefix}/lib"
+		pkg_prefix_lib_path=" -L${pkg_prefix}/lib/"
+	fi
+
+	if test -d "${pkg_prefix}/lib64"; then
+		pkg_prefix_rpath="${pkg_prefix_rpath} -Wl,-rpath=${pkg_prefix}/lib64"
+		pkg_prefix_lib_path="${pkg_prefix_lib_path} -L${pkg_prefix}/lib64/"
+	fi
+
+	if test -d "${pkg_prefix}/include"; then
+		pkg_prefix_rpath="${pkg_prefix_rpath} -Wl,-rpath=${pkg_prefix}/include"
+		pkg_prefix_lib_path="${pkg_prefix_lib_path} -L${pkg_prefix}/include/"
+	fi
+
+	# Add to cflags if elements found
+	if test -n "${pkg_prefix_rpath}"; then
+		CFLAGS="${CFLAGS} ${pkg_prefix_rpath}"
+		CPPFLAGS="${CPPFLAGS} ${pkg_prefix_rpath}"
+	fi
+
+	if test -n "${pkg_prefix_lib_path}"; then
+		RET_LIBS="${pkg_prefix_lib_path}"
+	fi
+}
 
 #################
 ##### HWLOC #####
@@ -88,13 +126,12 @@ pkg_config_rpath()
 AC_ARG_WITH([hwloc], AS_HELP_STRING([--with-hwloc=PATH], [Provide hwloc installation path]))
 
 if test -n "$with_hwloc" ; then
-		if test ! -d $with_hwloc; then
+		if test ! -d "$with_hwloc"; then
 			AC_MSG_ERROR([--with-hwloc path does not point to a directory])
 		fi
 		HWLOC_LDFLAGS="-lhwloc"
-		LIBS="-L$with_hwloc/lib -L$with_hwloc/lib64 $LIBS"
-		CFLAGS="-I$with_hwloc/include -Wl,-rpath=${with_hwloc}/lib64 -Wl,-rpath=${with_hwloc}/lib $CFLAGS"
-		CPPFLAGS="-I$with_hwloc/include $CPPFLAGS"
+		prefix_add_rpath_and_compute_flags "${with_hwloc}"
+		HWLOC_LDFLAGS="${HWLOC_LDFLAGS} ${RET_LIBS}"
 else
 	# First try with PKG config
 	PKG_CHECK_MODULES([HWLOC], [hwloc], [pkg_found=1], [pkg_found=0])
@@ -126,12 +163,12 @@ AS_IF([test "x$HWLOC_OK" = "x1"],
 AC_ARG_WITH([openpa], AS_HELP_STRING([--with-openpa=PATH], [Provide OpenPA installation path]))
 
 if test -n "$with_openpa" ; then
-		if test ! -d $with_openpa; then
+		if test ! -d "$with_openpa"; then
 			AC_MSG_ERROR([--with-openpa path does not point to a directory])
 		fi
-		LIBS="-L$with_openpa/lib -L$with_openpa/lib64 $LIBS"
-		CFLAGS="-I$with_openpa/include $CFLAGS"
-		CPPFLAGS="-I$with_openpa/include $CPPCFLAGS"
+		OPA_LDFLAGS="-lopa"
+		prefix_add_rpath_and_compute_flags "${with_openpa}"
+		OPA_LDFLAGS="${OPA_LDFLAGS} ${RET_LIBS}"
 else
 
 	# First try with PKG config
@@ -141,7 +178,7 @@ else
 	then
 		pkg_config_rpath "openpa"
 		
-		LIBS="${OPENPA_LIBS} ${LIBS}"
+		OPA_LDFLAGS="${OPENPA_LIBS} ${LIBS}"
 		CFLAGS="${OPENPA_CFLAGS} $CFLAGS"
 		CPPFLAGS="${OPENPA_CFLAGS} $CPPFLAGS"
 	fi
@@ -150,7 +187,9 @@ fi
 
 AC_CHECK_HEADER([opa_config.h], [OPA_OK=1], [OPA_OK=0])
 AS_IF([test "x$OPA_OK" = "x1"],
-				[AC_DEFINE([HAVE_ATOMICS], [1], [Define Atomic operation support])],
+				[AC_DEFINE([HAVE_ATOMICS], [1], [Define Atomic operation support])
+				 AC_SUBST(OPA_LDFLAGS)
+				],
 				[AC_MSG_WARN([Atomic Operation (OpenPA) library not found ! - Disabling HLS])])
 
 
@@ -161,12 +200,12 @@ AS_IF([test "x$OPA_OK" = "x1"],
 AC_ARG_WITH([libelf], AS_HELP_STRING([--with-libelf=PATH], [Provide libelf installation path]))
 
 if test -n "$with_libelf" ; then
-		if test ! -d $with_libelf; then
+		if test ! -d "$with_libelf"; then
 			AC_MSG_ERROR([--with-libelf path does not point to a directory])
 		fi
 		LIBELF_LDFLAGS="-lelf"
-		LIBS="-L$with_libelf/lib -L$with_libelf/lib64 $LIBS"
-		CFLAGS="-I$with_libelf/include $CFLAGS"
+		prefix_add_rpath_and_compute_flags "${with_libelf}"
+		LIBELF_LDFLAGS="${LIBELF_LDFLAGS} ${RET_LIBS}"
 else
 
 	# First try with PKG config
