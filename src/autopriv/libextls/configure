@@ -12296,32 +12296,33 @@ prefix_add_rpath_and_compute_flags()
 	RET_LIBS=""
 
 	pkg_prefix="$1"
-	pkg_prefix_rpath=""
+	pkg_prefix_cflags=""
 	pkg_prefix_lib_path=""
 
 	if test -d "${pkg_prefix}/lib"; then
-		pkg_prefix_rpath=" -Wl,-rpath=${pkg_prefix}/lib"
-		pkg_prefix_lib_path=" -L${pkg_prefix}/lib/"
+		pkg_prefix_lib_path=" -L${pkg_prefix}/lib/ -Wl,-rpath=${pkg_prefix}/lib"
 	fi
 
 	if test -d "${pkg_prefix}/lib64"; then
-		pkg_prefix_rpath="${pkg_prefix_rpath} -Wl,-rpath=${pkg_prefix}/lib64"
-		pkg_prefix_lib_path="${pkg_prefix_lib_path} -L${pkg_prefix}/lib64/"
+		pkg_prefix_lib_path="${pkg_prefix_lib_path} -L${pkg_prefix}/lib64/ -Wl,-rpath=${pkg_prefix}/lib64"
 	fi
 
 	if test -d "${pkg_prefix}/include"; then
-		pkg_prefix_rpath="${pkg_prefix_rpath} -Wl,-rpath=${pkg_prefix}/include"
-		pkg_prefix_lib_path="${pkg_prefix_lib_path} -L${pkg_prefix}/include/"
+		pkg_prefix_cflags="${pkg_prefix_cflags} -I${pkg_prefix}/include"
 	fi
 
 	# Add to cflags if elements found
-	if test -n "${pkg_prefix_rpath}"; then
-		CFLAGS="${CFLAGS} ${pkg_prefix_rpath}"
-		CPPFLAGS="${CPPFLAGS} ${pkg_prefix_rpath}"
+	if test -n "${pkg_prefix_cflags}"; then
+		CFLAGS="${CFLAGS} ${pkg_prefix_cflags}"
+		CPPFLAGS="${CPPFLAGS} ${pkg_prefix_cflags}"
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: Adding CLFAGS ${pkg_prefix_cflags}" >&5
+$as_echo "$as_me: Adding CLFAGS ${pkg_prefix_cflags}" >&6;}
 	fi
 
 	if test -n "${pkg_prefix_lib_path}"; then
 		RET_LIBS="${pkg_prefix_lib_path}"
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: Adding LDFLAGS ${pkg_prefix_lib_path}" >&5
+$as_echo "$as_me: Adding LDFLAGS ${pkg_prefix_lib_path}" >&6;}
 	fi
 }
 
@@ -12546,6 +12547,8 @@ fi
 	fi
 fi
 
+LIBS="${LIBS} ${HWLOC_LDFLAGS}"
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing hwloc_topology_init" >&5
 $as_echo_n "checking for library containing hwloc_topology_init... " >&6; }
 if ${ac_cv_search_hwloc_topology_init+:} false; then :
@@ -12724,6 +12727,8 @@ fi
 
 fi
 
+LIBS="${LIBS} ${OPA_LDFLAGS}"
+
 ac_fn_c_check_header_mongrel "$LINENO" "opa_config.h" "ac_cv_header_opa_config_h" "$ac_includes_default"
 if test "x$ac_cv_header_opa_config_h" = xyes; then :
   OPA_OK=1
@@ -12846,6 +12851,8 @@ fi
 		CPPFLAGS="${LIBELF_CFLAGS} $CPPFLAGS"
 	fi
 fi
+
+LIBS="${LIBS} ${LIBELF_LDFLAGS}"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing elf_version" >&5
 $as_echo_n "checking for library containing elf_version... " >&6; }

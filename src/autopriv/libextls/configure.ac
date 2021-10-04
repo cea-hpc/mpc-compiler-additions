@@ -91,32 +91,31 @@ prefix_add_rpath_and_compute_flags()
 	RET_LIBS=""
 
 	pkg_prefix="$1"
-	pkg_prefix_rpath=""
+	pkg_prefix_cflags=""
 	pkg_prefix_lib_path=""
 
 	if test -d "${pkg_prefix}/lib"; then
-		pkg_prefix_rpath=" -Wl,-rpath=${pkg_prefix}/lib"
-		pkg_prefix_lib_path=" -L${pkg_prefix}/lib/"
+		pkg_prefix_lib_path=" -L${pkg_prefix}/lib/ -Wl,-rpath=${pkg_prefix}/lib"
 	fi
 
 	if test -d "${pkg_prefix}/lib64"; then
-		pkg_prefix_rpath="${pkg_prefix_rpath} -Wl,-rpath=${pkg_prefix}/lib64"
-		pkg_prefix_lib_path="${pkg_prefix_lib_path} -L${pkg_prefix}/lib64/"
+		pkg_prefix_lib_path="${pkg_prefix_lib_path} -L${pkg_prefix}/lib64/ -Wl,-rpath=${pkg_prefix}/lib64"
 	fi
 
 	if test -d "${pkg_prefix}/include"; then
-		pkg_prefix_rpath="${pkg_prefix_rpath} -Wl,-rpath=${pkg_prefix}/include"
-		pkg_prefix_lib_path="${pkg_prefix_lib_path} -L${pkg_prefix}/include/"
+		pkg_prefix_cflags="${pkg_prefix_cflags} -I${pkg_prefix}/include"
 	fi
 
 	# Add to cflags if elements found
-	if test -n "${pkg_prefix_rpath}"; then
-		CFLAGS="${CFLAGS} ${pkg_prefix_rpath}"
-		CPPFLAGS="${CPPFLAGS} ${pkg_prefix_rpath}"
+	if test -n "${pkg_prefix_cflags}"; then
+		CFLAGS="${CFLAGS} ${pkg_prefix_cflags}"
+		CPPFLAGS="${CPPFLAGS} ${pkg_prefix_cflags}"
+		AC_MSG_NOTICE([Adding CLFAGS ${pkg_prefix_cflags}])
 	fi
 
 	if test -n "${pkg_prefix_lib_path}"; then
 		RET_LIBS="${pkg_prefix_lib_path}"
+		AC_MSG_NOTICE([Adding LDFLAGS ${pkg_prefix_lib_path}])
 	fi
 }
 
@@ -145,6 +144,8 @@ else
 		CPPFLAGS="${HWLOC_CFLAGS} $CPPFLAGS"
 	fi
 fi
+
+LIBS="${LIBS} ${HWLOC_LDFLAGS}"
 
 AC_SEARCH_LIBS([hwloc_topology_init], [hwloc], [HWLOC_OK=1], [HWLOC_OK=0])
 AS_IF([test "x$HWLOC_OK" = "x1"],
@@ -185,6 +186,8 @@ else
 
 fi
 
+LIBS="${LIBS} ${OPA_LDFLAGS}"
+
 AC_CHECK_HEADER([opa_config.h], [OPA_OK=1], [OPA_OK=0])
 AS_IF([test "x$OPA_OK" = "x1"],
 				[AC_DEFINE([HAVE_ATOMICS], [1], [Define Atomic operation support])
@@ -220,6 +223,8 @@ else
 		CPPFLAGS="${LIBELF_CFLAGS} $CPPFLAGS"
 	fi
 fi
+
+LIBS="${LIBS} ${LIBELF_LDFLAGS}"
 
 AC_SEARCH_LIBS([elf_version], [elf], [LIBELF_OK=1], [LIBELF_OK=0])
 AS_IF([test "x$LIBELF_OK" = "x1"],

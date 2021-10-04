@@ -4786,7 +4786,7 @@ esac
 
 
 ############################
-##### COIMPILER FAMILY #####
+###### COMPILER FAMILY #####
 ############################
 
 EXTLS_COMPILER_FAMILY="notset"

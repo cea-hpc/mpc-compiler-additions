@@ -35,6 +35,10 @@ COMPILE_GCC="yes"
 DOWNLOAD_ONLY="no"
 CONTRIB_OPTIONS=""
 
+WPREFIX_hwloc=""
+WPREFIX_openpa=""
+WPREFIX_libelf=""
+
 #
 # Argument parsing
 #
@@ -63,6 +67,9 @@ Options:
 	--disable-[V]   Disable a given variant [V] (see Variants list)
 	--enable-debug  Build in debug mode
 	--enable-color  Enable output colors
+	--with-hwloc=X  Prefix for HWLOC
+	--with-openpa=X Prefix for OpenPA
+	--with-libelf=X Prefix for libelf
 EOF
 }
 
@@ -106,6 +113,15 @@ for arg in "$@" ; do
 				GCC_VERSION=$(echo "A$arg" | sed -e 's/A--gcc-version=//g')
 				assert_gcc_version_known "${GCC_VERSION}"
 				;;
+			--with-hwloc=*)
+				WPREFIX_hwloc=$(echo "A$arg" | sed -e 's/A--with-hwloc=//g')
+			;;
+			--with-openpa=*)
+				WPREFIX_openpa=$(echo "A$arg" | sed -e 's/A--with-openpa=//g')
+			;;
+			--with-libelf=*)
+				WPREFIX_libelf=$(echo "A$arg" | sed -e 's/A--with-libelf=//g')
+			;;
 			*)
 				exit_error "No such option $arg see --help"
 				;;
@@ -226,6 +242,20 @@ if in_list "autopriv" "${ENABLED_VARIANTS}"; then
 	for dep in hwloc openpa libelf
 	do
 		DEP_VERSION=$(package_version_for_gcc "$dep" "${GCC_VERSION}")
+
+		CUR_WITH=""
+		eval "CUR_WITH=\$WPREFIX_$dep"
+
+		if test -n "${CUR_WITH}"; then
+			if test ! -d ${CUR_WITH}; then
+				echo "PREFIX for $dep is not a directory"
+				exit 1
+			fi
+
+			CONTRIB_OPTIONS="${CONTRIB_OPTIONS} --with-${dep}=${CUR_WITH}"
+
+			continue
+		fi
 
 		if pkg-config --exists "$dep = ${DEP_VERSION}"; then
 			echo "# $dep ${DEP_VERSION} found in environment."
