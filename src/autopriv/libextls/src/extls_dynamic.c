@@ -291,7 +291,7 @@ static inline void __extls_load_constructors_check_range_and_insert(struct dsos_
 			
 		if( !__extls_is_in_dso(dso->name, *to_check) )
 		{
-			extls_warn("ctor/dtor seems to refers an address outside its DSO. Prefer to discard it.");
+			extls_dbg("ctor/dtor seems to refers an address outside its DSO. Prefer to discard it.");
 			dso->cdtor_start = NULL;
 			dso->cdtor_end = NULL;
 			break;

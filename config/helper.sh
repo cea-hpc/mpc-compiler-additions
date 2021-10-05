@@ -514,7 +514,7 @@ download_dep()
 	FNAME=$(package_filename "$1" "${PVERSION}")
 	if test -f "${PWD}/${FNAME}"; then
 		echo "# ${FNAME} found, skipping download."
-		TARBALL_PATH="${PWD}/${FNAME}"		
+		TARBALL_PATH="${PWD}/${FNAME}"
 	elif test -f "${SCRIPTPATH}/${FNAME}"; then
 		echo "# ${FNAME} found in project, skipping download."
 		TARBALL_PATH="${SCRIPTPATH}/${FNAME}"
