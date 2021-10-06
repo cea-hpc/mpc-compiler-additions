@@ -13,7 +13,7 @@ PATH=`prune_prev_path "$PATH" "$AP_ROOT"`
 INCLUDE_PATH=`prune_prev_path "$INCLUDE_PATH" "$AP_ROOT"`
 CPATH=`prune_prev_path "$CPATH" "$AP_ROOT"`
 LD_LIBRARY_PATH=`prune_prev_path "$LD_LIBRARY_PATH" "$AP_ROOT"`
-LIBRARY_PATH=`prune_prev_path "$LIBRARRY_PATH" "$AP_ROOT"`
+LIBRARY_PATH=`prune_prev_path "$LIBRARY_PATH" "$AP_ROOT"`
 MANPATH=`prune_prev_path "$MANPATH" "$AP_ROOT"`
 PKG_CONFIG_PATH=`prune_prev_path "$PKG_CONFIG_PATH" "$AP_ROOT"`
 
