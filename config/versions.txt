@@ -1,4 +1,6 @@
 # GCC_VERSION       BINUTILS_VERSION       GMP_VERSION       MPC_VERSION       MPFR_VERSION       ISL_VERSION       HWLOC_VERSION       OPENPA_VERSION       LIBELF       IS_DEFAULT_ONE
+11.3.0              2.36.1                 6.2.1             1.2.1             4.1.0              0.24              2.2.0               1.0.4                0.8.13       no
+11.2.0              2.36.1                 6.2.1             1.2.1             4.1.0              0.24              2.2.0               1.0.4                0.8.13       no
 11.1.0              2.36.1                 6.2.1             1.2.1             4.1.0              0.24              2.2.0               1.0.4                0.8.13       no
 10.2.0              2.35                   6.1.2             1.1.0             4.0.2              0.21              2.2.0               1.0.4                0.8.13       yes
 10.3.0              2.35                   6.1.2             1.1.0             4.0.2              0.21              2.2.0               1.0.4                0.8.13       no
