@@ -21,11 +21,14 @@ fi
 
 set -x
 
-VERSION="`./.mpc_comp_additions_version`"
+echo "Cleaning timestamps for dist"
+find . -type f -print0 | xargs -0 touch -r ./configure
+
+VERSION="$(./.mpc_comp_additions_version)"
 FILE="${PWD}/mpc-compiler-additions-${VERSION}.tar.gz"
 
 echo -n "Generating archive for autopriv-${VERSION}... "
-git archive --format=tar.gz --prefix=mpc-compiler-additions-${VERSION}/ HEAD > $FILE
+git archive --format=tar.gz --prefix="mpc-compiler-additions-${VERSION}/" HEAD > "$FILE"
 echo "OK"
 
 
@@ -39,7 +42,7 @@ cd ./mpc-compiler-additions-* || exit 42
 
 echo "Downloading dependencies.."
 
-${SCRIPTPATH}/configure --download "$@"
+"${SCRIPTPATH}/configure" --download "$@"
 
 echo "Inserting dependencies ..."
 
@@ -47,6 +50,6 @@ cd .. || exit 42
 
 tar czf "${FILE}" ./mpc-compiler-additions-*
 
-rm -fr ${TMPDIR}
+rm -fr "${TMPDIR}"
 
 echo "./${FILE}"
