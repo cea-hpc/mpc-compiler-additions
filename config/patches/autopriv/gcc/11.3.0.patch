@@ -1,5 +1,5 @@
 diff --git a/gcc/Makefile.in b/gcc/Makefile.in
-index 7bfd6ce653..ea3ac6f52f 100644
+index 7bfd6ce653fd73516f81bf20672972e554657dc4..ea3ac6f52f9b6d361e10cc6864462c9ddeb33e5a 100644
 --- a/gcc/Makefile.in
 +++ b/gcc/Makefile.in
 @@ -937,7 +937,8 @@ FIXED_VALUE_H = fixed-value.h
@@ -41,7 +41,7 @@ index 7bfd6ce653..ea3ac6f52f 100644
    $(srcdir)/tree-phinodes.c \
    $(srcdir)/tree-ssa-alias.h \
 diff --git a/gcc/builtin-types.def b/gcc/builtin-types.def
-index d160826e1d..dcb76dd4c0 100644
+index d160826e1d4f5167c6376b34d9bac75e33576bac..dcb76dd4c013f9aff51f176bb1ebee53ffd51fb6 100644
 --- a/gcc/builtin-types.def
 +++ b/gcc/builtin-types.def
 @@ -615,7 +615,6 @@ DEF_FUNCTION_TYPE_3 (BT_FN_VOID_VPTR_I2_INT, BT_VOID, BT_VOLATILE_PTR, BT_I2, BT
@@ -61,7 +61,7 @@ index d160826e1d..dcb76dd4c0 100644
  		     BT_VOID, BT_INT, BT_PTR_FN_VOID_PTR, BT_SIZE, BT_PTR,
  		     BT_PTR, BT_PTR, BT_UINT, BT_PTR, BT_PTR)
 diff --git a/gcc/builtins.def b/gcc/builtins.def
-index b67649a13a..d027ed6c77 100644
+index b67649a13a97adfb7f6c09dfcc09d1770a312c36..d027ed6c77e181ec0a883a0489bfe135e092a016 100644
 --- a/gcc/builtins.def
 +++ b/gcc/builtins.def
 @@ -230,6 +230,17 @@ along with GCC; see the file COPYING3.  If not see
@@ -103,7 +103,7 @@ index b67649a13a..d027ed6c77 100644
  #include "gtm-builtins.def"
  
 diff --git a/gcc/c-family/c-common.c b/gcc/c-family/c-common.c
-index 7b8f49d78d..104b1dfb57 100644
+index 7b8f49d78dcfddb2c73efd1e8e81316572841b61..104b1dfb57e73b3d35c8e9a5be3023a141fd6228 100644
 --- a/gcc/c-family/c-common.c
 +++ b/gcc/c-family/c-common.c
 @@ -437,6 +437,12 @@ const struct c_common_resword c_common_reswords[] =
@@ -142,7 +142,7 @@ index 7b8f49d78d..104b1dfb57 100644
      default:
        return false;
 diff --git a/gcc/c-family/c-common.h b/gcc/c-family/c-common.h
-index f30b6c6ac3..bbdf9102a3 100644
+index f30b6c6ac33474d27939372c4529e9513804b67e..bbdf9102a31874520aac5371e22b9ff87d88310d 100644
 --- a/gcc/c-family/c-common.h
 +++ b/gcc/c-family/c-common.h
 @@ -70,6 +70,9 @@ enum rid
@@ -156,7 +156,7 @@ index f30b6c6ac3..bbdf9102a3 100644
    RID_COMPLEX, RID_THREAD, RID_SAT,
  
 diff --git a/gcc/c-family/c-cppbuiltin.c b/gcc/c-family/c-cppbuiltin.c
-index 11e015bdb8..ddd97cde3e 100644
+index 11e015bdb87b0f9ba7dd213e7c43ef823d7ab9b6..ddd97cde3e0552d105fad2c8b0e2bb4104cd497b 100644
 --- a/gcc/c-family/c-cppbuiltin.c
 +++ b/gcc/c-family/c-cppbuiltin.c
 @@ -1476,11 +1476,10 @@ c_cpp_builtins (cpp_reader *pfile)
@@ -175,7 +175,7 @@ index 11e015bdb8..ddd97cde3e 100644
    for (i = 0; i < NUM_INT_N_ENTS; i ++)
      if (int_n_enabled_p[i])
 diff --git a/gcc/c-family/c-omp.c b/gcc/c-family/c-omp.c
-index d58faa9f46..01df00ba1c 100644
+index d58faa9f4682d5ede655bb2b60022ff5cea40b9e..01df00ba1c2031d099d3e69e2289c5a69d146dd8 100644
 --- a/gcc/c-family/c-omp.c
 +++ b/gcc/c-family/c-omp.c
 @@ -155,6 +155,7 @@ c_finish_omp_barrier (location_t loc)
@@ -207,7 +207,7 @@ index d58faa9f46..01df00ba1c 100644
    add_stmt (x);
  }
 diff --git a/gcc/c-family/c-opts.c b/gcc/c-family/c-opts.c
-index 6f001e0bb6..7e82a30b57 100644
+index 6f001e0bb6c20aecf39c5552849f646ddb598382..7e82a30b579581e5349a2e04774daf932e8025b8 100644
 --- a/gcc/c-family/c-opts.c
 +++ b/gcc/c-family/c-opts.c
 @@ -42,6 +42,8 @@ along with GCC; see the file COPYING3.  If not see
@@ -287,7 +287,7 @@ index 6f001e0bb6..7e82a30b57 100644
  
  /* Give CPP the next file given by -include, if any.  */
 diff --git a/gcc/c-family/c-pragma.c b/gcc/c-family/c-pragma.c
-index 4f8e8e0128..2d9d8277ec 100644
+index 4f8e8e0128c3ddb77450a0d4976d00ad03c6a4c6..2d9d8277ec774f188749cdbeb160cc26af3af199 100644
 --- a/gcc/c-family/c-pragma.c
 +++ b/gcc/c-family/c-pragma.c
 @@ -1551,6 +1551,30 @@ init_pragma (void)
@@ -322,7 +322,7 @@ index 4f8e8e0128..2d9d8277ec 100644
      cpp_register_deferred_pragma (parse_in, "GCC", "pch_preprocess",
  				  PRAGMA_GCC_PCH_PREPROCESS, false, false);
 diff --git a/gcc/c-family/c-pragma.h b/gcc/c-family/c-pragma.h
-index 6c34ffa5be..f9ecc74fe4 100644
+index 6c34ffa5be43f6014b7d2221b586958143f5ef2b..f9ecc74fe4337dfe7d09a697d37f7aad0cfe2240 100644
 --- a/gcc/c-family/c-pragma.h
 +++ b/gcc/c-family/c-pragma.h
 @@ -73,6 +73,15 @@ enum pragma_kind {
@@ -342,7 +342,7 @@ index 6c34ffa5be..f9ecc74fe4 100644
    PRAGMA_IVDEP,
    PRAGMA_UNROLL,
 diff --git a/gcc/c-family/c.opt b/gcc/c-family/c.opt
-index 2005b783c6..b43b2f9098 100644
+index 2005b783c6828f3c4844584f8b5393a3202ca4be..b43b2f9098808941603e339120b3ae23a0a62549 100644
 --- a/gcc/c-family/c.opt
 +++ b/gcc/c-family/c.opt
 @@ -815,6 +815,12 @@ Wmissing-declarations
@@ -387,7 +387,7 @@ index 2005b783c6..b43b2f9098 100644
  C++ ObjC++ Var(flag_modules) Integer Init(0)
  Enable C++ modules-ts (experimental).
 diff --git a/gcc/c/c-decl.c b/gcc/c/c-decl.c
-index ddef9c68fb..63afe472c6 100644
+index ddef9c68fb7e9b2ff0237346c6f1f2cafffe6478..63afe472c6845e0940a7f8641d5909b5fa03749e 100644
 --- a/gcc/c/c-decl.c
 +++ b/gcc/c/c-decl.c
 @@ -222,6 +222,9 @@ struct GTY(()) lang_identifier {
@@ -665,7 +665,7 @@ index ddef9c68fb..63afe472c6 100644
    tree t;
    tree decls;
 diff --git a/gcc/c/c-parser.c b/gcc/c/c-parser.c
-index 7690977f6b..c9875dfbbb 100644
+index 7690977f6b8590599e54bb0e3b49afe21c322092..c9875dfbbbd892fcfe749477e24f1b4943352dec 100644
 --- a/gcc/c/c-parser.c
 +++ b/gcc/c/c-parser.c
 @@ -727,6 +727,11 @@ c_token_starts_declspecs (c_token *token)
@@ -1049,7 +1049,7 @@ index 7690977f6b..c9875dfbbb 100644
  
  void
 diff --git a/gcc/c/c-tree.h b/gcc/c/c-tree.h
-index a671a3eb74..f67eef6849 100644
+index a671a3eb7408733a345af778b2b036a624b40aed..f67eef6849fc5b081d3cf80027db95369a48bcd2 100644
 --- a/gcc/c/c-tree.h
 +++ b/gcc/c/c-tree.h
 @@ -280,6 +280,11 @@ enum c_declspec_word {
@@ -1080,7 +1080,7 @@ index a671a3eb74..f67eef6849 100644
    BOOL_BITFIELD const_p : 1;
    /* Whether "volatile" was specified.  */
 diff --git a/gcc/c/c-typeck.c b/gcc/c/c-typeck.c
-index a0fbe47d87..b12379a5ea 100644
+index a0fbe47d87fcbb6f565ca69b8c393e2e20ac9602..b12379a5eabe72879540341e705fb5ffa9ebb624 100644
 --- a/gcc/c/c-typeck.c
 +++ b/gcc/c/c-typeck.c
 @@ -4902,6 +4902,7 @@ build_unary_op (location_t location, enum tree_code code, tree xarg,
@@ -1185,7 +1185,7 @@ index a0fbe47d87..b12379a5ea 100644
  	      else switch (c_omp_predetermined_sharing (t))
  		{
 diff --git a/gcc/cgraph.h b/gcc/cgraph.h
-index 4a1f89920f..59e8c4499a 100644
+index 4a1f89920f56b685c1f33843fb86848b5847cbeb..59e8c4499a64d996ab025164b75e78c2af3ea82e 100644
 --- a/gcc/cgraph.h
 +++ b/gcc/cgraph.h
 @@ -2083,7 +2083,11 @@ struct GTY((tag ("SYMTAB_VARIABLE"))) varpool_node : public symtab_node
@@ -1201,7 +1201,7 @@ index 4a1f89920f..59e8c4499a 100644
    /* Set if the variable is known to be used by single function only.
       This is computed by ipa_single_use pass and used by late optimizations
 diff --git a/gcc/cgraphbuild.c b/gcc/cgraphbuild.c
-index e7acfc2dbf..7685c35a72 100644
+index e7acfc2dbfbb3f240c724bd113822b886d2fd994..7685c35a7246ddce9993583dfdde40b7a129d73f 100644
 --- a/gcc/cgraphbuild.c
 +++ b/gcc/cgraphbuild.c
 @@ -60,6 +60,10 @@ record_reference (tree *tp, int *walk_subtrees, void *data)
@@ -1216,7 +1216,7 @@ index e7acfc2dbf..7685c35a72 100644
        gcc_unreachable ();
        break;
 diff --git a/gcc/common.opt b/gcc/common.opt
-index a75b44ee47..4232f12aca 100644
+index a75b44ee47e7016966143c6587ad798b47285286..4232f12aca89d24f3629a47ae12cfb1965d2fc86 100644
 --- a/gcc/common.opt
 +++ b/gcc/common.opt
 @@ -3063,6 +3063,12 @@ fverbose-asm
@@ -1233,7 +1233,7 @@ index a75b44ee47..4232f12aca 100644
  Common Joined RejectNegative Enum(symbol_visibility) Var(default_visibility) Init(VISIBILITY_DEFAULT)
  -fvisibility=[default|internal|hidden|protected]	Set the default symbol visibility.
 diff --git a/gcc/config/i386/i386-protos.h b/gcc/config/i386/i386-protos.h
-index 941e91636d..999035d350 100644
+index 941e91636d8e7ea9b274920ee8d97722d8312089..999035d3503d04f19ebe8bd5863d5a3d1d1a1672 100644
 --- a/gcc/config/i386/i386-protos.h
 +++ b/gcc/config/i386/i386-protos.h
 @@ -244,6 +244,24 @@ extern bool ix86_gpr_tls_address_pattern_p (rtx);
@@ -1262,7 +1262,7 @@ index 941e91636d..999035d350 100644
  extern void ix86_expand_vector_set (bool, rtx, rtx, int);
  extern void ix86_expand_vector_set_var (rtx, rtx, rtx);
 diff --git a/gcc/config/i386/i386.c b/gcc/config/i386/i386.c
-index 48300af9a0..62294a7858 100644
+index 48300af9a09d414f771493578986a3f899777c93..62294a78585ddb482100959525a666488d3e3da7 100644
 --- a/gcc/config/i386/i386.c
 +++ b/gcc/config/i386/i386.c
 @@ -11189,7 +11189,11 @@ static GTY(()) rtx ix86_tls_symbol;
@@ -1536,7 +1536,7 @@ index 48300af9a0..62294a7858 100644
        if (!TARGET_64BIT)
  	{
 diff --git a/gcc/config/i386/i386.md b/gcc/config/i386/i386.md
-index 238ce09672..48af9446bb 100644
+index 238ce09672e7c093c6898fbf96ccb1330ce3e5ee..48af9446bb492f11499b4d4d932382168ffd7b7f 100644
 --- a/gcc/config/i386/i386.md
 +++ b/gcc/config/i386/i386.md
 @@ -15484,6 +15484,344 @@
@@ -2092,7 +2092,7 @@ index 238ce09672..48af9446bb 100644
    [(set (match_operand:SI 0 "register_operand" "=a")
  	(unspec:SI
 diff --git a/gcc/coretypes.h b/gcc/coretypes.h
-index 732c76f5cb..4504accc77 100644
+index 732c76f5cbfc0a1d209873f02b4f32b62a7c0c84..4504accc77e8a63312bf4cf4089b7c58cb7a3d6a 100644
 --- a/gcc/coretypes.h
 +++ b/gcc/coretypes.h
 @@ -195,7 +195,23 @@ enum tls_model {
@@ -2121,7 +2121,7 @@ index 732c76f5cb..4504accc77 100644
  
  /* Types of ABI for an offload compiler.  */
 diff --git a/gcc/cp/cp-tree.h b/gcc/cp/cp-tree.h
-index a2d8c1c77b..da346bc909 100644
+index a2d8c1c77b34a211f9a87ff5b225921526cc4de9..da346bc9094ab8cef44db20ed19ddbedca383643 100644
 --- a/gcc/cp/cp-tree.h
 +++ b/gcc/cp/cp-tree.h
 @@ -6064,6 +6064,11 @@ enum cp_decl_spec {
@@ -2148,7 +2148,7 @@ index a2d8c1c77b..da346bc909 100644
  extern int cp_tree_operand_length		(const_tree);
  extern int cp_tree_code_length			(enum tree_code);
 diff --git a/gcc/cp/decl.c b/gcc/cp/decl.c
-index bffbd00416..5e2ed75d28 100644
+index bffbd004167b03aa05a086712a30742bf15184b1..5e2ed75d288c7109fd63b969db3ba9762b3e0bd5 100644
 --- a/gcc/cp/decl.c
 +++ b/gcc/cp/decl.c
 @@ -249,6 +249,9 @@ struct GTY(()) incomplete_var {
@@ -2420,7 +2420,7 @@ index bffbd00416..5e2ed75d28 100644
        if (DECL_EXTERNAL (decl) || TREE_STATIC (decl))
  	{
 diff --git a/gcc/cp/decl2.c b/gcc/cp/decl2.c
-index 885c474998..efaa0868d1 100644
+index 885c4749989ba05e0b7826755b57130e24014cfc..efaa0868d1ce5517f07a49ad7c454182f1c45ba8 100644
 --- a/gcc/cp/decl2.c
 +++ b/gcc/cp/decl2.c
 @@ -55,6 +55,8 @@ int raw_dump_id;
@@ -2750,7 +2750,7 @@ index 885c474998..efaa0868d1 100644
  	  /* Does it need synthesizing?  */
  	  if (DECL_DEFAULTED_FN (decl) && ! DECL_INITIAL (decl)
 diff --git a/gcc/cp/parser.c b/gcc/cp/parser.c
-index 90d119eaa2..8ffb227f99 100644
+index 90d119eaa28025deabc21ef519f9f608a6317c4c..8ffb227f9917497e31ddb2a8a42108aa4a34fb89 100644
 --- a/gcc/cp/parser.c
 +++ b/gcc/cp/parser.c
 @@ -1030,6 +1030,11 @@ cp_keyword_starts_decl_specifier_p (enum rid keyword)
@@ -3116,7 +3116,7 @@ index 90d119eaa2..8ffb227f99 100644
  	if (context == pragma_external)
  	  {
 diff --git a/gcc/cp/semantics.c b/gcc/cp/semantics.c
-index d447ce8017..805ca003f3 100644
+index d447ce8017457de399431596bb21c75f5d30a19a..805ca003f3c3f6f22ad4064192cdae91457028bd 100644
 --- a/gcc/cp/semantics.c
 +++ b/gcc/cp/semantics.c
 @@ -4058,9 +4058,20 @@ finish_id_expression_1 (tree id_expression,
@@ -3179,7 +3179,7 @@ index d447ce8017..805ca003f3 100644
  		 make_decl_rtl once again, so that encode_section_info
  		 has a chance to look at the new decl flags.  */
 diff --git a/gcc/fortran/Make-lang.in b/gcc/fortran/Make-lang.in
-index 63195a9c7e..5b7ca8c103 100644
+index 63195a9c7edf6fed4b270bd71701b470e0af819c..5b7ca8c10379ffea18984a67a83d1ac8e747a617 100644
 --- a/gcc/fortran/Make-lang.in
 +++ b/gcc/fortran/Make-lang.in
 @@ -58,7 +58,7 @@ F95_PARSER_OBJS = fortran/arith.o fortran/array.o fortran/bbt.o \
@@ -3192,7 +3192,7 @@ index 63195a9c7e..5b7ca8c103 100644
  F95_OBJS = $(F95_PARSER_OBJS) $(FORTRAN_TARGET_OBJS) \
      fortran/convert.o fortran/dependency.o fortran/f95-lang.o \
 diff --git a/gcc/fortran/f95-lang.c b/gcc/fortran/f95-lang.c
-index a346457b5e..c9b7ce4310 100644
+index a346457b5e0829f2688a5002b1a9a5542df9532e..c9b7ce4310dfb9666633c971eec2c049b55eb3a9 100644
 --- a/gcc/fortran/f95-lang.c
 +++ b/gcc/fortran/f95-lang.c
 @@ -1216,14 +1216,30 @@ gfc_init_builtin_functions (void)
@@ -3235,7 +3235,7 @@ index a346457b5e..c9b7ce4310 100644
  #undef DEF_GOACC_BUILTIN
  #undef DEF_GOACC_BUILTIN_COMPILER
 diff --git a/gcc/fortran/gfortran.h b/gcc/fortran/gfortran.h
-index 0436c4f308..2663383966 100644
+index 0436c4f308f7dd57fcbdcdf7e6c249234b5c1a0d..26633839661aac14530cad72cd454c97756beaa1 100644
 --- a/gcc/fortran/gfortran.h
 +++ b/gcc/fortran/gfortran.h
 @@ -240,6 +240,12 @@ enum gfc_statement
@@ -3345,7 +3345,7 @@ index 0436c4f308..2663383966 100644
  bool gfc_add_data (symbol_attribute *, const char *, locus *);
 diff --git a/gcc/fortran/hls.c b/gcc/fortran/hls.c
 new file mode 100644
-index 0000000000..ce52bb7471
+index 0000000000000000000000000000000000000000..ce52bb7471aea74d542d5fbc30a1d85a0335646b
 --- /dev/null
 +++ b/gcc/fortran/hls.c
 @@ -0,0 +1,445 @@
@@ -3795,7 +3795,7 @@ index 0000000000..ce52bb7471
 +    }
 +}
 diff --git a/gcc/fortran/lang.opt b/gcc/fortran/lang.opt
-index 388ef8c0fd..b9e3f6a741 100644
+index 388ef8c0fdbf4629e8375e8940962ad561483fa0..b9e3f6a74171bcdfd24bebba41d478b3947473b6 100644
 --- a/gcc/fortran/lang.opt
 +++ b/gcc/fortran/lang.opt
 @@ -253,6 +253,12 @@ Wfunction-elimination
@@ -3842,7 +3842,7 @@ index 388ef8c0fd..b9e3f6a741 100644
  Fortran LTO
  ; Documented in C
 diff --git a/gcc/fortran/match.c b/gcc/fortran/match.c
-index 860b6567d2..9ce0a11f0d 100644
+index 860b6567d2a01d6f0031c44b4a7899b3ab604b8a..9ce0a11f0d1dbc083b1f7c5874eebbb0b89cd374 100644
 --- a/gcc/fortran/match.c
 +++ b/gcc/fortran/match.c
 @@ -3172,7 +3172,10 @@ done:
@@ -3858,7 +3858,7 @@ index 860b6567d2..9ce0a11f0d 100644
      case ST_ERROR_STOP:
        new_st.op = EXEC_ERROR_STOP;
 diff --git a/gcc/fortran/match.h b/gcc/fortran/match.h
-index 20a530f23c..9b204b54c9 100644
+index 20a530f23c277e61da064d5151d495287843c46e..9b204b54c9dce2dccb55e7a29762a88c69948db2 100644
 --- a/gcc/fortran/match.h
 +++ b/gcc/fortran/match.h
 @@ -271,6 +271,17 @@ match gfc_match_target (void);
@@ -3880,7 +3880,7 @@ index 20a530f23c..9b204b54c9 100644
  
  /* Fortran 2003 c interop.
 diff --git a/gcc/fortran/options.c b/gcc/fortran/options.c
-index 3a0b98bf1e..6278d5fa3e 100644
+index 3a0b98bf1ecc068cab80d6446fd448e9e9186849..6278d5fa3e316f641aa159c0bb20d9a83d8bc30a 100644
 --- a/gcc/fortran/options.c
 +++ b/gcc/fortran/options.c
 @@ -157,6 +157,17 @@ gfc_init_options (unsigned int decoded_options_count,
@@ -3957,7 +3957,7 @@ index 3a0b98bf1e..6278d5fa3e 100644
  #ifndef HAVE_LD_STATIC_DYNAMIC
        gfc_fatal_error ("%<-static-libgfortran%> is not supported in this "
 diff --git a/gcc/fortran/parse.c b/gcc/fortran/parse.c
-index 04501f44ef..31f99d08e5 100644
+index 04501f44ef8497a2a2f52e644051a949ca7a7a02..31f99d08e5b952da15ee53f1a402d889daa9369f 100644
 --- a/gcc/fortran/parse.c
 +++ b/gcc/fortran/parse.c
 @@ -1132,6 +1132,69 @@ decode_omp_directive (void)
@@ -4203,7 +4203,7 @@ index 04501f44ef..31f99d08e5 100644
  	  return st;
  	}
 diff --git a/gcc/fortran/parse.h b/gcc/fortran/parse.h
-index 55f0229930..c4384acc79 100644
+index 55f0229930491572b3ece5ebff60394f76e28604..c4384acc797e484a18f8ee6b675ab68cb56e158f 100644
 --- a/gcc/fortran/parse.h
 +++ b/gcc/fortran/parse.h
 @@ -31,7 +31,8 @@ enum gfc_compile_state
@@ -4217,7 +4217,7 @@ index 55f0229930..c4384acc79 100644
  
  /* Stack element for the current compilation state.  These structures
 diff --git a/gcc/fortran/resolve.c b/gcc/fortran/resolve.c
-index a26a90993a..fbd737cc2c 100644
+index a26a90993a740ee770c2ba847e120a5887f170c1..fbd737cc2c0eb91f6c618725599b0219269d130c 100644
 --- a/gcc/fortran/resolve.c
 +++ b/gcc/fortran/resolve.c
 @@ -10911,7 +10911,13 @@ gfc_resolve_blocks (gfc_code *b, gfc_namespace *ns)
@@ -4270,7 +4270,7 @@ index a26a90993a..fbd737cc2c 100644
       described in 14.7.5, to those variables that have not already
       been assigned one.  */
 diff --git a/gcc/fortran/scanner.c b/gcc/fortran/scanner.c
-index 74c5461ed6..7394847c63 100644
+index 74c5461ed6fd29439235cdc0e10a8503802c39a1..7394847c63a768024cb5fbccb177610af9fa590a 100644
 --- a/gcc/fortran/scanner.c
 +++ b/gcc/fortran/scanner.c
 @@ -54,10 +54,14 @@ along with GCC; see the file COPYING3.  If not see
@@ -4577,7 +4577,7 @@ index 74c5461ed6..7394847c63 100644
        if (c == '0' || c == ' ' || c == '\n')
  	goto not_continuation;
 diff --git a/gcc/fortran/st.c b/gcc/fortran/st.c
-index 13b3880720..4da39d3fa0 100644
+index 13b3880720ac40c4cd22177a5d428d41ca7bd142..4da39d3fa0db0cbec3c60de54612ae323be34770 100644
 --- a/gcc/fortran/st.c
 +++ b/gcc/fortran/st.c
 @@ -276,7 +276,14 @@ gfc_free_statement (gfc_code *p)
@@ -4597,7 +4597,7 @@ index 13b3880720..4da39d3fa0 100644
        gfc_internal_error ("gfc_free_statement(): Bad statement");
      }
 diff --git a/gcc/fortran/symbol.c b/gcc/fortran/symbol.c
-index c2dad08d87..81abfbf203 100644
+index c2dad08d8780a106f3d9720d99ad506dcde0e38c..81abfbf2031f03aba262afce5f1785dd0547b350 100644
 --- a/gcc/fortran/symbol.c
 +++ b/gcc/fortran/symbol.c
 @@ -434,8 +434,11 @@ gfc_check_conflict (symbol_attribute *attr, const char *name, locus *where)
@@ -4755,7 +4755,7 @@ index c2dad08d87..81abfbf203 100644
      goto fail;
    if (src->entry)
 diff --git a/gcc/fortran/trans-common.c b/gcc/fortran/trans-common.c
-index a11cf4c839..ea7d799d51 100644
+index a11cf4c839e083826d9fed70238c22d47ec437e8..ea7d799d515e68cc3f0b9cec94fe7968f37297b3 100644
 --- a/gcc/fortran/trans-common.c
 +++ b/gcc/fortran/trans-common.c
 @@ -126,6 +126,9 @@ static segment_info * current_segment;
@@ -4857,7 +4857,7 @@ index a11cf4c839..ea7d799d51 100644
        if (com->omp_device_type != OMP_DEVICE_TYPE_UNSET)
  	{
 diff --git a/gcc/fortran/trans-decl.c b/gcc/fortran/trans-decl.c
-index 95af7d9316..6c129068e0 100644
+index 95af7d93162e43217701ff38accc6021f04b7927..6c129068e006fdf6121af9510c6aeca41b7a05cf 100644
 --- a/gcc/fortran/trans-decl.c
 +++ b/gcc/fortran/trans-decl.c
 @@ -31,6 +31,7 @@ along with GCC; see the file COPYING3.  If not see
@@ -5009,7 +5009,7 @@ index 95af7d9316..6c129068e0 100644
    current_procedure_symbol = previous_procedure_symbol;
  }
 diff --git a/gcc/fortran/trans-stmt.h b/gcc/fortran/trans-stmt.h
-index 763f894040..f19868fbe5 100644
+index 763f8940404286450d5d123bd6ee3dd08c1ecb5f..f19868fbe51b157c97008340034fce110bff0bbb 100644
 --- a/gcc/fortran/trans-stmt.h
 +++ b/gcc/fortran/trans-stmt.h
 @@ -74,6 +74,11 @@ void gfc_trans_omp_declare_simd (gfc_namespace *);
@@ -5025,7 +5025,7 @@ index 763f894040..f19868fbe5 100644
  tree gfc_trans_open (gfc_code *);
  tree gfc_trans_close (gfc_code *);
 diff --git a/gcc/fortran/trans.c b/gcc/fortran/trans.c
-index 9e8e8619ff..1e5a4c31a6 100644
+index 9e8e8619ff837ba18dfd9374794db0eb9b0d380b..1e5a4c31a6b8e7ee14571d6845914eb0e38488da 100644
 --- a/gcc/fortran/trans.c
 +++ b/gcc/fortran/trans.c
 @@ -2206,7 +2206,15 @@ trans_code (gfc_code * code, tree cond)
@@ -5046,7 +5046,7 @@ index 9e8e8619ff..1e5a4c31a6 100644
  	case EXEC_OACC_WAIT:
  	case EXEC_OACC_UPDATE:
 diff --git a/gcc/fortran/types.def b/gcc/fortran/types.def
-index 8626ed0a4f..e52054d9d0 100644
+index 8626ed0a4f8eb9499b47288eafc4bc3fc618ab71..e52054d9d0cdafed10cd128a2768ae4a3e88c96a 100644
 --- a/gcc/fortran/types.def
 +++ b/gcc/fortran/types.def
 @@ -91,6 +91,7 @@ DEF_FUNCTION_TYPE_1 (BT_FN_VOID_BOOL, BT_VOID, BT_BOOL)
@@ -5066,7 +5066,7 @@ index 8626ed0a4f..e52054d9d0 100644
                       BT_VOID, BT_PTR_FN_VOID_PTR, BT_PTR, BT_UINT,
  		     BT_LONG, BT_LONG, BT_LONG, BT_UINT)
 diff --git a/gcc/gcc.c b/gcc/gcc.c
-index 0af888c7d7..ce1637ec42 100644
+index 0af888c7d78367afe2cd8eaafd2a0f2d9a4e979f..ce1637ec4202c440eb169d1dfe35e215f92082c6 100644
 --- a/gcc/gcc.c
 +++ b/gcc/gcc.c
 @@ -1142,6 +1142,9 @@ proper position among the other output files.  */
@@ -5107,7 +5107,7 @@ index 0af888c7d7..ce1637ec42 100644
  #ifndef LINK_LIBGCC_SPEC
  /* Generate -L options for startfile prefix list.  */
 diff --git a/gcc/gimplify.c b/gcc/gimplify.c
-index d6c3950072..d7484148ff 100644
+index d6c395007274f438ce77895c490843bfa14fc89a..d7484148ffab282a480ed18aada799a19c874562 100644
 --- a/gcc/gimplify.c
 +++ b/gcc/gimplify.c
 @@ -7448,7 +7448,12 @@ omp_notice_variable (struct gimplify_omp_ctx *ctx, tree decl, bool in_code)
@@ -5138,7 +5138,7 @@ index d6c3950072..d7484148ff 100644
  	}
 diff --git a/gcc/hls-builtins.def b/gcc/hls-builtins.def
 new file mode 100644
-index 0000000000..ab8a85eb9f
+index 0000000000000000000000000000000000000000..ab8a85eb9f240849399c5378f0dd0afc49416fd0
 --- /dev/null
 +++ b/gcc/hls-builtins.def
 @@ -0,0 +1,8 @@
@@ -5150,9 +5150,31 @@ index 0000000000..ab8a85eb9f
 +		  BT_FN_VOID_INT, ATTR_NOTHROW_LIST)
 +DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_SINGLE_NOWAIT, "__extls_hls_single_nowait",
 +		  BT_FN_BOOL_INT, ATTR_NOTHROW_LIST)
+diff --git a/gcc/lto-cgraph.c b/gcc/lto-cgraph.c
+index 7c3e276a8eaf44e4be62270cde4ec0a3ba54beef..87c8f9c98b33ddbbfa4d4dea8de4f1be8052cd01 100644
+--- a/gcc/lto-cgraph.c
++++ b/gcc/lto-cgraph.c
+@@ -630,7 +630,7 @@ lto_output_varpool_node (struct lto_simple_output_block *ob, varpool_node *node,
+ 		     && boundary_p && !DECL_EXTERNAL (node->decl), 1);
+ 	  /* in_other_partition.  */
+     }
+-  bp_pack_value (&bp, node->tls_model, 3);
++  bp_pack_value (&bp, node->tls_model, 4);
+   bp_pack_value (&bp, node->used_by_single_function, 1);
+   bp_pack_value (&bp, node->dynamically_initialized, 1);
+   streamer_write_bitpack (&bp);
+@@ -1390,7 +1390,7 @@ input_varpool_node (struct lto_file_decl_data *file_data,
+     }
+   if (node->alias && !node->analyzed && node->weakref)
+     node->alias_target = get_alias_symbol (node->decl);
+-  node->tls_model = (enum tls_model)bp_unpack_value (&bp, 3);
++  node->tls_model = (enum tls_model)bp_unpack_value (&bp, 4);
+   node->used_by_single_function = (enum tls_model)bp_unpack_value (&bp, 1);
+   node->dynamically_initialized = bp_unpack_value (&bp, 1);
+   group = read_identifier (ib);
 diff --git a/gcc/mpc-pass.c b/gcc/mpc-pass.c
 new file mode 100644
-index 0000000000..6fc56ff6ad
+index 0000000000000000000000000000000000000000..6fc56ff6ad577f2834e091afa3547f313c34fae3
 --- /dev/null
 +++ b/gcc/mpc-pass.c
 @@ -0,0 +1,420 @@
@@ -5577,7 +5599,7 @@ index 0000000000..6fc56ff6ad
 +
 +
 diff --git a/gcc/omp-low.c b/gcc/omp-low.c
-index 962cf88671..8e764f7842 100644
+index 962cf886710cef833f88d0d5c1fa82c72aa23794..8e764f7842adace7cd490dfc4433dd7bff7849e2 100644
 --- a/gcc/omp-low.c
 +++ b/gcc/omp-low.c
 @@ -9915,7 +9915,11 @@ lower_omp_critical (gimple_stmt_iterator *gsi_p, omp_context *ctx)
@@ -5594,7 +5616,7 @@ index 962cf88671..8e764f7842 100644
  
  	  critical_name_mutexes->put (name, decl);
 diff --git a/gcc/print-tree.c b/gcc/print-tree.c
-index 8ad0dcfbbf..8b45856821 100644
+index 8ad0dcfbbf01e4e573f1e9804e0c104b9f45882d..8b45856821eed267c1b9fe1a5dbd2e3f738ab8d4 100644
 --- a/gcc/print-tree.c
 +++ b/gcc/print-tree.c
 @@ -455,9 +455,48 @@ print_node (FILE *file, const char *prefix, tree node, int indent,
@@ -5648,7 +5670,7 @@ index 8ad0dcfbbf..8b45856821 100644
  
        if (CODE_CONTAINS_STRUCT (code, TS_DECL_COMMON))
 diff --git a/gcc/rtl.h b/gcc/rtl.h
-index efdaad2099..5f5ffa3762 100644
+index efdaad2099385d67c78d2e734d79cfbf1dd2fccf..5f5ffa37626335371087ffcc8e0665dd20a52b51 100644
 --- a/gcc/rtl.h
 +++ b/gcc/rtl.h
 @@ -2766,28 +2766,55 @@ do {								        \
@@ -5714,7 +5736,7 @@ index efdaad2099..5f5ffa3762 100644
  /* If SYMBOL_REF_HAS_BLOCK_INFO_P (RTX), this is the object_block
     structure to which the symbol belongs, or NULL if it has not been
 diff --git a/gcc/stor-layout.c b/gcc/stor-layout.c
-index 242452f2ac..5906961cf0 100644
+index 242452f2acf7bcef5b8df73e90fc3e62f7508246..5906961cf0c56c4a4afe163f6aef1dc50f2ba6d4 100644
 --- a/gcc/stor-layout.c
 +++ b/gcc/stor-layout.c
 @@ -779,6 +779,7 @@ layout_decl (tree decl, unsigned int known_align)
@@ -5726,7 +5748,7 @@ index 242452f2ac..5906961cf0 100644
        && TREE_CODE (DECL_SIZE_UNIT (decl)) != INTEGER_CST)
      DECL_SIZE_UNIT (decl) = variable_size (DECL_SIZE_UNIT (decl));
 diff --git a/gcc/tree-core.h b/gcc/tree-core.h
-index c31b8ebf24..3dbca55a31 100644
+index c31b8ebf2495865afd5599138e7605af1193f5c7..3dbca55a31e9eefc69d66b977007dae740c51c9f 100644
 --- a/gcc/tree-core.h
 +++ b/gcc/tree-core.h
 @@ -1831,7 +1831,9 @@ struct GTY(()) tree_decl_with_vis {
@@ -5741,7 +5763,7 @@ index c31b8ebf24..3dbca55a31 100644
   unsigned init_priority_p : 1;
   /* Used by C++ only.  Might become a generic decl flag.  */
 diff --git a/gcc/tree-ssa-dse.c b/gcc/tree-ssa-dse.c
-index 133cef3ac9..9fc08cdd13 100644
+index 133cef3ac9ce1d1638d5fc49325c9d11df119848..9fc08cdd13c68987ceb1a0d433a9d2009228353c 100644
 --- a/gcc/tree-ssa-dse.c
 +++ b/gcc/tree-ssa-dse.c
 @@ -372,7 +372,7 @@ maybe_trim_constructor_store (ao_ref *ref, sbitmap live, gimple *stmt)
@@ -5754,7 +5776,7 @@ index 133cef3ac9..9fc08cdd13 100644
    int head_trim = 0;
    int tail_trim = 0;
 diff --git a/gcc/tree-ssa-operands.c b/gcc/tree-ssa-operands.c
-index 9e620883d4..7861ff5053 100644
+index 9e620883d44bf47e51597c263947a681c3a67232..7861ff5053742b147ec44b1cf98c4191b94cef8f 100644
 --- a/gcc/tree-ssa-operands.c
 +++ b/gcc/tree-ssa-operands.c
 @@ -434,12 +434,10 @@ operands_scanner::finalize_ssa_uses ()
@@ -5775,7 +5797,7 @@ index 9e620883d4..7861ff5053 100644
      }
  
 diff --git a/gcc/tree.c b/gcc/tree.c
-index 5f87455c68..4dc3f8d417 100644
+index 5f87455c68fd0467cc16efd9ba3e152aca205cd1..4dc3f8d417baea5fad586f004b72cae25dea97c3 100644
 --- a/gcc/tree.c
 +++ b/gcc/tree.c
 @@ -3501,23 +3501,38 @@ staticp (tree arg)
@@ -5942,7 +5964,7 @@ index 5f87455c68..4dc3f8d417 100644
 +}
 +/* MPC END */
 diff --git a/gcc/tree.h b/gcc/tree.h
-index 44643c74ad..c40cd88859 100644
+index 44643c74ad992e9d92f9abee6e1f29e9fea7dac9..c40cd88859fc1d51bf1bba62bbbcf6504886e100 100644
 --- a/gcc/tree.h
 +++ b/gcc/tree.h
 @@ -2987,6 +2987,13 @@ extern void decl_value_expr_insert (tree, tree);
@@ -5960,7 +5982,7 @@ index 44643c74ad..c40cd88859 100644
  /* In a non-local VAR_DECL with static storage duration, true if the
     variable has an initialization priority.  If false, the variable
 diff --git a/gcc/varasm.c b/gcc/varasm.c
-index a7ef9b8d9f..416e795ec4 100644
+index a7ef9b8d9feca0a4bb43737fea60749b36de743c..416e795ec4f6534b4e4cd87634cd379a6115924c 100644
 --- a/gcc/varasm.c
 +++ b/gcc/varasm.c
 @@ -2207,11 +2207,37 @@ assemble_variable_contents (tree decl, const char *name,
@@ -6018,7 +6040,7 @@ index a7ef9b8d9f..416e795ec4 100644
  }
  
 diff --git a/libcpp/mkdeps.c b/libcpp/mkdeps.c
-index 1867e0089d..7691450e3b 100644
+index 1867e0089d7b5c6efacafb4dcf81a0c4d5be123c..7691450e3be37ef9c01be51038092feb6e0b0cfa 100644
 --- a/libcpp/mkdeps.c
 +++ b/libcpp/mkdeps.c
 @@ -292,6 +292,15 @@ void
@@ -6038,7 +6060,7 @@ index 1867e0089d..7691450e3b 100644
    t = apply_vpath (d, t);
  
 diff --git a/libgfortran/Makefile.am b/libgfortran/Makefile.am
-index 61bf05dd40..58de9d65ce 100644
+index 61bf05dd40d2266483a06df761c63bdba829b3b8..58de9d65cee53ac1e2298fe53e7d2d4ccfbdefb7 100644
 --- a/libgfortran/Makefile.am
 +++ b/libgfortran/Makefile.am
 @@ -38,12 +38,15 @@ LTLDFLAGS = $(shell $(SHELL) $(top_srcdir)/../libtool-ldflags $(LDFLAGS)) \
@@ -6123,7 +6145,7 @@ index 61bf05dd40..58de9d65ce 100644
  
  I_M4_DEPS=m4/iparm.m4
 diff --git a/libgfortran/Makefile.in b/libgfortran/Makefile.in
-index 3d043aaa92..dcc59ae21b 100644
+index 3d043aaa92431862d5bec13dee7d7997fa1fb49e..dcc59ae21bfc34a4794e83de80c8f8502c4227d5 100644
 --- a/libgfortran/Makefile.in
 +++ b/libgfortran/Makefile.in
 @@ -1,8 +1,8 @@
@@ -14041,7 +14063,7 @@ index 3d043aaa92..dcc59ae21b 100644
  # Otherwise a system limit (for SysV at least) may be exceeded.
  .NOEXPORT:
 diff --git a/libgfortran/aclocal.m4 b/libgfortran/aclocal.m4
-index 89e5496db5..83de6724ba 100644
+index 89e5496db5edf7ffd4a61d813493581355ed4ed4..83de6724ba2e040aa0ed578db545923d6d158696 100644
 --- a/libgfortran/aclocal.m4
 +++ b/libgfortran/aclocal.m4
 @@ -1,7 +1,7 @@
@@ -15481,7 +15503,7 @@ index 89e5496db5..83de6724ba 100644
  AC_SUBST([am__untar])
  ]) # _AM_PROG_TAR
 diff --git a/libgfortran/config.h.in b/libgfortran/config.h.in
-index 2d58188e50..52eb8460b1 100644
+index 2d58188e50ce1fbf38167d13d3202ea143f96c9c..52eb8460b17036c60502a6522befdcb464b9f8b0 100644
 --- a/libgfortran/config.h.in
 +++ b/libgfortran/config.h.in
 @@ -895,6 +895,9 @@
@@ -15495,7 +15517,7 @@ index 2d58188e50..52eb8460b1 100644
  #undef PACKAGE_BUGREPORT
  
 diff --git a/libgfortran/configure b/libgfortran/configure
-index f3634389cf..b21bb1fe32 100755
+index f3634389cf806555c74090947f6bd3cdbefd636b..b21bb1fe327b96a58706595a22861f690abd5903 100755
 --- a/libgfortran/configure
 +++ b/libgfortran/configure
 @@ -632,9 +632,7 @@ ac_header_list=
@@ -16947,7 +16969,7 @@ index f3634389cf..b21bb1fe32 100755
      "libtool":C)
  
 diff --git a/libgfortran/gfortran.map b/libgfortran/gfortran.map
-index 32579831a6..fad5b2d4a4 100644
+index 32579831a651f1deecc880bda149185d2081e3f0..fad5b2d4a42e41d22bfe3e50dfcaaaeefa2dfce6 100644
 --- a/libgfortran/gfortran.map
 +++ b/libgfortran/gfortran.map
 @@ -122,6 +122,7 @@ GFORTRAN_8 {
@@ -16975,7 +16997,7 @@ index 32579831a6..fad5b2d4a4 100644
      *;
  };
 diff --git a/libgfortran/io/unit.c b/libgfortran/io/unit.c
-index b0cc6ab230..25e4bb5f9a 100644
+index b0cc6ab230142b82d35246445b532143527d821f..25e4bb5f9ab037cc008fe3e9f1d699f6f54cae9b 100644
 --- a/libgfortran/io/unit.c
 +++ b/libgfortran/io/unit.c
 @@ -28,6 +28,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
@@ -17030,7 +17052,7 @@ index b0cc6ab230..25e4bb5f9a 100644
  /* Free a previously allocated newunit= unit number.  unit_lock must
     be held when calling.  */
 diff --git a/libgfortran/libgfortran.h b/libgfortran/libgfortran.h
-index 1e92f1a50d..db86e2afa4 100644
+index 1e92f1a50d34e1739606ee056b30b9db09fdf078..db86e2afa445de4f01f2a0647e3d31d01b5e92ea 100644
 --- a/libgfortran/libgfortran.h
 +++ b/libgfortran/libgfortran.h
 @@ -890,11 +890,11 @@ internal_proto(flush_all_units);
@@ -17050,7 +17072,7 @@ index 1e92f1a50d..db86e2afa4 100644
  extern int unit_to_fd (int);
  internal_proto(unit_to_fd);
 diff --git a/libgfortran/runtime/main.c b/libgfortran/runtime/main.c
-index 030b876783..4ba8ac174a 100644
+index 030b876783178aff145f8963f5e3cd6c9514b373..4ba8ac174ad49eee1a85e788a9eac455fc28d572 100644
 --- a/libgfortran/runtime/main.c
 +++ b/libgfortran/runtime/main.c
 @@ -66,8 +66,9 @@ init (void)
@@ -17074,7 +17096,7 @@ index 030b876783..4ba8ac174a 100644
 +  //close_units ();
  }
 diff --git a/libstdc++-v3/include/bits/regex_executor.tcc b/libstdc++-v3/include/bits/regex_executor.tcc
-index 405d1c4d0d..c0629e483d 100644
+index 405d1c4d0d19eaca970da6b2c207d685703fe3a5..c0629e483dc9b275985eebcc7baeccb5bed9fcab 100644
 --- a/libstdc++-v3/include/bits/regex_executor.tcc
 +++ b/libstdc++-v3/include/bits/regex_executor.tcc
 @@ -124,10 +124,10 @@ namespace __detail
