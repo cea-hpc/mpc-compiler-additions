@@ -28,7 +28,7 @@ def _gcc_patch_variants():
 
 
 def _gcc_version():
-    return {"4.8.5", "6.2.0", "7.4.0", "7.3.0", "7.5.0", "8.1.0", "8.2.0", "8.3.0", "8.4.0", "9.1.0", "9.2.0", "9.3.0", "10.1.0", "10.2.0", }
+    return {"4.8.5", "6.2.0", "7.4.0", "7.3.0", "7.5.0", "8.1.0", "8.2.0", "8.3.0", "8.4.0", "9.1.0", "9.2.0", "9.3.0", "10.1.0", "10.3.0", "10.2.0", "11.1.0", "11.2.0", "11.3.0", }
 
 
 class MpcCompilerAdditions(AutotoolsPackage):
@@ -38,8 +38,8 @@ class MpcCompilerAdditions(AutotoolsPackage):
 
     homepage = "http://mpc.hpcframework.com"
     url = "https://france.paratools.com/mpc/releases/mpc-compiler-additions-0.6.2.tar.gz"
-    version('0.7.0',
-            sha256='dbdad88fc2f1a27eec003061157a9d67c0d109a464aeb0df27a3b1045c7528dc')
+    version('0.8.0',
+            sha256='add07408b206468afc9288aff45b412b86a039b5da3516fc3c05b7649256e511')
 
     depends_on("hwloc@2.2.0")
     depends_on("openpa")
@@ -58,8 +58,20 @@ class MpcCompilerAdditions(AutotoolsPackage):
 
     
     conflicts("+workshare",
+              when="gcc_version=11.3.0",
+              msg="gcc_version=11.3.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=11.2.0",
+              msg="gcc_version=11.2.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=11.1.0",
+              msg="gcc_version=11.1.0 is not compatible with variant workshare")
+    conflicts("+workshare",
               when="gcc_version=10.2.0",
               msg="gcc_version=10.2.0 is not compatible with variant workshare")
+    conflicts("+workshare",
+              when="gcc_version=10.3.0",
+              msg="gcc_version=10.3.0 is not compatible with variant workshare")
     conflicts("+workshare",
               when="gcc_version=10.1.0",
               msg="gcc_version=10.1.0 is not compatible with variant workshare")
