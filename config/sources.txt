@@ -5,6 +5,6 @@ gmp             https://ftpmirror.gnu.org/gmp/gmp-VERSION.tar.bz2
 mpc             https://ftpmirror.gnu.org/mpc/mpc-VERSION.tar.gz
 mpfr            https://ftpmirror.gnu.org/mpfr/mpfr-VERSION.tar.bz2
 isl             https://france.paratools.com/isl/isl-VERSION.tar.bz2
-hwloc           https://download.open-mpi.org/release/hwloc/v2.2/hwloc-VERSION.tar.gz
+hwloc           https://france.paratools.com/hwloc/hwloc-VERSION.tar.gz
 openpa          https://github.com/pmodels/openpa/releases/download/vVERSION/openpa-VERSION.tar.gz
 libelf          https://fossies.org/linux/misc/old/libelf-VERSION.tar.gz
