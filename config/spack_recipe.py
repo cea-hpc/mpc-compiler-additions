@@ -41,7 +41,7 @@ class MpcCompilerAdditions(AutotoolsPackage):
     version('@AUTOPRIV_VERSION@',
             sha256='@SHA256SUM@')
 
-    depends_on("hwloc@2.2.0")
+    depends_on("hwloc@2.7.0")
     depends_on("openpa")
     depends_on("libelf", when="+libelf")
 
