@@ -1,0 +1,391 @@
+diff --git a/.gitlab-ci.yml b/.gitlab-ci.yml
+new file mode 100644
+index 000000000..550b130ad
+--- /dev/null
++++ b/.gitlab-ci.yml
+@@ -0,0 +1,79 @@
++#Available stages to run in 'automatic' processing:
++# For convenience, implicit stages have been made explicit here...
++stages:
++  - Initialization
++  - build
++  - check
++  - privatization
++  - Finalization
++
++# Add clone variables for concurent PIPELINES
++variables:
++  GIT_DEPTH: 5 # No need to clone the whole history
++  GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_RUNNER_ID/$CI_CONCURRENT_ID/$CI_PROJECT_PATH
++
++############################
++##### EXTRA ACTIONS ########
++############################
++#these actions should herit from implicit stages ".pre" and ".post"
++
++# pre-actions to cleanup the machine before the run
++# this job will be run in ANY pipeline -> ensure to enable all proper tags
++# CAUTION : Otherwise tag-specific runners won't allow to run the whole pipeline because
++# both .pre and .post cannot be scheduled (thus, why not using user-defined pre and post
++# to avoid them to be run systematically ?)
++Env Sanitize:
++  stage: Initialization
++  script:
++    - mkdir -p $HOME/GL_$CI_PIPELINE_ID/{build,install,priv}
++    - echo "Environment Cleaned !"
++
++# post-actions to cleanup the machine after the run
++# The last line may not be necessary as a pipeline start run something like a "git clean" before running
++# This implies a probable issue when multiple piplines are run concurrently on the same project :(
++# Please read the CAUTION above !
++Artifact Deletion:
++  stage: Finalization
++  allow_failure: true
++  when: on_success
++  script:
++    - $HOME/clean_old_pipelines.sh
++    - rm -rf $HOME/$CI_PIPELINE_ID/
++
++############################
++####### BUILD STAGE ########
++############################
++
++Build:
++  stage: build
++  script:
++  - cd $HOME/GL_$CI_PIPELINE_ID/build
++  - ${CI_PROJECT_DIR}/configure --prefix=$HOME/GL_$CI_PIPELINE_ID/install --enable-debug
++  - make -j8
++  - make -j8 install
++
++Check:
++  stage: check
++  script:
++  - cd $HOME/GL_$CI_PIPELINE_ID/build
++  # As some tests fail we set a cap on faillure (yes not ideal)
++  - (make -k -j8 check | tee out.log) || true
++  # Make sure tests have run
++  - cat out.log | grep "of expected passes"
++  # Here No test should fail when compared to vanilla
++  - cat out.log | ( grep "of unexpected failures" || true ) | cut -d "s" -f 2- | xargs > result
++  - test -z "$(cat ./result)" || test "$(cat ./result)" -eq 0
++
++############################
++####### PRIV CHECKS ########
++############################
++
++Check Priv:
++  stage: privatization
++  script:
++  - cd $HOME/GL_$CI_PIPELINE_ID/priv/
++  - wget http://france.paratools.com/autopriv/binutils_priv_test.tar.gz
++  - tar xf binutils_priv_test.tar.gz && rm -f binutils_priv_test.tar.gz
++  - cd binutils*
++  - export PRIV_CFLAGS="-B $HOME/GL_$CI_PIPELINE_ID/install/bin/"
++  - sh ./test.sh
+diff --git a/bfd/elf64-x86-64.c b/bfd/elf64-x86-64.c
+index 02ca55200..bce7d76b5 100644
+--- a/bfd/elf64-x86-64.c
++++ b/bfd/elf64-x86-64.c
+@@ -991,6 +991,23 @@ elf32_x86_64_elf_object_p (bfd *abfd)
+ /* Return TRUE if the TLS access code sequence support transition
+    from R_TYPE.  */
+ 
++/*MPC BEGIN */
++#define extls_is_tls(str) (strncmp(str, "__sctk__tls_get_addr_", 21) == 0 /* old API call */ \
++                        || strncmp(str, "__extls_get_addr_", 17) == 0)   /* new EXTLS call */
++
++/* this #define allow to inject Hexa code to offset GS with the desired TLS level */
++#define extls_memcpy(a, b, c) do{\
++unsigned char* start = a;\
++memcpy(start, b, c);\
++start[5] = '\x00' + (extls_scope_offset & 255); \
++start[6] = '\x00' + (extls_scope_offset >> 8);\
++}while(0)
++
++int __extls_optls = -1;
++#define extls_allow_opt_tls() (getenv("MPC_DISABLE_TLS_OPT") == NULL && getenv("EXTLS_ENABLE_VALGRIND") == NULL)
++
++/* MPC END */
++
+ static bool
+ elf_x86_64_check_tls_transition (bfd *abfd,
+ 				 struct bfd_link_info *info,
+@@ -1151,7 +1168,7 @@ elf_x86_64_check_tls_transition (bfd *abfd,
+ 
+       h = sym_hashes[r_symndx - symtab_hdr->sh_info];
+       if (h == NULL
+-	  || !((struct elf_x86_link_hash_entry *) h)->tls_get_addr)
++	  || !(((struct elf_x86_link_hash_entry *) h)->tls_get_addr || extls_is_tls(h->root.root.string) ))
+ 	return false;
+       else
+ 	{
+@@ -3384,12 +3401,109 @@ elf_x86_64_relocate_section (bfd *output_bfd,
+ 					   &r_type_tls, tls_type, rel,
+ 					   relend, h, r_symndx, true))
+ 	    return false;
++	  
++	  /* MPC BEGIN */
++	  unsigned short int extls_scope_offset = -1;
++	/* check if the current symbol is handled by extls */
++	if(extls_allow_opt_tls())
++	{
++	  unsigned long extls_r_symndx;
++	  struct elf_link_hash_entry *extls_h=NULL;
++
++	  /* big extls array to reproduce possible emitted TLS symbols
++	   * This array is two dimensional to support backward compatibility with old symbol names
++	   */
++	  unsigned long long call_idx;
++	  const unsigned long long nb_calls = 12;
++	  const unsigned long long nb_APIs = 2;
++	  char *extls_scopes[2][12] = {
++		 {
++			 "__extls_get_addr_process",
++			 "__extls_get_addr_task",
++			 "__extls_get_addr_thread",
++			 "__extls_get_addr_openmp",
++			 "__extls_get_addr_node",
++			 "__extls_get_addr_numa_level_2",
++			 "__extls_get_addr_numa_level_1",
++			 "__extls_get_addr_socket",
++			 "__extls_get_addr_cache_level_3",
++			 "__extls_get_addr_cache_level_2",
++			 "__extls_get_addr_cache_level_1",
++			 "__extls_get_addr_core"
++		 },
++
++		 {
++			 "__sctk__tls_get_addr__process_scope",
++			 "__sctk__tls_get_addr__task_scope",
++			 "__sctk__tls_get_addr__thread_scope",
++			 "__sctk__tls_get_addr__openmp_scope",
++			 "__sctk__tls_get_addr__node_scope",
++			 "__sctk__tls_get_addr__numa_level_2_scope",
++			 "__sctk__tls_get_addr__numa_level_1_scope",
++			 "__sctk__tls_get_addr__socket_scope",
++			 "__sctk__tls_get_addr__cache_level_3_scope",
++			 "__sctk__tls_get_addr__cache_level_2_scope",
++			 "__sctk__tls_get_addr__cache_level_1_scope",
++			 "__sctk__tls_get_addr__core"
++		 }
++	  };
++
++	  /* it is probably possible to optimized these nested "if"s */
++	  if ( (rel+1) < relend ) {
++		  extls_r_symndx = ELF64_R_SYM (rel[1].r_info);
++		  if (extls_r_symndx >= symtab_hdr->sh_info) {
++			  extls_h = sym_hashes[extls_r_symndx - symtab_hdr->sh_info];
++			  if ( extls_h != NULL && extls_is_tls(extls_h->root.root.string)){ 
++				  unsigned long long fidx;
++				  unsigned short int found = 0;
++				  for ( fidx = 0 ; fidx < nb_APIs && !found ; ++fidx ) {
++					  for ( call_idx = 0 ; call_idx < nb_calls && !found; ++call_idx ) {
++						  if ( strncmp ( extls_h->root.root.string,  extls_scopes[fidx][call_idx], strlen(extls_scopes[fidx][call_idx])) == 0)
++						  {
++							  found = 1;
++						  }
++					  }
++				  }
++
++
++				  if(!found) /* handling errors */
++				  {
++					  /* get variable name for error message */
++					  const char* name ;
++					  const char unknown_str[16] = "unknown" ;
++					  if ( h && h->root.root.string )
++						  name = h->root.root.string ;
++					  else
++						  name = bfd_elf_sym_name (input_bfd, symtab_hdr, sym, NULL) ;
++					  if ( name == NULL )
++						  name = unknown_str ;
++
++					  (*_bfd_error_handler)
++						  (_("%B: Undefined EXTLS level for the symbol '%s'"), input_bfd, name);
++					  bfd_set_error (bfd_error_bad_value);
++					  return false;
++				  } 
++                                 else 
++                                 { call_idx--; /* remove extra incerment done when found */ }
++
++				  extls_scope_offset = call_idx * (5*8); /* a level is built w/ a 5-pointer structure */
++				
++				  /* check that computed offset will fit with 'extls_scope_offset' size (initially: unsigned short int) */
++				  if((call_idx * (5*8)) >= (1 << (sizeof(extls_scope_offset) * 8)))
++				  {
++				  	(*_bfd_error_handler)
++						  (_("%B: A symbol requires an offset larger than currently implemented offset capability (%d bytes)"), input_bfd, sizeof(extls_scope_offset));
++				  }
++			  } /* close extls symbol check */
++		  } /* close sym index lookup */
++	  } /* close (rel+1) < relend check */
++	} /* close a local block to unstack tabs */
++	/* MPC END */
+ 
+ 	  if (r_type_tls == R_X86_64_TPOFF32)
+-	    {
+-	      bfd_vma roff = rel->r_offset;
+-
+-	      BFD_ASSERT (! unresolved_reloc);
++      {
++		bfd_vma roff = rel->r_offset;
++		BFD_ASSERT (! unresolved_reloc);
+ 
+ 	      if (r_type == R_X86_64_TLSGD)
+ 		{
+@@ -3427,7 +3541,13 @@ elf_x86_64_relocate_section (bfd *output_bfd,
+ 			leaq foo@tpoff(%rax), %rax
+ 			nopw 0x0(%rax,%rax,1)  */
+ 		  int largepic = 0;
+-		  if (ABI_64_P (output_bfd))
++		  if(extls_scope_offset != (unsigned short int) -1)
++		  {
++			  extls_memcpy(contents + roff - 4,
++					  "\x65\x48\x8b\x04\x25\0\0\0\0\x48\x8d\x80\0\0\0",
++					  16);
++		  }
++		  else if (ABI_64_P (output_bfd))
+ 		    {
+ 		      if (contents[roff + 5] == 0xb8)
+ 			{
+@@ -3790,7 +3910,13 @@ elf_x86_64_relocate_section (bfd *output_bfd,
+ 			addq foo@gottpoff(%rax), %rax
+ 			nopw 0x0(%rax,%rax,1)  */
+ 		  int largepic = 0;
+-		  if (ABI_64_P (output_bfd))
++		  if(extls_scope_offset != (unsigned short int) -1)
++		  {
++			  extls_memcpy(contents + roff - 4,
++					  "\x65\x48\x8b\x04\x25\0\0\0\0\x48\x03\x05\0\0\0",
++					  16);
++		  }
++		  else if (ABI_64_P (output_bfd))
+ 		    {
+ 		      if (contents[roff + 5] == 0xb8)
+ 			{
+diff --git a/bfd/elflink.c b/bfd/elflink.c
+index 6fa18d920..1d4cc7488 100644
+--- a/bfd/elflink.c
++++ b/bfd/elflink.c
+@@ -2292,6 +2292,34 @@ elf_link_add_dt_relr_dependency (struct elf_find_verdep_info *rinfo)
+   return true;
+ }
+ 
++/* MPC BEGIN */
++static bool
++_bfd_elf_export_mpc_dyn_tls_wrapper (struct elf_link_hash_entry *h, void *data)
++{
++	struct elf_info_failed *eif = (struct elf_info_failed *) data;
++
++  /* Ignore indirect symbols.  These are added by the versioning code.  */
++	if (h->root.type == bfd_link_hash_indirect)
++		return true;
++
++	const char * name = h->root.root.string;
++
++	if( !name )
++		return true;
++	
++	if( !strstr( name, "___mpc_TLS_w_" ) )
++		return true;
++
++	if (! bfd_elf_link_record_dynamic_symbol (eif->info, h))
++	{
++		eif->failed = true;
++		return false;
++	}
++
++	return true;
++}
++/* MPC END */
++
+ /* Look through the symbols which are defined in other shared
+    libraries and referenced here.  Update the list of version
+    dependencies.  This will be put into the .gnu.version_r section.
+@@ -6638,12 +6666,16 @@ bfd_elf_size_dynamic_sections (bfd *output_bfd,
+       asection *s;
+       size_t soname_indx;
+ 
++	  struct elf_info_failed eif;
++
++	  eif.info = info;
++	  eif.failed = false;
++
+       /* If we are supposed to export all symbols into the dynamic symbol
+ 	 table (this is not the normal case), then do so.  */
+       if (info->export_dynamic
+ 	  || (bfd_link_executable (info) && info->dynamic))
+ 	{
+-	  struct elf_info_failed eif;
+ 
+ 	  eif.info = info;
+ 	  eif.failed = false;
+@@ -6653,7 +6685,18 @@ bfd_elf_size_dynamic_sections (bfd *output_bfd,
+ 	  if (eif.failed)
+ 	    return false;
+ 	}
+-
++	
++	/* MPC BEGIN */
++	 /* Here we export the dynamic TLS symbols
++	  * in order to allow remote TU intializer
++	  * resolution */
++	  elf_link_hash_traverse (elf_hash_table (info),
++			  _bfd_elf_export_mpc_dyn_tls_wrapper,
++			  &eif);
++	  if (eif.failed)
++	    return false;
++	/* MPC END */
++	/* MPC CONFLICT WITH MPC BLOCK UNTIL MARKED */
+       if (soname != NULL)
+ 	{
+ 	  soname_indx = _bfd_elf_strtab_add (elf_hash_table (info)->dynstr,
+@@ -6664,6 +6707,7 @@ bfd_elf_size_dynamic_sections (bfd *output_bfd,
+ 	}
+       else
+ 	soname_indx = (size_t) -1;
++	/* END CONFLICT */
+ 
+       /* Make all global versions with definition.  */
+       for (t = info->version_info; t != NULL; t = t->next)
+diff --git a/ld/ldfile.c b/ld/ldfile.c
+index 731ae5f7a..947bcb15e 100644
+--- a/ld/ldfile.c
++++ b/ld/ldfile.c
+@@ -340,18 +340,35 @@ ldfile_open_file_search (const char *arch,
+      directory first.  */
+   if (!entry->flags.maybe_archive)
+     {
++        /* MPC INTEL BEGIN */
++#if 0
+       if (entry->flags.sysrooted && IS_ABSOLUTE_PATH (entry->filename))
++#endif
++      /* For absolute pathnames, try to always open the file in the
++	 sysroot first. If this fails, try to open the file at the
++	 given location. */
++      entry->flags.sysrooted = is_sysrooted_pathname(entry->filename);
++      if (IS_ABSOLUTE_PATH (entry->filename) && ld_sysroot && ! entry->flags.sysrooted)
++          /* MPC INTEL END */
+ 	{
+ 	  char *name = concat (ld_sysroot, entry->filename,
+ 			       (const char *) NULL);
+ 	  if (ldfile_try_open_bfd (name, entry))
+ 	    {
+ 	      entry->filename = name;
++          /* MPC INTEL BEGIN */
++	      entry->flags.sysrooted = true;
++          /* MPC INTEL END */
+ 	      return true;
+ 	    }
+ 	  free (name);
+ 	}
++      /* MPC INTEL BEGIN */
++#if 0
+       else if (ldfile_try_open_bfd (entry->filename, entry))
++#endif
++      if (ldfile_try_open_bfd (entry->filename, entry))
++          /* MPC INTEL END */
+ 	return true;
+ 
+       if (IS_ABSOLUTE_PATH (entry->filename))
