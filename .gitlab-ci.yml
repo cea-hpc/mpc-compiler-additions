@@ -326,7 +326,7 @@ nogcc:
     - docker
   image: build-debian:11
   script:
-    - apt-get update -y && apt-get install texinfo -y
+    - apt-get update -y && apt-get install texinfo flex bison dejagnu -y
     - pwd
     - ls
     - mkdir /BUILD
