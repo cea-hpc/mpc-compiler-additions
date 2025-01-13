@@ -311,6 +311,7 @@ nogcc:
     - docker
   image: build-debian:11
   script:
+    - apt-get update -y && apt-get install texinfo -y
     - pwd
     - ls
     - mkdir /BUILD
@@ -325,6 +326,7 @@ nogcc:
     - docker
   image: build-debian:11
   script:
+    - apt-get update -y && apt-get install texinfo -y
     - pwd
     - ls
     - mkdir /BUILD
