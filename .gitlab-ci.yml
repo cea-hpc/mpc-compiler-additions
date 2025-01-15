@@ -335,3 +335,32 @@ nogcc:
     - make -j8 install
     - make check
 
+13.3.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:11
+  script:
+    - apt-get update -y && apt-get install texinfo flex bison dejagnu -y
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=13.3.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
+
+14.2.0:
+  stage: Validation
+  tags:
+    - docker
+  image: build-debian:11
+  script:
+    - apt-get update -y && apt-get install texinfo flex bison dejagnu -y
+    - pwd
+    - ls
+    - mkdir /BUILD
+    - cd /BUILD
+    - ${CI_PROJECT_DIR}/configure --gcc-version=14.2.0 --prefix=/INSTALL --disable-workshare
+    - make -j8 install
+    - make check
