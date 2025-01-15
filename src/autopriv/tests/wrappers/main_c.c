@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <extls.h>
 #include <extls_dynamic.h>
+#include <stdio.h>
+
 int i = 42;
 int *j = &i;
 
