@@ -68,7 +68,7 @@ in_list()
 #
 _config_file_clean()
 {
-    grep -v "^\#" < "$1" | sed -E "s/\s+/ /g"
+    grep -v '^#' < "$1" | sed -E "s/\s+/ /g"
 }
 
 #
