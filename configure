@@ -256,7 +256,7 @@ if in_list "autopriv" "${ENABLED_VARIANTS}"; then
 
 	# Now time to install AUTOPRIV's DEPS if needed
 
-	for dep in hwloc openpa libelf
+	for dep in hwloc openpa
 	do
 		DEP_VERSION=$(package_version_for_gcc "$dep" "${GCC_VERSION}")
 
