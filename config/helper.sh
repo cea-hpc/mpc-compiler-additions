@@ -500,10 +500,33 @@ prepare_sources()
 	done
 }
 
+# Get package from URL
+# - 1: package name
+# - 2: gcc version
+# Return:
+# - TARBALL_PATH path to downloaded tarball
+do_download_dep()
+{
+	PVERSION=$(package_version_for_gcc "$1" "$2")
+	FNAME=$(package_filename "$1" "${PVERSION}")
+	echo "# Downloading $1 ..."
+	if have_cmd "wget"; then
+		safe_exec wget "$(package_download_address "$1" "${PVERSION}")"
+	elif have_cmd "curl"; then
+		safe_exec curl -L "$(package_download_address "$1" "${PVERSION}")" -o "./${FNAME}"
+	else
+		exit_error "Curl or wget is required for dep download or use --download."
+	fi
+	#(TARBALL_PATH is the return value)
+	# shellcheck disable=SC2034
+	TARBALL_PATH="${PWD}/${FNAME}"
+}
+
 # Get package from URL, current dir or PROJECT
 # Args:
 # - 1: package name
 # - 2: gcc version
+# - 3: deny copy from ~/autopriv dirs if set to 'no'
 # Return:
 # - TARBALL_PATH path to downloaded tarball
 TARBALL_PATH=""
@@ -512,40 +535,32 @@ download_dep()
 	assert_package "$1"
 	PVERSION=$(package_version_for_gcc "$1" "$2")
 	FNAME=$(package_filename "$1" "${PVERSION}")
+
 	if test -f "${PWD}/${FNAME}"; then
 		echo "# ${FNAME} found, skipping download."
 		TARBALL_PATH="${PWD}/${FNAME}"
 	elif test -f "${SCRIPTPATH}/${FNAME}"; then
 		echo "# ${FNAME} found in project, skipping download."
 		TARBALL_PATH="${SCRIPTPATH}/${FNAME}"
-	elif test -f "${HOME}/.autopriv/${FNAME}"; then
-		echo "# ${FNAME} found in user's HOME, skipping download."
-		TARBALL_PATH="${HOME}/.autopriv/${FNAME}"
+	elif [ -f "${HOME}/.autopriv/${FNAME}" -a "x$3" != "xno" ]; then
+			echo "# ${FNAME} found in user's HOME, skipping download."
+			TARBALL_PATH="${HOME}/.autopriv/${FNAME}"
 	else
-		echo "# Downloading $1 ..."
-		if have_cmd "wget"; then
-			safe_exec wget "$(package_download_address "$1" "${PVERSION}")"
-		elif have_cmd "curl"; then
-			safe_exec curl -L "$(package_download_address "$1" "${PVERSION}")" -o "./${FNAME}"
-		else
-			exit_error "Curl or wget is required for dep download or use --download."
-		fi
-		#(TARBALL_PATH is the return value)
-		# shellcheck disable=SC2034
-		TARBALL_PATH="${PWD}/${FNAME}"
+		do_download_dep $1 $2
 	fi
 }
 
 # Get all packages from URL, current dir or PROJECT
 # Args:
 # - 1: gcc version
+# - 2: allow copy from ~/autopriv paths
 # Return:
 # - TARBALL_PATH path to downloaded tarball
 download_all_deps()
 {
 	for p in $(package_list)
 	do
-		download_dep "$p" "$1"
+		download_dep "$p" "$1" "$2"
 		# If files were elsewhere copy them in local dir
 		if test ! -f "$(basename "$TARBALL_PATH")"; then
 			cp "${TARBALL_PATH}" .

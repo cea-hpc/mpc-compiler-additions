@@ -12,13 +12,6 @@ if test ! -f "$(basename "$0")"; then
     exit 1
 fi
 
-if test -d ~/.autopriv/; then
-	echo "============================================================"
-	echo "Please temporarilly remove ~/.autopriv/ to build the tarball"
-	echo "============================================================"
-	exit 1
-fi
-
 set -x
 
 echo "Cleaning timestamps for dist"
@@ -42,7 +35,7 @@ cd ./mpc-compiler-additions-* || exit 42
 
 echo "Downloading dependencies.."
 
-"${SCRIPTPATH}/configure" --download "$@"
+"${SCRIPTPATH}/configure" --download --no-home-autopriv "$@"
 
 echo "Inserting dependencies ..."
 

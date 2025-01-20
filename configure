@@ -32,7 +32,8 @@ GCC_VERSION=""
 DISABLED_VARIANTS=""
 ENABLED_VARIANTS=""
 COMPILE_GCC="yes"
-DOWNLOAD_ONLY="no"
+DOWNLOAD="no"
+ALLOW_HOME_COPY="yes"
 CONTRIB_OPTIONS=""
 
 WPREFIX_hwloc=""
@@ -62,7 +63,8 @@ Options:
 	--gcc-version=  Version of GCC to deploy
 	--opts="XX"     Option to be passed to contribs' configure
 	-v|--verbose    Show verbose output
-	--download      Only download dependencies
+	--download      Only download dependencies (or copy them from local dirs).
+	--no-home-autopriv Do not use file in ~/.autopriv.
 	--disable-gcc   Do not build the patched GCC
 	--disable-[V]   Disable a given variant [V] (see Variants list)
 	--enable-debug  Build in debug mode
@@ -87,7 +89,10 @@ for arg in "$@" ; do
 				FAKE_RUN="yes"
 				;;
 			--download)
-				DOWNLOAD_ONLY="yes"
+				DOWNLOAD="yes"
+				;;
+			--no-home-autopriv)
+				ALLOW_HOME_COPY="no"
 				;;
 			--disable-gcc)
 				COMPILE_GCC="no"
@@ -141,8 +146,8 @@ fi
 #
 # Download only
 #
-if test "x${DOWNLOAD_ONLY}" = "xyes"; then
-	download_all_deps "$GCC_VERSION"
+if test "x${DOWNLOAD}" = "xyes"; then
+	download_all_deps "$GCC_VERSION" "$ALLOW_HOME_COPY"
 	exit 0
 fi
 
