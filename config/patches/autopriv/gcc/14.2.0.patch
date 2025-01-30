@@ -5126,6 +5126,26 @@ index 0000000000..ab8a85eb9f
 +		  BT_FN_VOID_INT, ATTR_NOTHROW_LIST)
 +DEF_MPC_BUILTIN (BUILT_IN_MPC_HLS_SINGLE_NOWAIT, "__extls_hls_single_nowait",
 +		  BT_FN_BOOL_INT, ATTR_NOTHROW_LIST)
+diff --git a/gcc/ipa-visibility.cc b/gcc/ipa-visibility.cc
+index 501d3c304a..d4dac42ea4 100644
+--- a/gcc/ipa-visibility.cc
++++ b/gcc/ipa-visibility.cc
+@@ -883,9 +883,14 @@ function_and_variable_visibility (bool whole_program)
+ 
+ 	  /* Upgrade TLS access model based on optimized visibility status,
+ 	     unless it was specified explicitly or no references remain.  */
++	  /*
++	   * MPC: This optimisation assume imvalide optimisation for MPC TLS.
++	   * Make sure it does not modify MPC TLS.
++	   */
+ 	  if (DECL_THREAD_LOCAL_P (decl)
+ 	      && !lookup_attribute ("tls_model", DECL_ATTRIBUTES (decl))
+-	      && vnode->ref_list.referring.length ())
++	      && vnode->ref_list.referring.length ()
++		  && DECL_TLS_MODEL(decl) < TLS_MODEL_MPC_OPENMP) // MPC
+ 	    {
+ 	      enum tls_model new_model = decl_default_tls_model (decl);
+ 	      STATIC_ASSERT (TLS_MODEL_GLOBAL_DYNAMIC < TLS_MODEL_LOCAL_DYNAMIC);
 diff --git a/gcc/lto-cgraph.cc b/gcc/lto-cgraph.cc
 index 6395033ab9..fa2027fc33 100644
 --- a/gcc/lto-cgraph.cc
