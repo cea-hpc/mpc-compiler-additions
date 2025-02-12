@@ -2142,7 +2142,7 @@ index ed637015a9..482b45deea 100644
    ds_redefined_builtin_type_spec,
    ds_attribute,
 diff --git a/gcc/cp/decl.cc b/gcc/cp/decl.cc
-index ca00e9aea2..1d1a68ccd9 100644
+index ca00e9aea2..f698f26bee 100644
 --- a/gcc/cp/decl.cc
 +++ b/gcc/cp/decl.cc
 @@ -262,6 +262,9 @@ struct GTY(()) incomplete_var {
@@ -2339,7 +2339,7 @@ index ca00e9aea2..1d1a68ccd9 100644
 +
 +     int __cxa_thread_atexit (void (*)(void *), void *, void *) */
 +  tree fn_type = build_function_type_list (integer_type_node,
-+					   get_atexit_fn_ptr_type (),
++					   get_cxa_atexit_fn_ptr_type (),
 +					   ptr_type_node, ptr_type_node,
 +					   NULL_TREE);
 +
